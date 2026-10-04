@@ -8,7 +8,7 @@
 <style>
 :root{--primary:#8b0000;--secondary:#b22222;--bg:#fdfbf7;--card:#fff;--line:#e7d7c1}
 *{box-sizing:border-box}
-body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:#2c2c2c;margin:0;padding:18px;
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:#2c2c2c;margin:0;padding:18px;
  -webkit-user-select:none;-moz-user-select:none;user-select:none}
 input,textarea{-webkit-user-select:text;user-select:text}
 .container{max-width:1180px;margin:0 auto}
@@ -492,25 +492,33 @@ function loadNavigator(){
 }
 
 /* ============================================================
-   SECTION 5 : SOURCE PROTECTION (ชั้นป้องปราม)
+   SECTION 5 : SOURCE PROTECTION (เวอร์ชันปลอดภัยกับมือถือ)
+   - ตัดตัวตรวจจับ DevTools ออก (false positive บน iOS Safari)
+   - เหลือเฉพาะชั้นป้องปรามที่ไม่กระทบการใช้งานจริง
    ============================================================ */
-document.addEventListener('keydown',e=>{
-  const k=e.key.toUpperCase();
-  if(k==='F12'||(e.ctrlKey&&e.shiftKey&&['I','J','C','K'].includes(k))||
-     (e.ctrlKey&&['U','S','P'].includes(k))){e.preventDefault();return false;}
+const IS_TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+/* บล็อกคีย์ลัดเฉพาะเครื่องเดสก์ท็อปเท่านั้น */
+if(!IS_TOUCH){
+  document.addEventListener('keydown',e=>{
+    const k=(e.key||'').toUpperCase();
+    if(k==='F12'||(e.ctrlKey&&e.shiftKey&&['I','J','C','K'].includes(k))||
+       (e.ctrlKey&&['U','S','P'].includes(k))){e.preventDefault();return false;}
+  });
+}
+
+/* ห้ามคัดลอกเนื้อหา ยกเว้นช่องกรอกข้อมูล */
+document.addEventListener('copy',e=>{
+  const t=e.target.tagName;
+  if(t!=='INPUT'&&t!=='TEXTAREA')e.preventDefault();
 });
-document.addEventListener('copy',e=>{if(e.target.tagName!=='INPUT')e.preventDefault();});
-(function devtools(){
-  let warned=false;
-  setInterval(()=>{
-    const w=window.outerWidth-window.innerWidth, h=window.outerHeight-window.innerHeight;
-    if((w>170||h>170)&&!warned){warned=true;
-      document.body.innerHTML='<div style="display:flex;height:90vh;align-items:center;justify-content:center;text-align:center;font-size:20px;color:#8b0000"><div>🔒 ตรวจพบการเปิดเครื่องมือพัฒนา<br><span style="font-size:14px">กรุณาปิด DevTools แล้วรีเฟรชหน้าใหม่</span></div></div>';}
-  },1200);
-})();
+
+/* กู้ session เดิม + ตั้งค่าวันหมดอายุเริ่มต้น */
 (function restore(){
-  const s=sessionStorage.getItem('bz_ses');
-  if(s){const o=JSON.parse(s);openApp(o.n,o.a);}
+  try{
+    const s=sessionStorage.getItem('bz_ses');
+    if(s){const o=JSON.parse(s);openApp(o.n,o.a);}
+  }catch(err){ /* เปิดหน้า login ตามปกติ */ }
   const d=new Date();d.setFullYear(d.getFullYear()+1);
   const el=document.getElementById('agExp'); if(el)el.valueAsDate=d;
 })();

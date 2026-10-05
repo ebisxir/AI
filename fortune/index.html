@@ -237,6 +237,48 @@ function makeKey(u){
   return a+b+'-'+n;
 }
 const norm=s=>(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+
+// --- เพิ่มฟังก์ชันจัดการบันทึกข้อมูลและปุ่ม Line ---
+function saveUserData() {
+  const u = document.getElementById('whoami').textContent.replace('🛡️ ADMIN · ', '').trim();
+  if(!u) return;
+  const data = {
+    country: document.getElementById('country').value,
+    by: document.getElementById('by').value,
+    bm: document.getElementById('bm').value,
+    bd: document.getElementById('bd').value,
+    bh: document.getElementById('bh').value,
+    bmin: document.getElementById('bmin').value,
+    lon: document.getElementById('lon').value,
+    tz: document.getElementById('tz').value
+  };
+  try { localStorage.setItem('bz_user_' + u, JSON.stringify(data)); } catch(e){}
+}
+
+function loadUserData(u) {
+  try {
+    const saved = localStorage.getItem('bz_user_' + u);
+    if(saved) {
+      const data = JSON.parse(saved);
+      if(data.country) document.getElementById('country').value = data.country;
+      if(data.by) document.getElementById('by').value = data.by;
+      if(data.bm) document.getElementById('bm').value = data.bm;
+      if(data.bd) document.getElementById('bd').value = data.bd;
+      if(data.bh) document.getElementById('bh').value = data.bh;
+      if(data.bmin) document.getElementById('bmin').value = data.bmin;
+      if(data.lon) document.getElementById('lon').value = data.lon;
+      if(data.tz) document.getElementById('tz').value = data.tz;
+    }
+  } catch(e) {}
+}
+
+function copyForLine(u, k) {
+  const text = `🔮 ระบบดวงชะตา BaZi Precision Navigator\n👤 ชื่อผู้ใช้งาน: ${u}\n🔑 รหัสเข้าใช้: ${k}\n\n👉 นำชื่อและรหัสนี้ไปกรอกในระบบ เพื่อเข้าดูดวงชะตาได้เลยครับ`;
+  if(navigator.clipboard) navigator.clipboard.writeText(text);
+  else { const t=document.createElement('textarea'); t.value=text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  alert('✅ คัดลอกข้อความสำหรับส่ง Line เรียบร้อยแล้ว');
+}
+
 function switchTab(t){
   document.getElementById('paneUser').style.display=t==='user'?'block':'none';
   document.getElementById('paneAdmin').style.display=t==='admin'?'block':'none';
@@ -244,6 +286,7 @@ function switchTab(t){
   document.getElementById('tbAdmin').className=t==='admin'?'':'ghost';
   document.getElementById('gateMsg').innerHTML='';
 }
+
 function openApp(name,isAdmin){
   document.getElementById('gate').style.display='none';
   document.getElementById('app').style.display='block';
@@ -251,8 +294,11 @@ function openApp(name,isAdmin){
   document.getElementById('adminCard').style.display=isAdmin?'block':'none';
   try{sessionStorage.setItem('bz_ses',JSON.stringify({n:name,a:isAdmin}));}catch(e){}
   if(isAdmin)renderKeyList();
+  
+  if(!isAdmin) loadUserData(name); // โหลดข้อมูลที่บันทึกไว้สำหรับ User คนนี้
   calculateBazi();
 }
+
 function adminLogin(){
   const v=document.getElementById('inAdmin').value.trim();
   if(cyrb53(_S+v)===cyrb53(_S+'6395'))openApp('Administrator',true);
@@ -269,15 +315,20 @@ function userLogin(){
   setTimeout(()=>openApp(u,false),320);
 }
 function logout(){try{sessionStorage.removeItem('bz_ses');}catch(e){}location.reload();}
+
 function genKey(){
   const u=document.getElementById('agUser').value.trim();
   const note=document.getElementById('agNote').value.trim();
   if(!u){document.getElementById('keyResult').innerHTML='<span class="err">⚠️ กรุณากรอกชื่อผู้ใช้งาน</span>';return;}
   const k=makeKey(u);
+  
+  // เพิ่มปุ่มคัดลอกส่ง Line ที่นี่
   document.getElementById('keyResult').innerHTML=
     '<div class="box" style="margin-top:12px">🎫 รหัสของ <b>'+u+'</b>'+
     '<div class="keyout">'+k+'</div>'+
-    '<button class="ghost" style="margin-top:10px" onclick="copyKey(\''+k+'\')">📋 คัดลอกรหัส</button></div>';
+    '<button class="ghost" style="margin-top:10px; margin-right:6px" onclick="copyKey(\''+k+'\')">📋 คัดลอกรหัส</button>'+
+    '<button class="ghost" style="margin-top:10px; background:#06c755; color:#fff; border:none;" onclick="copyForLine(\''+u+'\',\''+k+'\')">💬 คัดลอกส่ง Line</button></div>';
+    
   let db=[];try{db=JSON.parse(localStorage.getItem('bz_keys')||'[]');}catch(e){}
   if(!db.find(x=>x.u.toLowerCase()===u.toLowerCase()))db.push({u,k,note,d:new Date().toISOString().slice(0,10)});
   try{localStorage.setItem('bz_keys',JSON.stringify(db));}catch(e){}
@@ -287,6 +338,7 @@ function copyKey(k){
   if(navigator.clipboard)navigator.clipboard.writeText(k);
   else{const t=document.createElement('textarea');t.value=k;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
 }
+
 function renderKeyList(){
   let db=[];try{db=JSON.parse(localStorage.getItem('bz_keys')||'[]');}catch(e){}
   const el=document.getElementById('keyList');
@@ -294,7 +346,9 @@ function renderKeyList(){
   let h='<div class="tbwrap"><table class="rtable"><thead><tr><th>👤 ผู้ใช้</th><th>🎫 รหัส</th><th>📝 หมายเหตุ</th><th>📆 ออกเมื่อ</th><th>🗑️</th></tr></thead><tbody>';
   db.forEach((x,i)=>{h+='<tr>'+
     '<td data-label="👤 ผู้ใช้"><div>'+x.u+'</div></td>'+
-    '<td data-label="🎫 รหัส"><div style="font-family:monospace;font-weight:700;letter-spacing:2px">'+x.k+'</div></td>'+
+    // เพิ่มปุ่มปะ Line ในตาราง
+    '<td data-label="🎫 รหัส"><div style="font-family:monospace;font-weight:700;letter-spacing:2px">'+x.k+'</div>'+
+    '<button class="ghost" style="margin-top:4px; padding:4px 8px; font-size:11.5px; background:#06c755; color:#fff; border:none; border-radius:6px;" onclick="copyForLine(\''+x.u+'\',\''+x.k+'\')">💬 ปะ Line</button></td>'+
     '<td data-label="📝 หมายเหตุ"><div>'+(x.note||'-')+'</div></td>'+
     '<td data-label="📆 ออกเมื่อ"><div>'+(x.d||'-')+'</div></td>'+
     '<td data-label="🗑️ จัดการ"><div><button class="ghost" style="padding:4px 10px;font-size:12px" onclick="delKey('+i+')">ลบ</button></div></td></tr>';});
@@ -572,7 +626,7 @@ function buildStory(P,A){
   t+=`<p><b>${lack.length?6:5}) จังหวะวันที่ควรจำ</b><br>`+
      `นักษัตรประจำเสาวันของคุณคือ <b>${P.day.animal}</b> ดังนั้นวันที่เป็นนักษัตร<b>${clashAnimal}</b>จะเป็น "วันชงดิถี" ควรเลี่ยงการตัดสินใจใหญ่ การเดินทางไกล และการปะทะกับคน `+
      `ส่วนวันนักษัตร<b>${comboAnimal}</b>เป็นวันสมพงศ์ เหมาะกับการเจรจา ขอความช่วยเหลือ และเริ่มสิ่งใหม่ — ระบบด้านล่างคำนวณให้อัตโนมัติทุกวันแล้ว</p>`;
-  t+=`<p class="small">⚠️ หมายเหตุ: การตีความนี้สร้างจากสูตรถ่วงน้ำหนักมาตรฐาน ใช้เป็นเครื่องมือวางแผนชีวิตและโภชนาการ ไม่ใช่คำทำนายตายตัว และไม่ใช้แทนคำวินิจฉัยทางการแพทย์</p>`;
+  t+=`<p class="small">⚠️️ หมายเหตุ: การตีความนี้สร้างจากสูตรถ่วงน้ำหนักมาตรฐาน ใช้เป็นเครื่องมือวางแผนชีวิตและโภชนาการ ไม่ใช่คำทำนายตายตัว และไม่ใช้แทนคำวินิจฉัยทางการแพทย์</p>`;
   return t;
 }
 function calculateBazi(){
@@ -617,6 +671,9 @@ function calculateBazi(){
   if(!document.getElementById('navDate').value)
     document.getElementById('navDate').valueAsDate=new Date();
   loadNavigator();
+  
+  // บันทึกข้อมูลหลังจากคำนวณเสร็จ
+  saveUserData();
 }
 function parseLocal(s){const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c,12,0,0,0);}
 function setToday(){document.getElementById('navDate').valueAsDate=new Date();loadNavigator();}

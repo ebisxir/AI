@@ -319,7 +319,8 @@ function genKey(){
   document.getElementById('keyResult').innerHTML=
     '<div class="box" style="margin-top:12px">🎫 รหัสของ <b>'+u+'</b>'+
     '<div class="keyout">'+k+'</div>'+
-    '<button class="ghost" style="margin-top:10px" onclick="copyKey(\''+k+'\')">📋 คัดลอกรหัส</button></div>';
+    '<button class="ghost" style="margin-top:10px; margin-right:6px" onclick="copyKey(\''+k+'\')">📋 คัดลอกรหัส</button>'+
+    '<button class="ghost" style="margin-top:10px; background:#06c755; color:#fff; border:none;" onclick="copyForLine(\''+u+'\',\''+k+'\')">💬 คัดลอกส่ง Line</button></div>';
   let db=[];try{db=JSON.parse(localStorage.getItem('bz_keys')||'[]');}catch(e){}
   if(!db.find(x=>x.u.toLowerCase()===u.toLowerCase()))db.push({u,k,note,d:new Date().toISOString().slice(0,10)});
   try{localStorage.setItem('bz_keys',JSON.stringify(db));}catch(e){}
@@ -336,7 +337,8 @@ function renderKeyList(){
   let h='<div class="tbwrap"><table class="rtable"><thead><tr><th>👤 ผู้ใช้</th><th>🎫 รหัส</th><th>📝 หมายเหตุ</th><th>📆 ออกเมื่อ</th><th>🗑️</th></tr></thead><tbody>';
   db.forEach((x,i)=>{h+='<tr>'+
     '<td data-label="👤 ผู้ใช้"><div>'+x.u+'</div></td>'+
-    '<td data-label="🎫 รหัส"><div style="font-family:monospace;font-weight:700;letter-spacing:2px">'+x.k+'</div></td>'+
+    '<td data-label="🎫 รหัส"><div style="font-family:monospace;font-weight:700;letter-spacing:2px">'+x.k+'</div>'+
+    '<button class="ghost" style="margin-top:4px; padding:4px 8px; font-size:11.5px; background:#06c755; color:#fff; border:none; border-radius:6px;" onclick="copyForLine(\''+x.u+'\',\''+x.k+'\')">💬 ปะ Line</button></td>'+
     '<td data-label="📝 หมายเหตุ"><div>'+(x.note||'-')+'</div></td>'+
     '<td data-label="📆 ออกเมื่อ"><div>'+(x.d||'-')+'</div></td>'+
     '<td data-label="🗑️ จัดการ"><div><button class="ghost" style="padding:4px 10px;font-size:12px" onclick="delKey('+i+')">ลบ</button></div></td></tr>';});

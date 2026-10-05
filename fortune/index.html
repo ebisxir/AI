@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#8b0000">
-<title>🏛️ BaZi Precision Navigator</title>
+<title>🏛️ BaZi Navigator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -237,6 +237,47 @@ function makeKey(u){
   return a+b+'-'+n;
 }
 const norm=s=>(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+// --- โค้ดที่ต้องเพิ่มใหม่ เริ่มต้น ---
+function saveUserData() {
+  const u = document.getElementById('whoami').textContent.replace('🛡️ ADMIN · ', '').trim();
+  if(!u) return;
+  const data = {
+    country: document.getElementById('country').value,
+    by: document.getElementById('by').value,
+    bm: document.getElementById('bm').value,
+    bd: document.getElementById('bd').value,
+    bh: document.getElementById('bh').value,
+    bmin: document.getElementById('bmin').value,
+    lon: document.getElementById('lon').value,
+    tz: document.getElementById('tz').value
+  };
+  try { localStorage.setItem('bz_user_' + u, JSON.stringify(data)); } catch(e){}
+}
+
+function loadUserData(u) {
+  try {
+    const saved = localStorage.getItem('bz_user_' + u);
+    if(saved) {
+      const data = JSON.parse(saved);
+      if(data.country) document.getElementById('country').value = data.country;
+      if(data.by) document.getElementById('by').value = data.by;
+      if(data.bm) document.getElementById('bm').value = data.bm;
+      if(data.bd) document.getElementById('bd').value = data.bd;
+      if(data.bh) document.getElementById('bh').value = data.bh;
+      if(data.bmin) document.getElementById('bmin').value = data.bmin;
+      if(data.lon) document.getElementById('lon').value = data.lon;
+      if(data.tz) document.getElementById('tz').value = data.tz;
+    }
+  } catch(e) {}
+}
+
+function copyForLine(u, k) {
+  const text = `🔮 ระบบดวงชะตา BaZi Precision Navigator\n👤 ชื่อผู้ใช้งาน: ${u}\n🔑 รหัสเข้าใช้: ${k}\n\n👉 นำชื่อและรหัสนี้ไปกรอกในระบบ เพื่อเข้าดูดวงชะตาได้เลยครับ`;
+  if(navigator.clipboard) navigator.clipboard.writeText(text);
+  else { const t=document.createElement('textarea'); t.value=text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  alert('✅ คัดลอกข้อความสำหรับส่ง Line เรียบร้อยแล้ว');
+}
+// --- โค้ดที่ต้องเพิ่มใหม่ สิ้นสุด ---
 function switchTab(t){
   document.getElementById('paneUser').style.display=t==='user'?'block':'none';
   document.getElementById('paneAdmin').style.display=t==='admin'?'block':'none';
@@ -251,6 +292,7 @@ function openApp(name,isAdmin){
   document.getElementById('adminCard').style.display=isAdmin?'block':'none';
   try{sessionStorage.setItem('bz_ses',JSON.stringify({n:name,a:isAdmin}));}catch(e){}
   if(isAdmin)renderKeyList();
+  if(!isAdmin) loadUserData(name); // <-- เพิ่มบรรทัดนี้ เพื่อโหลดข้อมูลก่อนคำนวณ
   calculateBazi();
 }
 function adminLogin(){
@@ -617,6 +659,12 @@ function calculateBazi(){
   if(!document.getElementById('navDate').value)
     document.getElementById('navDate').valueAsDate=new Date();
   loadNavigator();
+  if(!document.getElementById('navDate').value)
+    document.getElementById('navDate').valueAsDate=new Date();
+  loadNavigator();
+  
+  saveUserData(); // <-- เพิ่มบรรทัดนี้ เพื่อเซฟข้อมูลอัตโนมัติทุกครั้งที่คำนวณ
+}
 }
 function parseLocal(s){const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c,12,0,0,0);}
 function setToday(){document.getElementById('navDate').valueAsDate=new Date();loadNavigator();}

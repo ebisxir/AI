@@ -31,6 +31,7 @@ h3{font-size:17px;font-weight:600}
 h1,h2,h3{text-align:center;color:var(--primary);margin:8px 0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
 .small{font-size:12.5px;color:var(--muted);line-height:1.6}
+.tip{font-size:12.5px;color:#5a4634;background:#fffaf0;border-left:3px solid var(--gold);padding:8px 11px;border-radius:0 8px 8px 0;margin-top:10px;line-height:1.7}
 
 /* ---------- ฟอร์ม ---------- */
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;align-items:end}
@@ -43,7 +44,12 @@ button:active{transform:scale(.97)}
 button:hover{background:var(--secondary)}
 button.ghost{background:#efe9df;color:#5a4634}
 button.wide{width:100%}
+button.mini{padding:7px 12px;font-size:12.5px;border-radius:9px}
 .confirm{margin-top:14px;background:linear-gradient(135deg,#fff8e7,#fdf1e0);border:1px dashed var(--gold);border-radius:12px;padding:12px 14px;font-size:14.5px;line-height:1.75}
+.savebar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;align-items:center}
+.profilebar{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed var(--gold)}
+.profilebar .fld{flex:1 1 200px;min-width:170px}
+.chartwho{text-align:center;font-size:13px;color:#7a6348;margin-top:-4px;margin-bottom:6px}
 
 /* ---------- เสาสี่ ---------- */
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
@@ -58,6 +64,9 @@ button.wide{width:100%}
 .box.read{background:#fffdf7;border:1px solid var(--line);line-height:1.95;font-size:14.5px;text-align:left}
 .box.read p{margin:0 0 12px}
 .box.read b{color:var(--primary)}
+.erow{margin-bottom:9px}
+.ename{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.edesc{font-size:11.8px;color:#6b6b6b;line-height:1.5;margin-top:1px}
 
 /* ---------- ตาราง ---------- */
 .tbwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -82,7 +91,10 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
 .ok{color:#15803d;font-weight:600}.err{color:#b91c1c;font-weight:600}
 #app{display:none}
 .keyout{font-family:'SFMono-Regular',Menlo,monospace;font-size:26px;font-weight:700;background:#121212;color:#4ade80;padding:12px;border-radius:10px;letter-spacing:5px;margin-top:10px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:11px}
 .topbar{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1f1f1f;color:#fff;padding:11px 20px;border-radius:30px;font-size:14px;opacity:0;pointer-events:none;transition:.28s;z-index:10000;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:88vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ---------- RESPONSIVE ---------- */
 @media(max-width:900px){
@@ -106,10 +118,13 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
   .pillar .cn{font-size:33px}
   .form-grid{grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:9px}
   .box{font-size:13.8px;padding:12px}
+  .profilebar .fld{flex:1 1 100%}
 }
 </style>
 </head>
 <body oncontextmenu="return false" ondragstart="return false">
+
+<div class="toast" id="toast"></div>
 
 <!-- ================= LOGIN GATE ================= -->
 <div id="gate">
@@ -124,6 +139,7 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
       <input id="inUser" placeholder="ชื่อผู้ใช้งาน" autocomplete="off" autocapitalize="off">
       <input id="inKey" placeholder="รหัสเข้าใช้ เช่น KD-4821" autocomplete="off" autocapitalize="characters">
       <button class="wide" style="margin-top:10px" onclick="userLogin()">🔓 เข้าสู่ระบบ</button>
+      <p class="small" style="margin-top:10px">🔒 ระบบจะจดจำการเข้าสู่ระบบไว้จนกว่าคุณจะกดออก หรือล้างแคชเบราว์เซอร์</p>
     </div>
     <div id="paneAdmin" style="display:none">
       <input id="inAdmin" type="password" inputmode="numeric" placeholder="รหัสผ่านแอดมิน">
@@ -139,7 +155,7 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
   <h1>🏛️ BaZi Precision &amp; Nutrition Navigator</h1>
   <div class="topbar">
     <span class="small">👋 <b id="whoami"></b></span>
-    <button class="ghost" style="padding:5px 12px;font-size:12.5px" onclick="logout()">🚪 ออกจากระบบ</button>
+    <button class="ghost mini" onclick="logout()">🚪 ออกจากระบบ</button>
   </div>
 
   <!-- ADMIN -->
@@ -159,23 +175,39 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
   <!-- 1. INPUT -->
   <div class="card">
     <h2>⚙️ ตั้งค่าดวงกำเนิด · Four Pillars Engine</h2>
+
+    <div class="profilebar">
+      <div class="fld"><label>👥 ดวงที่กำลังดู</label><select id="profileSel" onchange="switchProfile(this.value)"></select></div>
+      <button class="mini" onclick="addProfile()">➕ เพิ่มดวง</button>
+      <button class="mini ghost" onclick="dupProfile()">📑 ทำสำเนา</button>
+      <button class="mini ghost" onclick="renameProfile()">✏️ เปลี่ยนชื่อ</button>
+      <button class="mini ghost" onclick="delProfile()">🗑️ ลบ</button>
+      <button class="mini ghost" onclick="exportProfiles()">📤 สำรอง</button>
+      <button class="mini ghost" onclick="document.getElementById('impFile').click()">📥 กู้คืน</button>
+      <input type="file" id="impFile" accept="application/json,.json" style="display:none" onchange="importProfiles(this)">
+    </div>
+
     <div class="form-grid">
       <div class="fld" style="grid-column:span 2"><label>🌏 ประเทศ / เมืองเกิด</label><select id="country" onchange="applyCountry()"></select></div>
-      <div class="fld"><label>🗓️ ปี ค.ศ.</label><input type="number" id="by" value="2000" oninput="updateConfirm()"></div>
-      <div class="fld"><label>📅 เดือน</label><input type="number" id="bm" value="1" min="1" max="12" oninput="updateConfirm()"></div>
-      <div class="fld"><label>📆 วัน</label><input type="number" id="bd" value="1" min="1" max="31" oninput="updateConfirm()"></div>
-      <div class="fld"><label>⏰ ชั่วโมง</label><input type="number" id="bh" value="9" min="0" max="23" oninput="updateConfirm()"></div>
+      <div class="fld"><label>🗓️ ปี ค.ศ.</label><input type="number" id="by" value="1982" oninput="updateConfirm()"></div>
+      <div class="fld"><label>📅 เดือน</label><input type="number" id="bm" value="7" min="1" max="12" oninput="updateConfirm()"></div>
+      <div class="fld"><label>📆 วัน</label><input type="number" id="bd" value="5" min="1" max="31" oninput="updateConfirm()"></div>
+      <div class="fld"><label>⏰ ชั่วโมง</label><input type="number" id="bh" value="13" min="0" max="23" oninput="updateConfirm()"></div>
       <div class="fld"><label>🕧 นาที</label><input type="number" id="bmin" value="0" min="0" max="59" oninput="updateConfirm()"></div>
       <div class="fld"><label>📍 ลองจิจูด</label><input type="number" id="lon" value="100.5" step="0.01" oninput="markCustom();updateConfirm()"></div>
       <div class="fld"><label>🕰️ Time Zone</label><input type="number" id="tz" value="7" step="0.5" oninput="markCustom();updateConfirm()"></div>
       <div class="fld" style="grid-column:span 2"><button class="wide" onclick="calculateBazi()">🔮 วิเคราะห์ดวงชะตา</button></div>
     </div>
     <div class="confirm" id="confirmLine">📋 …</div>
+    <div class="savebar">
+      <span class="small" id="saveState">💾 ข้อมูลจะถูกบันทึกลงดวงที่เลือกอัตโนมัติ</span>
+    </div>
   </div>
 
   <!-- 2. CHART -->
   <div class="card">
     <h2>📌 โครงสร้างดวงกำเนิด · ธาตุแฝง · สิบเทพ</h2>
+    <div class="chartwho" id="chartWho">-</div>
     <div class="grid4">
       <div class="pillar"><div class="tag">⏰ เสาเวลา</div><div class="cn" id="p0">-</div><div class="sub" id="s0">-</div><div class="hid" id="h0">-</div></div>
       <div class="pillar main"><div class="tag">👑 เสาวัน (ดิถี)</div><div class="cn" id="p1">-</div><div class="sub" id="s1">-</div><div class="hid" id="h1">-</div></div>
@@ -190,7 +222,7 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
       <div class="box" id="godsBox">🌟 -</div>
       <div class="box" id="yongBox">💎 -</div>
     </div>
-    <h3 style="margin-top:20px">📖 อ่านดวงคุณฉบับเข้าใจง่าย</h3>
+    <h3 style="margin-top:20px">📖 อ่านดวงคุณแบบภาษาคน</h3>
     <div class="box read" id="storyBox">-</div>
   </div>
 
@@ -228,7 +260,7 @@ function cyrb53(str,seed=0){let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;
  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
  h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
  return 4294967296*(2097151&h2)+(h1>>>0);}
-const KL='ABCDEFGHJKLMNPQRSTUVWXYZ';           // ตัด I,O กันสับสนกับ 1,0
+const KL='ABCDEFGHJKLMNPQRSTUVWXYZ';
 function makeKey(u){
   const h=cyrb53(_S+'|'+u.trim().toLowerCase());
   const a=KL[Math.floor(h)%KL.length];
@@ -237,47 +269,16 @@ function makeKey(u){
   return a+b+'-'+n;
 }
 const norm=s=>(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+let CURRENT_USER='';
 
-// --- เพิ่มฟังก์ชันจัดการบันทึกข้อมูลและปุ่ม Line ---
-function saveUserData() {
-  const u = document.getElementById('whoami').textContent.replace('🛡️ ADMIN · ', '').trim();
-  if(!u) return;
-  const data = {
-    country: document.getElementById('country').value,
-    by: document.getElementById('by').value,
-    bm: document.getElementById('bm').value,
-    bd: document.getElementById('bd').value,
-    bh: document.getElementById('bh').value,
-    bmin: document.getElementById('bmin').value,
-    lon: document.getElementById('lon').value,
-    tz: document.getElementById('tz').value
-  };
-  try { localStorage.setItem('bz_user_' + u, JSON.stringify(data)); } catch(e){}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('show'),2300);
 }
-
-function loadUserData(u) {
-  try {
-    const saved = localStorage.getItem('bz_user_' + u);
-    if(saved) {
-      const data = JSON.parse(saved);
-      if(data.country) document.getElementById('country').value = data.country;
-      if(data.by) document.getElementById('by').value = data.by;
-      if(data.bm) document.getElementById('bm').value = data.bm;
-      if(data.bd) document.getElementById('bd').value = data.bd;
-      if(data.bh) document.getElementById('bh').value = data.bh;
-      if(data.bmin) document.getElementById('bmin').value = data.bmin;
-      if(data.lon) document.getElementById('lon').value = data.lon;
-      if(data.tz) document.getElementById('tz').value = data.tz;
-    }
-  } catch(e) {}
-}
-
-function copyForLine(u, k) {
-  const text = `🔮 ระบบดวงชะตา BaZi Precision Navigator\n👤 ชื่อผู้ใช้งาน: ${u}\n🔑 รหัสเข้าใช้: ${k}\n\n👉 นำชื่อและรหัสนี้ไปกรอกในระบบ เพื่อเข้าดูดวงชะตาได้เลยครับ`;
-  if(navigator.clipboard) navigator.clipboard.writeText(text);
-  else { const t=document.createElement('textarea'); t.value=text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
-  alert('✅ คัดลอกข้อความสำหรับส่ง Line เรียบร้อยแล้ว');
-}
+function LS(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
+function LSdel(k){try{localStorage.removeItem(k);}catch(e){}}
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 function switchTab(t){
   document.getElementById('paneUser').style.display=t==='user'?'block':'none';
@@ -286,19 +287,17 @@ function switchTab(t){
   document.getElementById('tbAdmin').className=t==='admin'?'':'ghost';
   document.getElementById('gateMsg').innerHTML='';
 }
-
 function openApp(name,isAdmin){
+  CURRENT_USER=name;
   document.getElementById('gate').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('whoami').textContent=(isAdmin?'🛡️ ADMIN · ':'')+name;
   document.getElementById('adminCard').style.display=isAdmin?'block':'none';
-  try{sessionStorage.setItem('bz_ses',JSON.stringify({n:name,a:isAdmin}));}catch(e){}
+  LS('bz_ses',JSON.stringify({n:name,a:isAdmin}));
   if(isAdmin)renderKeyList();
-  
-  if(!isAdmin) loadUserData(name); // โหลดข้อมูลที่บันทึกไว้สำหรับ User คนนี้
+  initProfiles();
   calculateBazi();
 }
-
 function adminLogin(){
   const v=document.getElementById('inAdmin').value.trim();
   if(cyrb53(_S+v)===cyrb53(_S+'6395'))openApp('Administrator',true);
@@ -314,50 +313,215 @@ function userLogin(){
   m.innerHTML='<span class="ok">✅ เข้าสู่ระบบสำเร็จ</span>';
   setTimeout(()=>openApp(u,false),320);
 }
-function logout(){try{sessionStorage.removeItem('bz_ses');}catch(e){}location.reload();}
+function logout(){
+  if(!confirm('ออกจากระบบ? (ดวงที่บันทึกไว้ทั้งหมดจะยังอยู่)'))return;
+  LSdel('bz_ses');location.reload();
+}
 
+/* ============================================================
+   SECTION 0.5 : MULTI-PROFILE  (บันทึกดวงได้หลายคน)
+   ============================================================ */
+const BF=['by','bm','bd','bh','bmin','lon','tz','country'];
+const uKey=()=>(CURRENT_USER||'guest').trim().toLowerCase();
+const PKEY=()=>'bz_profiles_'+uKey();
+const AKEY=()=>'bz_active_'+uKey();
+const LKEY=()=>'bz_birth_'+uKey();          // คีย์เวอร์ชันเก่า (ใช้ย้ายข้อมูล)
+function getProfiles(){try{const a=JSON.parse(LS(PKEY())||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+function setProfiles(a){LS(PKEY(),JSON.stringify(a));}
+function getActiveId(){return LS(AKEY())||'';}
+function setActiveId(id){LS(AKEY(),id);}
+function newId(){return 'p'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36);}
+function fieldsObj(){const o={};BF.forEach(id=>o[id]=document.getElementById(id).value);return o;}
+function pickFields(src){const o={};BF.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!=='')o[k]=src[k];});return o;}
+function applyFields(o){BF.forEach(id=>{if(o&&o[id]!==undefined&&o[id]!=='')document.getElementById(id).value=o[id];});}
+const DEFAULT_FIELDS={by:'1990',bm:'1',bd:'1',bh:'12',bmin:'0',lon:'100.5',tz:'7',country:'0'};
+
+function activeProfile(){
+  const ps=getProfiles();
+  return ps.find(x=>x.id===getActiveId())||ps[0]||null;
+}
+function initProfiles(){
+  let ps=getProfiles();
+  if(!ps.length){
+    let legacy=null;try{legacy=JSON.parse(LS(LKEY())||'null');}catch(e){}
+    const p=Object.assign({id:newId(),name:'ดวงของฉัน'},DEFAULT_FIELDS,pickFields(legacy||fieldsObj()));
+    ps=[p];setProfiles(ps);setActiveId(p.id);
+    if(legacy)LSdel(LKEY());
+  }
+  let aid=getActiveId();
+  if(!ps.find(x=>x.id===aid)){aid=ps[0].id;setActiveId(aid);}
+  applyFields(ps.find(x=>x.id===aid));
+  renderProfiles();
+  updateConfirm();
+}
+function renderProfiles(){
+  const ps=getProfiles(),aid=getActiveId(),sel=document.getElementById('profileSel');
+  sel.innerHTML=ps.map(p=>`<option value="${p.id}"${p.id===aid?' selected':''}>👤 ${esc(p.name)}</option>`).join('');
+  const cur=activeProfile();
+  document.getElementById('chartWho').innerHTML=cur?`👥 กำลังแสดงดวงของ <b>${esc(cur.name)}</b> · บันทึกทั้งหมด ${ps.length} ดวง`:'';
+}
+function saveActiveProfile(){
+  const ps=getProfiles(),aid=getActiveId();
+  const i=ps.findIndex(x=>x.id===aid);
+  if(i<0)return;
+  Object.assign(ps[i],pickFields(fieldsObj()),{_t:new Date().toISOString()});
+  setProfiles(ps);
+  document.getElementById('saveState').innerHTML=`💾 บันทึกลงดวง <b>${esc(ps[i].name)}</b> เรียบร้อย ✅`;
+  renderProfiles();
+}
+function switchProfile(id){
+  const ps=getProfiles(),p=ps.find(x=>x.id===id);
+  if(!p)return;
+  setActiveId(id);applyFields(p);renderProfiles();calculateBazi();
+  toast('👥 เปลี่ยนเป็นดวงของ '+p.name);
+}
+function addProfile(){
+  const n=(prompt('ตั้งชื่อดวงใหม่ (เช่น คุณแม่ / ลูกชาย / ลูกค้า A)','')||'').trim();
+  if(!n)return;
+  const ps=getProfiles();
+  if(ps.some(x=>x.name.toLowerCase()===n.toLowerCase())){toast('⚠️ มีชื่อนี้อยู่แล้ว');return;}
+  const p=Object.assign({id:newId(),name:n},DEFAULT_FIELDS);
+  ps.push(p);setProfiles(ps);setActiveId(p.id);
+  applyFields(p);renderProfiles();calculateBazi();
+  toast('➕ เพิ่มดวง '+n+' แล้ว · กรอกวันเวลาเกิดได้เลย');
+}
+function dupProfile(){
+  const cur=activeProfile();if(!cur)return;
+  const n=(prompt('ชื่อสำเนาใหม่','')||'').trim()||(cur.name+' (สำเนา)');
+  const ps=getProfiles();
+  const p=Object.assign({},cur,pickFields(fieldsObj()),{id:newId(),name:n});
+  ps.push(p);setProfiles(ps);setActiveId(p.id);
+  applyFields(p);renderProfiles();calculateBazi();
+  toast('📑 ทำสำเนาเป็น '+n);
+}
+function renameProfile(){
+  const ps=getProfiles(),aid=getActiveId(),i=ps.findIndex(x=>x.id===aid);
+  if(i<0)return;
+  const n=(prompt('เปลี่ยนชื่อดวงนี้',ps[i].name)||'').trim();
+  if(!n)return;
+  ps[i].name=n;setProfiles(ps);renderProfiles();
+  toast('✏️ เปลี่ยนชื่อเป็น '+n);
+}
+function delProfile(){
+  const ps=getProfiles(),aid=getActiveId();
+  if(ps.length<=1){toast('⚠️ ต้องเหลืออย่างน้อย 1 ดวง');return;}
+  const i=ps.findIndex(x=>x.id===aid);if(i<0)return;
+  if(!confirm('ลบดวง "'+ps[i].name+'" ถาวร?'))return;
+  const nm=ps[i].name;
+  ps.splice(i,1);setProfiles(ps);setActiveId(ps[0].id);
+  applyFields(ps[0]);renderProfiles();calculateBazi();
+  toast('🗑️ ลบดวง '+nm+' แล้ว');
+}
+function exportProfiles(){
+  const data={app:'BaZi Precision Navigator',v:1,user:CURRENT_USER,exported:new Date().toISOString(),profiles:getProfiles()};
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download='bazi_profiles_'+uKey()+'.json';a.click();
+  toast('📤 สำรองข้อมูลเรียบร้อย');
+}
+function importProfiles(el){
+  const f=el.files&&el.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      const inc=Array.isArray(d)?d:(d.profiles||[]);
+      if(!inc.length)throw 0;
+      const ps=getProfiles();
+      let add=0;
+      inc.forEach(p=>{
+        if(!p||!p.name)return;
+        let nm=p.name,c=2;
+        while(ps.some(x=>x.name.toLowerCase()===nm.toLowerCase())){nm=p.name+' ('+c+')';c++;}
+        ps.push(Object.assign({id:newId(),name:nm},DEFAULT_FIELDS,pickFields(p)));add++;
+      });
+      setProfiles(ps);renderProfiles();
+      toast('📥 นำเข้า '+add+' ดวงเรียบร้อย');
+    }catch(e){toast('⚠️ ไฟล์ไม่ถูกต้อง');}
+    el.value='';
+  };
+  r.readAsText(f);
+}
+
+/* ---------- ADMIN : ออกรหัส + คัดลอก ---------- */
 function genKey(){
   const u=document.getElementById('agUser').value.trim();
   const note=document.getElementById('agNote').value.trim();
   if(!u){document.getElementById('keyResult').innerHTML='<span class="err">⚠️ กรุณากรอกชื่อผู้ใช้งาน</span>';return;}
   const k=makeKey(u);
-  
-  // เพิ่มปุ่มคัดลอกส่ง Line ที่นี่
+  const eu=encodeURIComponent(u),ek=encodeURIComponent(k);
   document.getElementById('keyResult').innerHTML=
-    '<div class="box" style="margin-top:12px">🎫 รหัสของ <b>'+u+'</b>'+
+    '<div class="box" style="margin-top:12px">🎫 รหัสของ <b>'+esc(u)+'</b>'+
     '<div class="keyout">'+k+'</div>'+
-    '<button class="ghost" style="margin-top:10px; margin-right:6px" onclick="copyKey(\''+k+'\')">📋 คัดลอกรหัส</button>'+
-    '<button class="ghost" style="margin-top:10px; background:#06c755; color:#fff; border:none;" onclick="copyForLine(\''+u+'\',\''+k+'\')">💬 คัดลอกส่ง Line</button></div>';
-    
-  let db=[];try{db=JSON.parse(localStorage.getItem('bz_keys')||'[]');}catch(e){}
+    '<div class="btnrow">'+
+      '<button class="mini" onclick="copyText(\''+ek+'\',\'คัดลอกรหัสแล้ว\')">📋 คัดลอกรหัส</button>'+
+      '<button class="mini ghost" onclick="copyInvite(\''+eu+'\',\''+ek+'\')">💬 คัดลอกข้อความส่ง LINE</button>'+
+      '<button class="mini ghost" onclick="shareInvite(\''+eu+'\',\''+ek+'\')">📤 แชร์</button>'+
+    '</div></div>';
+  let db=[];try{db=JSON.parse(LS('bz_keys')||'[]');}catch(e){}
   if(!db.find(x=>x.u.toLowerCase()===u.toLowerCase()))db.push({u,k,note,d:new Date().toISOString().slice(0,10)});
-  try{localStorage.setItem('bz_keys',JSON.stringify(db));}catch(e){}
+  LS('bz_keys',JSON.stringify(db));
   renderKeyList();
 }
-function copyKey(k){
-  if(navigator.clipboard)navigator.clipboard.writeText(k);
-  else{const t=document.createElement('textarea');t.value=k;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+function inviteText(u,k){
+  const link=location.origin+location.pathname;
+  return '🏛️ BaZi Precision Navigator\n'+
+         '━━━━━━━━━━━━━━━\n'+
+         '👤 ชื่อผู้ใช้งาน : '+u+'\n'+
+         '🎫 รหัสเข้าใช้งาน : '+k+'\n'+
+         '🔗 ลิงก์ : '+link+'\n'+
+         '━━━━━━━━━━━━━━━\n'+
+         '📝 วิธีใช้\n'+
+         '1) เปิดลิงก์ด้านบน\n'+
+         '2) เลือกแท็บ "👤 ผู้ใช้งาน"\n'+
+         '3) กรอกชื่อผู้ใช้งานและรหัสให้ตรงตามนี้\n'+
+         '4) กรอกวัน-เวลาเกิด ระบบจะจำไว้ให้อัตโนมัติ\n'+
+         '5) บันทึกได้หลายดวง ผ่านเมนู "👥 ดวงที่กำลังดู"';
 }
-
+function copyText(enc,okMsg){
+  const t=decodeURIComponent(enc);
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(()=>toast('✅ '+okMsg)).catch(()=>fallbackCopy(t,okMsg));
+  }else fallbackCopy(t,okMsg);
+}
+function fallbackCopy(t,okMsg){
+  const a=document.createElement('textarea');
+  a.value=t;a.style.position='fixed';a.style.top='-999px';
+  document.body.appendChild(a);a.focus();a.select();
+  try{document.execCommand('copy');toast('✅ '+okMsg);}catch(e){toast('⚠️ คัดลอกไม่สำเร็จ กรุณากดค้างเพื่อคัดลอก');}
+  a.remove();
+}
+function copyInvite(eu,ek){
+  copyText(encodeURIComponent(inviteText(decodeURIComponent(eu),decodeURIComponent(ek))),'คัดลอกข้อความเชิญแล้ว พร้อมวางในไลน์');
+}
+function shareInvite(eu,ek){
+  const txt=inviteText(decodeURIComponent(eu),decodeURIComponent(ek));
+  if(navigator.share){navigator.share({title:'BaZi Precision Navigator',text:txt}).catch(()=>{});}
+  else copyText(encodeURIComponent(txt),'อุปกรณ์นี้ไม่รองรับการแชร์ · คัดลอกให้แล้ว');
+}
 function renderKeyList(){
-  let db=[];try{db=JSON.parse(localStorage.getItem('bz_keys')||'[]');}catch(e){}
+  let db=[];try{db=JSON.parse(LS('bz_keys')||'[]');}catch(e){}
   const el=document.getElementById('keyList');
   if(!db.length){el.innerHTML='';return;}
-  let h='<div class="tbwrap"><table class="rtable"><thead><tr><th>👤 ผู้ใช้</th><th>🎫 รหัส</th><th>📝 หมายเหตุ</th><th>📆 ออกเมื่อ</th><th>🗑️</th></tr></thead><tbody>';
-  db.forEach((x,i)=>{h+='<tr>'+
-    '<td data-label="👤 ผู้ใช้"><div>'+x.u+'</div></td>'+
-    // เพิ่มปุ่มปะ Line ในตาราง
-    '<td data-label="🎫 รหัส"><div style="font-family:monospace;font-weight:700;letter-spacing:2px">'+x.k+'</div>'+
-    '<button class="ghost" style="margin-top:4px; padding:4px 8px; font-size:11.5px; background:#06c755; color:#fff; border:none; border-radius:6px;" onclick="copyForLine(\''+x.u+'\',\''+x.k+'\')">💬 ปะ Line</button></td>'+
-    '<td data-label="📝 หมายเหตุ"><div>'+(x.note||'-')+'</div></td>'+
+  let h='<div class="tbwrap"><table class="rtable"><thead><tr><th>👤 ผู้ใช้</th><th>🎫 รหัส</th><th>📝 หมายเหตุ</th><th>📆 ออกเมื่อ</th><th>⚙️ จัดการ</th></tr></thead><tbody>';
+  db.forEach((x,i)=>{
+    const eu=encodeURIComponent(x.u),ek=encodeURIComponent(x.k);
+    h+='<tr>'+
+    '<td data-label="👤 ผู้ใช้"><div>'+esc(x.u)+'</div></td>'+
+    '<td data-label="🎫 รหัส"><div style="font-family:monospace;font-weight:700;letter-spacing:2px">'+x.k+'</div></td>'+
+    '<td data-label="📝 หมายเหตุ"><div>'+esc(x.note||'-')+'</div></td>'+
     '<td data-label="📆 ออกเมื่อ"><div>'+(x.d||'-')+'</div></td>'+
-    '<td data-label="🗑️ จัดการ"><div><button class="ghost" style="padding:4px 10px;font-size:12px" onclick="delKey('+i+')">ลบ</button></div></td></tr>';});
+    '<td data-label="⚙️ จัดการ"><div class="btnrow" style="justify-content:flex-start;margin-top:0">'+
+      '<button class="mini" onclick="copyText(\''+ek+'\',\'คัดลอกรหัสแล้ว\')">📋</button>'+
+      '<button class="mini ghost" onclick="copyInvite(\''+eu+'\',\''+ek+'\')">💬 ข้อความ</button>'+
+      '<button class="mini ghost" onclick="delKey('+i+')">🗑️</button>'+
+    '</div></td></tr>';});
   el.innerHTML=h+'</tbody></table></div>';
 }
-function delKey(i){let db=[];try{db=JSON.parse(localStorage.getItem('bz_keys')||'[]');}catch(e){}
-  db.splice(i,1);try{localStorage.setItem('bz_keys',JSON.stringify(db));}catch(e){}renderKeyList();}
+function delKey(i){let db=[];try{db=JSON.parse(LS('bz_keys')||'[]');}catch(e){}
+  db.splice(i,1);LS('bz_keys',JSON.stringify(db));renderKeyList();}
 function exportKeys(){
-  let db=[];try{db=JSON.parse(localStorage.getItem('bz_keys')||'[]');}catch(e){}
+  let db=[];try{db=JSON.parse(LS('bz_keys')||'[]');}catch(e){}
   const csv='user,key,note,issued\n'+db.map(x=>[x.u,x.k,x.note||'',x.d||''].join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));
   a.download='bazi_users.csv';a.click();
@@ -388,6 +552,18 @@ const EL_COLOR={"ไม้":["#16a34a","#4ade80","#065f46"],"ไฟ":["#dc2626",
  "ดิน":["#ca8a04","#92400e","#fde68a"],"ทอง":["#ffffff","#d4d4d8","#a1a1aa"],"น้ำ":["#1d4ed8","#0ea5e9","#0f172a"]};
 const EL_COLORNAME={"ไม้":"เขียว / เขียวมะกอก","ไฟ":"แดง / ส้ม / ชมพู","ดิน":"เหลือง / น้ำตาล / ครีม",
  "ทอง":"ขาว / เงิน / เทา","น้ำ":"น้ำเงิน / ฟ้า / ดำ"};
+const EL_MEAN={
+ "ไม้":"การเติบโต ริเริ่มสิ่งใหม่ ความคิดสร้างสรรค์ ความเมตตา · ร่างกาย: ตับ ถุงน้ำดี เส้นเอ็น ดวงตา",
+ "ไฟ":"พลังใจ ความกระตือรือร้น ชื่อเสียง การเข้าสังคม · ร่างกาย: หัวใจ ลำไส้เล็ก ระบบไหลเวียนเลือด",
+ "ดิน":"ความมั่นคง ความน่าเชื่อถือ การดูแลคน ทรัพย์สินถาวร · ร่างกาย: ม้าม กระเพาะอาหาร ระบบย่อย",
+ "ทอง":"ระเบียบวินัย ความเด็ดขาด เหตุผล ความยุติธรรม · ร่างกาย: ปอด ลำไส้ใหญ่ ผิวหนัง ภูมิคุ้มกัน",
+ "น้ำ":"สติปัญญา การสื่อสาร ความยืดหยุ่น การปรับตัว · ร่างกาย: ไต กระเพาะปัสสาวะ กระดูก ระบบฮอร์โมน"};
+const EL_HIGH={"ไม้":"ดื้อ ยึดความคิดตัวเอง เริ่มหลายอย่างแต่ไม่จบ","ไฟ":"ใจร้อน อารมณ์ขึ้นลง นอนไม่หลับ ใช้พลังเกินตัว",
+ "ดิน":"คิดมาก ยึดติด เปลี่ยนแปลงช้า สะสมของเกินจำเป็น","ทอง":"เข้มงวด วิจารณ์แรง ไม่ยืดหยุ่นกับคนอื่น",
+ "น้ำ":"คิดฟุ้ง ลังเล เปลี่ยนใจบ่อย ไหลไปตามสถานการณ์"};
+const EL_LOW={"ไม้":"ขาดแรงริเริ่ม ไม่กล้าเริ่มสิ่งใหม่ อ่อนล้าเรื้อรัง","ไฟ":"ขาดความมั่นใจ ไม่กล้าแสดงออก มือเท้าเย็น",
+ "ดิน":"ขาดหลักยึด ชีวิตโยกคลอน ระบบย่อยอ่อนแอ","ทอง":"ตัดสินใจไม่เด็ดขาด ปล่อยปละ ภูมิคุ้มกันต่ำ",
+ "น้ำ":"ขาดความยืดหยุ่น ปรับตัวยาก พักผ่อนไม่เพียงพอ"};
 const CLASH={"子":"午","午":"子","丑":"未","未":"丑","寅":"申","申":"寅","卯":"酉","酉":"卯","辰":"戌","戌":"辰","巳":"亥","亥":"巳"};
 const COMBINE={"子":"丑","丑":"子","寅":"亥","亥":"寅","卯":"戌","戌":"卯","辰":"酉","酉":"辰","巳":"申","申":"巳","午":"未","未":"午"};
 const HARM={"子":"未","未":"子","丑":"午","午":"丑","寅":"巳","巳":"寅","卯":"辰","辰":"卯","申":"亥","亥":"申","酉":"戌","戌":"酉"};
@@ -403,6 +579,24 @@ const GOD_ACT={
  "ทรัพย์":{g:"💰 ปิดการขาย เจรจาราคา วางแผนการเงิน ลงทุนระยะยาว",b:"🛍️ ใช้จ่ายฟุ่มเฟือย ตัดสินใจซื้อของชิ้นใหญ่แบบเร่งรีบ"},
  "อำนาจ":{g:"📜 เซ็นสัญญา สมัครงาน สอบ ยื่นเอกสารราชการ รับตำแหน่ง",b:"⚔️ ปะทะกับผู้มีอำนาจ ทำงานหักโหม ฝ่าฝืนกฎระเบียบ"},
  "ทรัพยากร":{g:"📚 เรียนรู้ อบรม ตรวจสุขภาพ ขอคำปรึกษาผู้ใหญ่ ทำบุญ",b:"🛌 ผัดวันประกันพรุ่ง คิดมากเกินเหตุ พึ่งพาผู้อื่นมากไป"}};
+const GOD_MEAN={
+ "เพื่อน":"ตัวเรา พี่น้อง เพื่อน คู่แข่ง · เรื่องความร่วมมือและการแข่งขัน",
+ "แสดงออก":"ความคิดสร้างสรรค์ ผลงาน คำพูด ลูกหลาน · เรื่องการปล่อยของออกจากตัวเรา",
+ "ทรัพย์":"เงินทอง ทรัพย์สิน โอกาสทางธุรกิจ (ผู้ชาย = คู่ครอง) · สิ่งที่เราควบคุมได้",
+ "อำนาจ":"หน้าที่การงาน ตำแหน่ง กฎเกณฑ์ แรงกดดัน (ผู้หญิง = คู่ครอง) · สิ่งที่ควบคุมเรา",
+ "ทรัพยากร":"ความรู้ การเรียน ผู้ใหญ่อุปถัมภ์ มารดา สุขภาพ · สิ่งที่หล่อเลี้ยงเรา"};
+const GOD_HIGH={
+ "เพื่อน":"มากไป = เสียเงินให้คนใกล้ตัว แย่งงานแย่งโอกาส ชอบลงมือเองจนเหนื่อย",
+ "แสดงออก":"มากไป = พูดมากจนเสียงาน ไอเดียล้นแต่ไม่จบ ขัดแย้งกับผู้บังคับบัญชา",
+ "ทรัพย์":"มากไป = หมกมุ่นเรื่องเงิน ทำงานหนักจนสุขภาพพัง เจ้าชู้/ใจแตกเรื่องความสัมพันธ์",
+ "อำนาจ":"มากไป = กดดันตัวเองสูง เครียดสะสม เจอเจ้านายหรือกฎเกณฑ์บีบคั้น",
+ "ทรัพยากร":"มากไป = คิดเยอะไม่ลงมือ พึ่งคนอื่น ขี้เกียจแฝง ติดสบาย"};
+const GOD_LOW={
+ "เพื่อน":"น้อยไป = โดดเดี่ยว ขาดพวกพ้อง ต้องสู้คนเดียว",
+ "แสดงออก":"น้อยไป = เก็บกด ไม่กล้าแสดงฝีมือ ผลงานไม่ถูกมองเห็น",
+ "ทรัพย์":"น้อยไป = หาเงินยาก มองไม่เห็นโอกาส ต้องสร้างวินัยการเงินเป็นพิเศษ",
+ "อำนาจ":"น้อยไป = ขาดวินัย ไม่ชอบถูกบังคับ เหมาะกับงานอิสระมากกว่างานประจำ",
+ "ทรัพยากร":"น้อยไป = ขาดคนหนุนหลัง ต้องพึ่งตัวเอง เรียนรู้จากประสบการณ์ตรง"};
 const DM_STORY={
  "甲":"🌳 <b>ต้นไม้ใหญ่</b> — ตรงไปตรงมา ยึดหลักการ มีความเป็นผู้นำโดยธรรมชาติ เติบโตช้าแต่มั่นคงและเป็นร่มเงาให้คนอื่น จุดที่ต้องระวังคือดื้อและปรับทิศทางยากเมื่อถูกบังคับ",
  "乙":"🌿 <b>เถาวัลย์ดอกไม้</b> — อ่อนโยน ยืดหยุ่น เอาตัวรอดเก่งด้วยการปรับตัวและพึ่งพาเครือข่ายรอบตัว เสน่ห์ดี เจรจาเก่ง แต่บางครั้งลังเลและพึ่งพาผู้อื่นมากไป",
@@ -460,24 +654,21 @@ function getPillars(y,mo,d,hr,mi,lon,tz){
   const clock=hr+mi/60;
   const jUT=jdn(y,mo,d,clock-tz);
   const doy=Math.floor(jUT-jdn(y,1,0,-tz));
-  const corr=(lon-tz*15)*4/60+eotMin(doy)/60;        // เวลาสุริยะจริง (ชม.)
+  const corr=(lon-tz*15)*4/60+eotMin(doy)/60;
   const solarH=clock+corr;
   let dayShift=0;
   if(solarH>=23)dayShift=1; else if(solarH<0)dayShift=-1;
 
-  /* เสาวัน : รอบ 60 กะจาก JDN (anchor 2000-01-01 = 戊午 #54) */
   const di=mod(Math.floor(jdn(y,mo,d,12)+0.5)+49+dayShift,60);
   const dS=di%10, dB=di%12;
 
-  /* เสาเดือน/ปี : องศาดวงอาทิตย์ตัดทุก 30° (節氣) */
   const sl=sunLon(jUT);
-  const k=Math.floor(mod(sl-315,360)/30);            // k=0 → 寅
-  let bzY=y; if(k>=10&&mo<=2)bzY-=1;                 // ยังไม่ถึง 立春
+  const k=Math.floor(mod(sl-315,360)/30);
+  let bzY=y; if(k>=10&&mo<=2)bzY-=1;
   const yS=mod(bzY-4,10), yB=mod(bzY-4,12);
   const mB=mod(k+2,12);
-  const mS=mod((yS%5)*2+2+k,10);                     // 五虎遁
+  const mS=mod((yS%5)*2+2+k,10);
 
-  /* เสาเวลา : 五鼠遁 */
   const hB=Math.floor(mod(solarH+1,24)/2);
   const hS=mod((dS%5)*2+hB,10);
 
@@ -518,7 +709,6 @@ function analyse(P){
   else if(support<45){status={t:"🌱 ดิถีอ่อน (Weak)",c:"#1d4ed8",k:"weak"};fav=[res,dm];unfav=[out,wea,pow];}
   else{status={t:"⚖️ ดิถีสมดุล (Balanced)",c:"#15803d",k:"bal"};
        const so=Object.keys(sc).sort((a,b)=>sc[a]-sc[b]);fav=[so[0],so[1]];unfav=[so[4]];}
-  /* สัดส่วนสิบเทพ */
   const cat={"เพื่อน":0,"แสดงออก":0,"ทรัพย์":0,"อำนาจ":0,"ทรัพยากร":0};
   ["year","month","hour"].forEach(k=>cat[tenGod(P.day.si,P[k].si).c]+=W_S[k]);
   ["year","month","day","hour"].forEach(k=>P[k].hidden.forEach(h=>cat[tenGod(P.day.si,sIdx(h.s)).c]+=W_B[k]*h.w/100));
@@ -569,23 +759,25 @@ function initCountry(){
 }
 function applyCountry(){
   const c=COUNTRIES[+document.getElementById('country').value];
-  if(c[1]!==null){document.getElementById('lon').value=c[1];document.getElementById('tz').value=c[2];}
+  if(c&&c[1]!==null){document.getElementById('lon').value=c[1];document.getElementById('tz').value=c[2];}
   updateConfirm();
 }
 function markCustom(){document.getElementById('country').value=COUNTRIES.length-1;}
 function countryName(){
-  const t=COUNTRIES[+document.getElementById('country').value][0];
-  return t.replace(/^[^\s]+\s/,'');
+  const c=COUNTRIES[+document.getElementById('country').value];
+  return c?c[0].replace(/^[^\s]+\s/,''):'กำหนดเอง';
 }
 function updateConfirm(){
   const g=id=>+document.getElementById(id).value;
   const y=g('by'),m=g('bm'),d=g('bd'),h=g('bh'),mi=g('bmin'),lon=g('lon'),tz=g('tz');
   const el=document.getElementById('confirmLine');
-  if(!y||m<1||m>12||d<1||d>31){el.innerHTML='⚠️ กรุณากรอกวันเดือนปีให้ถูกต้อง';return;}
+  const cur=activeProfile();
+  const who=cur?`👥 <b>${esc(cur.name)}</b> · `:'';
+  if(!y||m<1||m>12||d<1||d>31){el.innerHTML=who+'⚠️ กรุณากรอกวันเดือนปีให้ถูกต้อง';return;}
   const dt=new Date(y,m-1,d);
-  const valid=dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;
-  if(!valid){el.innerHTML='⚠️ ไม่มีวันที่นี้ในปฏิทิน กรุณาตรวจสอบอีกครั้ง';return;}
-  el.innerHTML=`📋 <b>ยืนยันข้อมูล:</b> คุณเกิด<b>วัน${TH_DOW[dt.getDay()]}</b> ที่ <b>${d} ${TH_MON[m-1]} ค.ศ. ${y}</b> `+
+  if(!(dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d)){
+    el.innerHTML=who+'⚠️ ไม่มีวันที่นี้ในปฏิทิน กรุณาตรวจสอบอีกครั้ง';return;}
+  el.innerHTML=who+`📋 <b>ยืนยันข้อมูล:</b> เกิด<b>วัน${TH_DOW[dt.getDay()]}</b> ที่ <b>${d} ${TH_MON[m-1]} ค.ศ. ${y}</b> `+
    `เวลา <b>${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')} น.</b> `+
    `ณ <b>${countryName()}</b> · ลองจิจูด <b>${lon}</b> · ไทม์โซน <b>${tz>=0?'+':''}${tz}</b>`;
 }
@@ -621,12 +813,12 @@ function buildStory(P,A){
   if(lack.length)
     t+=`<p><b>5) ธาตุที่ขาดในดวง</b><br>`+
        `ดวงคุณแทบไม่มีธาตุ ${lack.map(e=>`${EL_EMO[e]}<b>${e}</b>`).join(', ')} เลย `+
-       `ธาตุที่ขาดมักสะท้อนเป็น "มุมที่ชีวิตต้องใช้แรงมากกว่าคนอื่น" เช่น ด้านที่ไม่ถนัดโดยธรรมชาติหรืออวัยวะที่ต้องดูแลเป็นพิเศษ `+
+       `ธาตุที่ขาดมักสะท้อนเป็น "มุมที่ชีวิตต้องใช้แรงมากกว่าคนอื่น" เช่น ${lack.map(e=>EL_LOW[e]).join(' · ')} `+
        (lack.some(e=>A.fav.includes(e))?`และเนื่องจากมันเป็นธาตุให้คุณด้วย การตั้งใจเติมผ่านสี อาหาร และสิ่งแวดล้อมจะช่วยคุณได้มากเป็นพิเศษ`:`แต่ไม่ใช่เรื่องร้ายเสมอไป เพราะบางครั้งการไม่มีคือการไม่ถูกรบกวน`)+`</p>`;
   t+=`<p><b>${lack.length?6:5}) จังหวะวันที่ควรจำ</b><br>`+
      `นักษัตรประจำเสาวันของคุณคือ <b>${P.day.animal}</b> ดังนั้นวันที่เป็นนักษัตร<b>${clashAnimal}</b>จะเป็น "วันชงดิถี" ควรเลี่ยงการตัดสินใจใหญ่ การเดินทางไกล และการปะทะกับคน `+
      `ส่วนวันนักษัตร<b>${comboAnimal}</b>เป็นวันสมพงศ์ เหมาะกับการเจรจา ขอความช่วยเหลือ และเริ่มสิ่งใหม่ — ระบบด้านล่างคำนวณให้อัตโนมัติทุกวันแล้ว</p>`;
-  t+=`<p class="small">⚠️️ หมายเหตุ: การตีความนี้สร้างจากสูตรถ่วงน้ำหนักมาตรฐาน ใช้เป็นเครื่องมือวางแผนชีวิตและโภชนาการ ไม่ใช่คำทำนายตายตัว และไม่ใช้แทนคำวินิจฉัยทางการแพทย์</p>`;
+  t+=`<p class="small">⚠️ หมายเหตุ: การตีความนี้สร้างจากสูตรถ่วงน้ำหนักมาตรฐาน ใช้เป็นเครื่องมือวางแผนชีวิตและโภชนาการ ไม่ใช่คำทำนายตายตัว และไม่ใช้แทนคำวินิจฉัยทางการแพทย์</p>`;
   return t;
 }
 function calculateBazi(){
@@ -645,35 +837,49 @@ function calculateBazi(){
    `ผลประเมิน: <b style="color:${CH.status.c};font-size:16px">${CH.status.t}</b><br>`+
    `พลังหนุน (ตัวเอง + ทรัพยากร) = <b>${CH.support}%</b>`+
    `<div class="gauge"><span style="left:calc(${Math.min(100,CH.support)}% - 2px)"></span></div>`+
-   `<div class="small">🔵 อ่อน &lt;45% · 🟢 สมดุล 45–55% · 🔴 แกร่ง &gt;55%</div>`;
+   `<div class="small">🔵 อ่อน &lt;45% · 🟢 สมดุล 45–55% · 🔴 แกร่ง &gt;55%</div>`+
+   `<div class="tip">📖 <b>แปลง่ายๆ:</b> "ดิถี" คือธาตุที่แทนตัวคุณเอง · ถ้า<b>แกร่ง</b> แปลว่าพลังล้น ต้องหาทางระบายออก · ถ้า<b>อ่อน</b> แปลว่าพลังน้อย ต้องเติมก่อนใช้ · ถ้า<b>สมดุล</b> แปลว่ารับได้ทั้งสองทาง ขึ้นกับจังหวะของแต่ละวัน</div>`;
 
+  const elSorted=Object.keys(CH.sc).sort((a,b)=>CH.sc[b]-CH.sc[a]);
+  const eTop=elSorted[0], eLow=elSorted[4];
   let eb='🧪 <b>สัดส่วนพลังธาตุทั้งดวง (รวมธาตุแฝง)</b>';
   Object.keys(CH.sc).forEach(e=>{const v=CH.pc(e);
-    eb+=`<div>${EL_EMO[e]} ${e} <b>${v}%</b><div class="bar"><i class="bg${e}" style="width:${v}%"></i></div></div>`;});
+    eb+=`<div class="erow"><div class="ename"><span>${EL_EMO[e]} <b>${e}</b></span><b>${v}%</b></div>`+
+        `<div class="bar"><i class="bg${e}" style="width:${v}%"></i></div>`+
+        `<div class="edesc">${EL_MEAN[e]}</div></div>`;});
+  eb+=`<div class="tip">📖 <b>อ่านอย่างไร:</b> ตัวเลขคือสัดส่วนพลังของแต่ละธาตุในดวงคุณ ไม่ใช่คะแนนดี-ไม่ดี · ธาตุที่สูงสุดคือ ${EL_EMO[eTop]}<b>${eTop}</b> (${CH.pc(eTop)}%) `+
+      `ถ้าล้นเกินมักแสดงออกเป็น: ${EL_HIGH[eTop]} · ธาตุที่ต่ำสุดคือ ${EL_EMO[eLow]}<b>${eLow}</b> (${CH.pc(eLow)}%) `+
+      `ถ้าพร่องมักแสดงออกเป็น: ${EL_LOW[eLow]}<br>⚖️ เป้าหมายของ BaZi ไม่ใช่ให้ทุกธาตุเท่ากัน แต่คือ "เติมธาตุที่ช่วยดิถี ลดธาตุที่บั่นทอนดิถี"</div>`;
   document.getElementById('elemBox').innerHTML=eb;
 
   const EMO={"เพื่อน":"🤝","แสดงออก":"🎨","ทรัพย์":"💰","อำนาจ":"📜","ทรัพยากร":"📚"};
+  const catSorted=Object.keys(CH.cat).sort((a,b)=>CH.cat[b]-CH.cat[a]);
+  const cTop=catSorted[0], cLow=catSorted[4];
   let gb='🌟 <b>สิบเทพ (10 Gods) ในดวงกำเนิด</b>';
   Object.keys(CH.cat).forEach(c=>{const v=(CH.cat[c]/CH.ctot*100).toFixed(1);
-    gb+=`<div>${EMO[c]} ${c} <b>${v}%</b><div class="bar"><i style="width:${v}%;background:var(--primary)"></i></div></div>`;});
+    gb+=`<div class="erow"><div class="ename"><span>${EMO[c]} <b>${c}</b></span><b>${v}%</b></div>`+
+        `<div class="bar"><i style="width:${v}%;background:var(--primary)"></i></div>`+
+        `<div class="edesc">${GOD_MEAN[c]}</div></div>`;});
   gb+=`<div class="small">เสาปี ${tenGod(P.day.si,P.year.si).n} · เสาเดือน ${tenGod(P.day.si,P.month.si).n} · เสาเวลา ${tenGod(P.day.si,P.hour.si).n}</div>`;
+  gb+=`<div class="tip">📖 <b>สิบเทพคืออะไร:</b> คือการแปลง "ธาตุ" ให้กลายเป็น "เรื่องในชีวิตจริง" โดยวัดจากว่าแต่ละธาตุมีความสัมพันธ์กับตัวคุณอย่างไร — หล่อเลี้ยงเรา / เราผลิตออกไป / เราควบคุม / ควบคุมเรา / เหมือนเรา<br>`+
+      `🔝 หมวดเด่นที่สุดของคุณคือ ${EMO[cTop]}<b>${cTop}</b> → ${GOD_HIGH[cTop]}<br>`+
+      `🔻 หมวดที่บางที่สุดคือ ${EMO[cLow]}<b>${cLow}</b> → ${GOD_LOW[cLow]}</div>`;
   document.getElementById('godsBox').innerHTML=gb;
 
   document.getElementById('yongBox').innerHTML=
    `💎 <b>ธาตุให้คุณ (用神/喜神)</b><br>`+
-   CH.fav.map(e=>`${EL_EMO[e]} <b>${e}</b> ${dots([e])} <span class="small">${EL_COLORNAME[e]}</span>`).join('<br>')+
+   CH.fav.map(e=>`${EL_EMO[e]} <b>${e}</b> ${dots([e])}`).join('<br>')+
    `<br>🚫 <b>ธาตุให้โทษ (忌神)</b><br>`+
-   CH.unfav.map(e=>`${EL_EMO[e]} <b>${e}</b> ${dots([e])} <span class="small">${EL_COLORNAME[e]}</span>`).join('<br>')+
-   `<br>🍲 <b>แนวโภชนาการหลัก</b><br><span class="small">${FOOD[CH.fav[0]]}</span>`;
+   CH.unfav.map(e=>`${EL_EMO[e]} <b>${e}</b> ${dots([e])}`).join('<br>')+
+   `<br>🍲 <b>แนวโภชนาการหลัก</b><br><span class="small">${FOOD[CH.fav[0]]}</span>`+
+   `<div class="tip">📖 <b>แปลง่ายๆ:</b> "ธาตุให้คุณ" คือธาตุที่ช่วยปรับดวงให้สมดุล ใช้สีตามจุดสีด้านบนกับเสื้อผ้า ของใช้ และโต๊ะทำงาน · "ธาตุให้โทษ" คือธาตุที่ยิ่งเติมยิ่งเสียสมดุล เลี่ยงใช้เป็นสีหลักในวันสำคัญ</div>`;
 
   document.getElementById('storyBox').innerHTML=buildStory(P,CH);
 
   if(!document.getElementById('navDate').value)
     document.getElementById('navDate').valueAsDate=new Date();
   loadNavigator();
-  
-  // บันทึกข้อมูลหลังจากคำนวณเสร็จ
-  saveUserData();
+  saveActiveProfile();
 }
 function parseLocal(s){const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c,12,0,0,0);}
 function setToday(){document.getElementById('navDate').valueAsDate=new Date();loadNavigator();}
@@ -689,12 +895,13 @@ function loadNavigator(){
    `🥢 เสาวันจร <b style="font-family:var(--cn);font-size:26px;color:var(--primary)">${p.day.stem}${p.day.branch}</b> · `+
    `${EL_EMO[p.day.sEl]} <b>${p.day.yy}${p.day.sEl}</b> · ${p.day.animal} ${EL_EMO[p.day.bEl]}${p.day.bEl}<br>`+
    `🫙 ธาตุแฝง: ${p.day.hidden.map(h=>h.s+' '+EL_EMO[h.el]+h.el+' '+h.w+'%').join(' · ')}<br>`+
-   `🌟 สิบเทพประจำวัน: <b>${ev.god.n}</b> (หมวด${ev.god.c}) · 🌊 ธาตุเด่นวันนี้ ${EL_EMO[ev.dom]}${ev.dom}<br>`+
+   `🌟 สิบเทพประจำวัน: <b>${ev.god.n}</b> (หมวด${ev.god.c}) <span class="small">— ${GOD_MEAN[ev.god.c]}</span><br>`+
+   `🌊 ธาตุเด่นวันนี้ ${EL_EMO[ev.dom]}${ev.dom}<br>`+
    `${ev.lv.e} <b style="color:${ev.lv.c};font-size:17px">${ev.lv.t} · คะแนน ${ev.sv}/100</b>`+
    (ev.tags.length?`<br><span class="small">${ev.tags.join(' · ')}</span>`:'')+
    `<hr style="border:none;border-top:1px dashed var(--gold);margin:12px 0">`+
-   `🎨 <b>สีมงคล:</b> ${dots(ev.lucky)} <span class="small">(${ev.lucky.map(e=>EL_COLORNAME[e]).join(' / ')})</span><br>`+
-   `🚫 <b>สีกาลกิณี:</b> ${dots(ev.bad)} <span class="small">(${ev.bad.map(e=>EL_COLORNAME[e]).join(' / ')})</span><br>`+
+   `🎨 <b>สีมงคล:</b> ${dots(ev.lucky)}<br>`+
+   `🚫 <b>สีกาลกิณี:</b> ${dots(ev.bad)}<br>`+
    `✅ <b>ควรทำ:</b> ${ev.good}<br>⚠️ <b>ควรเลี่ยง:</b> ${ev.avoid}<br>🍲 <b>โภชนาการ:</b> ${ev.food}`;
 
   let h='';
@@ -706,13 +913,13 @@ function loadNavigator(){
       <td data-label="🥢 เสาวันจร"><div><b style="font-family:var(--cn);font-size:19px;color:var(--primary)">${q.day.stem}${q.day.branch}</b>
           <span class="badge bg${q.day.sEl}">${EL_EMO[q.day.sEl]}${q.day.yy}${q.day.sEl}</span></div></td>
       <td data-label="🐉 นักษัตร"><div>${q.day.animal} <span class="small">${q.day.hidden.map(x=>x.s+' '+x.w+'%').join(' · ')}</span></div></td>
-      <td data-label="🌟 สิบเทพ"><div><span class="small">${e.god.n}</span> <span class="badge" style="background:var(--primary)">${e.god.c}</span></div></td>
+      <td data-label="🌟 สิบเทพ"><div><span class="small">${e.god.n}</span> <span class="badge" style="background:var(--primary)">${e.god.c}</span><div class="edesc">${GOD_MEAN[e.god.c]}</div></div></td>
       <td data-label="⚖️ คะแนน"><div><b style="color:${e.lv.c};font-size:15px">${e.lv.e} ${e.sv}</b>
           <span class="small" style="color:${e.lv.c}"> ${e.lv.t}</span>
           <div class="bar"><i style="width:${e.sv}%;background:${e.lv.c}"></i></div>
           ${e.tags.length?`<span class="small">${e.tags.join(' · ')}</span>`:''}</div></td>
-      <td data-label="🎨 สีมงคล"><div>${dots(e.lucky)} <span class="small">${e.lucky.map(x=>EL_COLORNAME[x]).join(' / ')}</span></div></td>
-      <td data-label="🚫 สีกาลกิณี"><div>${dots(e.bad)} <span class="small">${e.bad.map(x=>EL_COLORNAME[x]).join(' / ')}</span></div></td>
+      <td data-label="🎨 สีมงคล"><div>${dots(e.lucky)}</div></td>
+      <td data-label="🚫 สีกาลกิณี"><div>${dots(e.bad)}</div></td>
       <td data-label="✅ ควรทำ"><div style="text-align:left;font-size:12.5px">${e.good}</div></td>
       <td data-label="⚠️ ควรเลี่ยง"><div style="text-align:left;font-size:12.5px;color:#b91c1c">${e.avoid}</div></td>
       <td data-label="🍲 โภชนาการ"><div style="text-align:left;font-size:12.5px">${e.food}</div></td></tr>`;
@@ -722,7 +929,6 @@ function loadNavigator(){
 
 /* ============================================================
    SECTION 5 : SOURCE PROTECTION (ปลอดภัยกับ iOS / Android)
-   - ตัดตัวตรวจจับ DevTools ออกทั้งหมด (false positive บนมือถือ)
    ============================================================ */
 const IS_TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 if(!IS_TOUCH){
@@ -744,10 +950,12 @@ document.addEventListener('copy',e=>{
   initCountry();
   const inp=document.getElementById('inKey');
   if(inp)inp.addEventListener('keydown',e=>{if(e.key==='Enter')userLogin();});
+  const iu=document.getElementById('inUser');
+  if(iu)iu.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('inKey').focus();});
   const adm=document.getElementById('inAdmin');
   if(adm)adm.addEventListener('keydown',e=>{if(e.key==='Enter')adminLogin();});
   try{
-    const s=sessionStorage.getItem('bz_ses');
+    const s=LS('bz_ses');
     if(s){const o=JSON.parse(s);openApp(o.n,o.a);}
   }catch(err){}
 })();

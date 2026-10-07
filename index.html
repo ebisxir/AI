@@ -195,6 +195,7 @@ body.isadmin .adminonly{display:block!important}
 <header>
   <h1>NutriPlan <span>24</span></h1>
   <p>วางแผนชนิด จำนวน และปริมาณอาหารให้สอดคล้องกับเป้าหมายรายวันและรายมื้อ ตลอดโปรแกรม 24 สัปดาห์</p>
+  <div id="whoami" class="note" style="text-align:center"></div>
   <div class="rolebar noprint">
     <span class="pill p-blue" id="rolepill">—</span>
     <button class="btn2" onclick="logout()">ออกจากระบบ</button>
@@ -205,6 +206,21 @@ body.isadmin .adminonly{display:block!important}
 <div class="noprint">
   <div class="card">
     <h2><i></i>1. ข้อมูลผู้ใช้งาน</h2>
+
+    <div class="sec" style="border-color:rgba(74,222,128,.5)">
+      <div class="st">ผู้รับแผน — บันทึกได้หลายคนในรหัสเดียว</div>
+      <select id="profsel" onchange="switchProfile(this.value)"></select>
+      <input type="text" id="profname" placeholder="พิมพ์ชื่อผู้รับแผน เช่น คุณเอ" style="margin-top:8px">
+      <div class="row">
+        <button class="btn2" style="margin-top:8px" onclick="addProfile()">เพิ่มเป็นคนใหม่</button>
+        <button class="btn2" style="margin-top:8px" onclick="renameProfile()">เปลี่ยนชื่อคนนี้</button>
+      </div>
+      <div class="row">
+        <button class="btn2" style="margin-top:8px" onclick="dupProfile()">ทำสำเนาคนนี้</button>
+        <button class="btn2" style="margin-top:8px" onclick="delProfile()">ลบคนนี้</button>
+      </div>
+      <div id="profnote" class="note"></div>
+    </div>
 
     <label>วันเริ่มต้นของแผน 7 วันนี้</label>
     <input type="date" id="sdate">
@@ -236,10 +252,11 @@ body.isadmin .adminonly{display:block!important}
       <input type="number" id="vis" value="9" min="1" max="30" step="1">
       <div id="visnote" class="note"></div>
 
-      <label style="margin-top:10px">ชนิดและจำนวนช้อนโปรตีนรสชาติที่ผสม</label>
-      <div class="pblend"><select id="pt1"><option value="">— เลือกตัวที่ 1 —</option><option value="allplant">ออลแพลนท์ (80 kcal / P16)</option><option value="choco">ช็อกโกแลต (85 kcal / P10)</option><option value="berry">เบอร์รี่ (85 kcal / P10)</option></select><input type="number" id="ps1" value="1" min="0" max="3" step="1"></div>
-      <div class="pblend"><select id="pt2"><option value="">— เลือกตัวที่ 2 —</option><option value="allplant">ออลแพลนท์ (80 kcal / P16)</option><option value="choco">ช็อกโกแลต (85 kcal / P10)</option><option value="berry">เบอร์รี่ (85 kcal / P10)</option></select><input type="number" id="ps2" value="0" min="0" max="3" step="1"></div>
-      <div class="note" style="margin-top:6px">บอดี้คีย์ถูกกำหนดโดย Period อัตโนมัติ ไม่ต้องเลือกเอง · กฎความหนืด: มื้อที่มีบอดี้คีย์ ออลแพลนท์สูงสุด 2 ช้อน รสชาติสูงสุด 2 ช้อน (ถ้าผสมกัน ออลแพลนท์ 1 + รสชาติ 2) · มื้อโปรตีนล้วน ออลแพลนท์สูงสุด 2 รสชาติสูงสุด 3</div>
+      <label style="margin-top:10px">ชนิดและจำนวนช้อนโปรตีนที่ผสม (เลือกได้สูงสุด 3 ชนิด)</label>
+      <div class="pblend"><select id="pt1"></select><input type="number" id="ps1" value="2" min="0" max="3" step="1"></div>
+      <div class="pblend"><select id="pt2"></select><input type="number" id="ps2" value="0" min="0" max="3" step="1"></div>
+      <div class="pblend"><select id="pt3"></select><input type="number" id="ps3" value="0" min="0" max="3" step="1"></div>
+      <div id="blendnote" class="note"></div>
     </div>
 
     <div class="sec" style="border-color:rgba(167,139,250,.45)">
@@ -297,7 +314,7 @@ body.isadmin .adminonly{display:block!important}
 
   <div class="card">
     <h2><i></i>2. อาหารเสริมที่ใช้ในช่วงนี้</h2>
-    <div class="note" style="margin-top:0">กดเลือกหรือยกเลิกรายการที่ใช้ใน Period นี้ ระบบจะจัดลงตารางตามเวลาทานให้อัตโนมัติ</div>
+    <div class="note" style="margin-top:0">กดเลือกหรือยกเลิกรายการที่ใช้ใน Period นี้ ระบบจะจัดลงตารางตามเวลาทานให้อัตโนมัติ (แยกตามผู้รับแผนแต่ละคน)</div>
     <div class="sgrid" id="sgrid"></div>
     <div class="row" style="margin-top:12px">
       <button class="btn2" style="margin:0" onclick="suppAll(1)">เลือกทั้งหมด</button>
@@ -320,7 +337,7 @@ body.isadmin .adminonly{display:block!important}
     <div id="bzsum" class="note" style="margin-top:0"></div>
     <div id="bzfood"></div>
     <div class="sec">
-      <div class="st">คำนวณธาตุประจำตัวจากวันเกิด (ทำครั้งเดียวพอ)</div>
+      <div class="st">คำนวณธาตุประจำตัวจากวันเกิด (ทำครั้งเดียวต่อผู้รับแผนหนึ่งคน)</div>
       <div class="row">
         <div><label>วันเกิด</label><input type="date" id="bdate"></div>
         <div><label>เวลาเกิด</label><input type="time" id="btime" value="12:00"></div>
@@ -335,7 +352,7 @@ body.isadmin .adminonly{display:block!important}
     <div class="note" style="margin-top:0">พิมพ์ชื่อผู้ใช้แล้วกดสร้าง ระบบจะคำนวณรหัส 4 หลักประจำชื่อนั้นทันที ใช้ได้กับไฟล์เดียวกันทุกเครื่องโดยไม่ต้องแก้โค้ดหรืออัปโหลดใหม่</div>
     <div class="sec">
       <div class="st">ออกรหัสใหม่</div>
-      <input type="text" id="gname" placeholder="ชื่อผู้ใช้ เช่น somchai หรือ คุณสมชาย" style="margin-top:8px" onkeydown="if(event.key==='Enter')genKey()">
+      <input type="text" id="gname" placeholder="ชื่อผู้ใช้ เช่น somchai" style="margin-top:8px" onkeydown="if(event.key==='Enter')genKey()">
       <button class="btn1" onclick="genKey()">สร้างรหัส 4 หลัก</button>
       <div id="gout"></div>
       <div id="gerr" class="note"></div>
@@ -343,7 +360,7 @@ body.isadmin .adminonly{display:block!important}
     <div class="sec">
       <div class="st">รายชื่อที่ออกรหัสไปแล้ว</div>
       <div id="klist"></div>
-      <div class="note">รายการนี้เก็บไว้ในเครื่องของผู้ดูแลระบบเพื่อใช้อ้างอิงเท่านั้น การลบออกจากรายการไม่ได้ตัดสิทธิ์ผู้ใช้ หากต้องการยกเลิกรหัสทั้งระบบ ให้เปลี่ยนเลข <b>KEY_VERSION</b> ในไฟล์ แล้วออกรหัสชุดใหม่ให้ทุกคน</div>
+      <div class="note">รายการนี้เก็บในเครื่องผู้ดูแลระบบเพื่อใช้อ้างอิงเท่านั้น การลบไม่ได้ตัดสิทธิ์ผู้ใช้ หากต้องการยกเลิกรหัสทั้งระบบ ให้เปลี่ยนเลข <b>KEY_VERSION</b> ในไฟล์ แล้วออกรหัสชุดใหม่</div>
     </div>
   </div>
 </div>
@@ -372,9 +389,6 @@ body.isadmin .adminonly{display:block!important}
 <script>
 /* ============================================================
    ระบบรหัสผ่าน — ไม่ต้องแก้ไฟล์เมื่อเพิ่มผู้ใช้
-   ADMIN_PASS  : รหัสผู้ดูแลระบบ
-   KEY_SALT    : กุญแจลับของระบบ (เปลี่ยนแล้วรหัสเดิมใช้ไม่ได้ทั้งหมด)
-   KEY_VERSION : เลขรุ่นรหัส เพิ่มทีละ 1 เมื่อต้องการยกเลิกรหัสเก่าทั้งชุด
    ============================================================ */
 const ADMIN_PASS  = '6395';
 const KEY_SALT    = 'NutriPlan24-KeySalt-2569';
@@ -394,7 +408,8 @@ function makeKey(u){
   return String(cyrb53(KEY_SALT+'|v'+KEY_VERSION+'|'+n,77)%10000).padStart(4,'0');
 }
 
-let ROLE=null, CFG=null, DAYS=[];
+let ROLE=null, CFG=null, DAYS=[], BOOTING=false;
+
 function loginTab(w){
   const u=w==='user';
   document.getElementById('ltu').classList.toggle('on',u);
@@ -425,11 +440,13 @@ function enterApp(role){
   document.getElementById('pwgate').style.display='none';
   document.getElementById('appwrap').style.opacity='1';
   const nm=localStorage.getItem('nutri_user')||'';
-  document.getElementById('rolepill').innerHTML=role==='admin'?'ผู้ดูแลระบบ':'ผู้ใช้งาน: '+nm;
+  document.getElementById('rolepill').innerHTML=role==='admin'?'ผู้ดูแลระบบ':'บัญชี: '+nm;
   document.getElementById('rolepill').className='pill '+(role==='admin'?'p-warn':'p-blue');
   if(role==='admin') renderKeyList();
+  bootData();
 }
 function logout(){
+  if(PID) save();
   localStorage.removeItem('nutri_role');
   localStorage.removeItem('nutri_user');
   location.reload();
@@ -470,6 +487,120 @@ function renderKeyList(){
     :'<div class="note">ยังไม่มีรายชื่อที่ออกรหัส</div>';
 }
 function delKey(i){ const l=getKeys(); l.splice(i,1); setKeys(l); renderKeyList(); }
+
+/* ================= โปรไฟล์ผู้รับแผน ================= */
+let PROF=[], PID=null;
+const ns=()=>'np_'+normName(localStorage.getItem('nutri_user')||'guest')+'_';
+const dkey=id=>ns()+'d_'+id;
+function loadProfs(){ PROF=JSON.parse(localStorage.getItem(ns()+'profiles')||'[]'); }
+function saveProfs(){ localStorage.setItem(ns()+'profiles',JSON.stringify(PROF)); }
+const curData=()=>JSON.parse(localStorage.getItem(dkey(PID))||'null');
+const profName=()=>{const p=PROF.find(x=>x.id===PID);return p?p.name:'';};
+
+function bootData(){
+  loadProfs();
+  if(!PROF.length){
+    const id='p'+Date.now();
+    PROF=[{id,name:(localStorage.getItem('nutri_user')||'ผู้รับแผนคนที่ 1')}];
+    saveProfs();
+    const old=JSON.parse(localStorage.getItem('nutriplan24')||'null');
+    if(old){
+      const d=Object.assign({},old);
+      d.supps=JSON.parse(localStorage.getItem('nutri_supps')||'null');
+      d.locks=JSON.parse(localStorage.getItem('nutri_item_locks')||'null');
+      d.bazi =JSON.parse(localStorage.getItem('nutri_bazi')||'null');
+      localStorage.setItem(dkey(id),JSON.stringify(d));
+    }
+    PID=id;
+  }else{
+    PID=localStorage.getItem(ns()+'active');
+    if(!PROF.some(p=>p.id===PID)) PID=PROF[0].id;
+  }
+  localStorage.setItem(ns()+'active',PID);
+  renderProfSel();
+  applyData(curData());
+}
+function renderProfSel(){
+  profsel.innerHTML=PROF.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  profsel.value=PID;
+  profname.value=profName();
+  whoami.innerHTML=`แผนสำหรับ <b>${profName()}</b>`;
+  profnote.innerHTML=`มีผู้รับแผนในบัญชีนี้ <b>${PROF.length}</b> คน · ข้อมูลของแต่ละคนแยกกันทั้งหมด ทั้งเป้าหมาย อาหารเสริม ธาตุประจำตัว และเมนูที่ล็อกไว้`;
+}
+function switchProfile(id){
+  if(id===PID) return;
+  save();
+  PID=id;
+  localStorage.setItem(ns()+'active',PID);
+  renderProfSel();
+  applyData(curData());
+}
+function addProfile(){
+  const nm=profname.value.trim();
+  if(!nm){ profnote.innerHTML='<span style="color:var(--dan)">กรุณาพิมพ์ชื่อผู้รับแผนก่อน</span>'; return; }
+  if(PROF.some(p=>p.name===nm)){ profnote.innerHTML='<span style="color:var(--dan)">มีชื่อนี้อยู่แล้ว</span>'; return; }
+  save();
+  const id='p'+Date.now();
+  PROF.push({id,name:nm}); saveProfs();
+  PID=id; localStorage.setItem(ns()+'active',PID);
+  renderProfSel(); applyData(null);
+  profnote.innerHTML=`<span style="color:var(--acc)">เพิ่ม "${nm}" แล้ว เริ่มกรอกข้อมูลของคนนี้ได้เลย</span>`;
+}
+function dupProfile(){
+  const nm=(profname.value.trim()||profName()+' (สำเนา)');
+  if(PROF.some(p=>p.name===nm)){ profnote.innerHTML='<span style="color:var(--dan)">มีชื่อนี้อยู่แล้ว</span>'; return; }
+  save();
+  const src=curData();
+  const id='p'+Date.now();
+  PROF.push({id,name:nm}); saveProfs();
+  if(src) localStorage.setItem(dkey(id),JSON.stringify(src));
+  PID=id; localStorage.setItem(ns()+'active',PID);
+  renderProfSel(); applyData(curData());
+  profnote.innerHTML=`<span style="color:var(--acc)">ทำสำเนาเป็น "${nm}" แล้ว</span>`;
+}
+function renameProfile(){
+  const nm=profname.value.trim();
+  if(!nm){ profnote.innerHTML='<span style="color:var(--dan)">กรุณาพิมพ์ชื่อใหม่</span>'; return; }
+  const p=PROF.find(x=>x.id===PID); if(!p) return;
+  p.name=nm; saveProfs(); renderProfSel();
+  if(DAYS.length) renderAll(CURDAY);
+  profnote.innerHTML='<span style="color:var(--acc)">เปลี่ยนชื่อเรียบร้อยแล้ว</span>';
+}
+function delProfile(){
+  if(PROF.length<=1){ profnote.innerHTML='<span style="color:var(--warn)">เหลือคนสุดท้ายแล้ว ลบไม่ได้ ใช้วิธีเปลี่ยนชื่อแทน</span>'; return; }
+  if(!confirm('ลบผู้รับแผน "'+profName()+'" และข้อมูลทั้งหมดของคนนี้?')) return;
+  localStorage.removeItem(dkey(PID));
+  PROF=PROF.filter(p=>p.id!==PID); saveProfs();
+  PID=PROF[0].id; localStorage.setItem(ns()+'active',PID);
+  renderProfSel(); applyData(curData());
+  profnote.innerHTML='<span style="color:var(--acc)">ลบเรียบร้อยแล้ว</span>';
+}
+function applyData(d){
+  BOOTING=true;
+  d=d||{};
+  week.value=d.w||'1';
+  kcal.value=d.k||1400; prot.value=d.p||110; meals.value=d.m||'3'; vis.value=d.v||9;
+  pt1.value=(d.pt1!==undefined?d.pt1:'allplant'); ps1.value=(d.ps1!==undefined?d.ps1:2);
+  pt2.value=d.pt2||''; ps2.value=d.ps2||0;
+  pt3.value=d.pt3||''; ps3.value=d.ps3||0;
+  dm.value=d.dm||''; dmstr.value=d.ds||'strong';
+  style.value=d.s||'all'; breakslot.value=d.b||'เช้า';
+  pmode.value=d.pm||'compact';
+  SUPPS=(d.supps&&d.supps.length)?JSON.parse(JSON.stringify(d.supps)):JSON.parse(JSON.stringify(DEFAULT_SUPPS));
+  SON=new Set((d.sup&&d.sup.length)?d.sup.filter(id=>SUPPS.some(x=>x.id===id)):SUPPS.map(x=>x.id));
+  ITEM_LOCKS=d.locks||{};
+  bdate.value=(d.bazi&&d.bazi.d)||'';
+  btime.value=(d.bazi&&d.bazi.t)||'12:00';
+  sdate.value=todayStr();
+  buildSupps();
+  document.body.classList.toggle('pcompact',pmode.value==='compact');
+  document.body.classList.toggle('pfull',pmode.value!=='compact');
+  upd();
+  if(d.rows) Object.entries(d.rows).forEach(([k,v])=>{const e=document.getElementById(k);if(e)e.value=v;});
+  sumRows();
+  BOOTING=false;
+  run();
+}
 
 /* ================= วันที่ไทย ================= */
 const TH_D=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
@@ -554,18 +685,19 @@ function calcBazi(){
   const strength=pct<45?'weak':pct>55?'strong':'balance';
   dm.value=`${me}|${STEMS[dS].yy}|${STEMS[dS].cn}`;
   dmstr.value=strength;
-  localStorage.setItem('nutri_bazi',JSON.stringify({d:bdate.value,t:btime.value}));
-  bzerr.innerHTML=`<span style="color:var(--acc)">ดิถี ${STEMS[dS].cn} ${STEMS[dS].yy}${ELN[me]} · พลังดิถี ${Math.round(pct)}% → ${strength==='strong'?'ดิถีแกร่ง':strength==='weak'?'ดิถีอ่อน':'ดิถีสมดุล'} (บันทึกแล้ว ครั้งหน้าไม่ต้องกรอกอีก)</span>`;
+  bzerr.innerHTML=`<span style="color:var(--acc)">ดิถี ${STEMS[dS].cn} ${STEMS[dS].yy}${ELN[me]} · พลังดิถี ${Math.round(pct)}% → ${strength==='strong'?'ดิถีแกร่ง':strength==='weak'?'ดิถีอ่อน':'ดิถีสมดุล'} (บันทึกให้ ${profName()} แล้ว)</span>`;
   upd(); run();
 }
 
-/* ================= ผลิตภัณฑ์ ================= */
+/* ================= ผลิตภัณฑ์ (แก้ค่าโภชนาการที่นี่จุดเดียว) ================= */
 const PRODS={
-  bodykey:{n:'บอดี้คีย์',u:'ซอง',kcal:205,p:16,c:24},
-  allplant:{n:'โปรตีนออลแพลนท์',u:'ช้อน',kcal:80,p:16,c:2},
-  choco:{n:'โปรตีนช็อกโกแลต',u:'ช้อน',kcal:85,p:10,c:8},
-  berry:{n:'โปรตีนเบอร์รี่',u:'ช้อน',kcal:85,p:10,c:8}
+  bodykey :{n:'บอดี้คีย์',          u:'ซอง', kcal:205, p:16,   c:24},
+  allplant:{n:'โปรตีนออลแพลนท์',   u:'ช้อน',kcal:75,  p:17.5, c:1},
+  choco   :{n:'โปรตีนช็อกโกแลต',   u:'ช้อน',kcal:85,  p:10,   c:8},
+  berry   :{n:'โปรตีนเบอร์รี่',     u:'ช้อน',kcal:100, p:9.5,  c:10},
+  green   :{n:'โปรตีนชาเขียว',     u:'ช้อน',kcal:110, p:10.5, c:9}
 };
+const FLAVS=['allplant','choco','berry','green'];
 const PRODNAMES=new Set(Object.values(PRODS).map(x=>x.n));
 
 /* ================= คลังเมนู ================= */
@@ -709,7 +841,45 @@ function hsh(str,day,salt){
   return h%70;
 }
 
-/* ========== เลือกเมนู : คุมคาร์บ + กันซ้ำ + ดวงจีน ========== */
+/* ===== โปรตีนที่ผู้ใช้เลือก + กฎความหนืด ===== */
+function readBlends(){
+  const map={};
+  [1,2,3].forEach(i=>{
+    const t=document.getElementById('pt'+i).value;
+    const q=+document.getElementById('ps'+i).value;
+    if(t&&PRODS[t]&&q>0) map[t]=(map[t]||0)+q;
+  });
+  return Object.keys(map).map(t=>({type:t,...PRODS[t],q:map[t]}));
+}
+function allocScoops(blends,mode){
+  const hasFlav=blends.some(b=>b.type!=='allplant');
+  let apLeft = hasFlav?1:2;
+  let flLeft = mode==='bk'?2:3;
+  const out=[];
+  blends.forEach(b=>{
+    let q;
+    if(b.type==='allplant'){ q=Math.min(b.q,apLeft); apLeft-=q; }
+    else { q=Math.min(b.q,flLeft); flLeft-=q; }
+    if(q>0) out.push({...b,q});
+  });
+  return out;
+}
+function blendSummary(){
+  const b=readBlends();
+  if(!b.length){ blendnote.innerHTML='<span style="color:var(--warn)">ยังไม่ได้เลือกโปรตีน ระบบจะเติมแคลอรี่ด้วยอาหารปกติทั้งหมด</span>'; return; }
+  const line=(mode,label)=>{
+    const a=allocScoops(b,mode);
+    const K=a.reduce((s,x)=>s+x.kcal*x.q,0), P=a.reduce((s,x)=>s+x.p*x.q,0);
+    const cut=a.some((x,i)=>x.q<b[i].q);
+    return `${label}: ${a.map(x=>x.n.replace('โปรตีน','')+' '+x.q+' ช้อน').join(' + ')||'—'}
+      <span class="pill p-blue">${r0(K)} kcal</span> <span class="pill p-acc">โปรตีน ${r1(P)} ก.</span>${cut?' <span class="pill p-warn">ถูกตัดตามกฎความหนืด</span>':''}`;
+  };
+  blendnote.innerHTML=`บอดี้คีย์มาจาก Period อัตโนมัติ ไม่ต้องเลือกเอง<br>
+    ${line('bk','มื้อที่มีบอดี้คีย์')}<br>${line('flav','มื้อโปรตีนล้วน')}<br>
+    <span style="font-size:10.5px">กฎ: มื้อมีบอดี้คีย์ รสชาติรวมไม่เกิน 2 ช้อน · มื้อโปรตีนล้วน รสชาติรวมไม่เกิน 3 ช้อน · ถ้าผสมกับออลแพลนท์ ออลแพลนท์จะเหลือ 1 ช้อน</span>`;
+}
+
+/* ========== เลือกเมนู ========== */
 function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban){
   const ok=m=>dietOK(m,cfg.style);
   let mains=MENUS.filter(m=>m.tag==='main'&&ok(m));
@@ -759,7 +929,6 @@ function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban){
   return best;
 }
 
-/* ========== คำนวณยอดรวมของวันจากรายการจริง ========== */
 function recalcDay(p){
   p.K=p.meals.reduce((a,m)=>a+m.K,0);
   p.P=p.meals.reduce((a,m)=>a+m.P,0);
@@ -783,24 +952,12 @@ function mealState(p,skipSlot){
 /* ========== วางแผน 1 วัน ========== */
 function planDay(day,cfg){
   const st={eggs:0,today:new Set()};
-  const per=cfg.per;
-
-  const flav=[];
-  [1,2].forEach(i=>{
-    const t=document.getElementById('pt'+i).value, q=+document.getElementById('ps'+i).value;
-    if(t&&PRODS[t]&&q>0) flav.push({type:t,...PRODS[t],q});
-  });
+  const per=cfg.per, blends=readBlends();
 
   const baseMap={};
   if(per.mode==='bk2'){ baseMap['เช้า']='bk'; baseMap['เย็น']='bk'; }
   else if(per.mode==='bk1'){ baseMap['เช้า']='bk'; baseMap['เย็น']='flav'; }
   else { baseMap[cfg.breakSlot]='flav'; }
-
-  const mixing=flav.length>1;
-  const capScoop=(type,mode)=>{
-    if(mode==='bk') return type==='allplant'?(mixing?1:2):2;
-    return type==='allplant'?(mixing?1:2):3;
-  };
 
   const draft=cfg.slots.map(s=>{
     const mode=baseMap[s.slot];
@@ -810,10 +967,9 @@ function planDay(day,cfg){
       const b=PRODS.bodykey;
       items.push({n:b.n,q:1,u:b.u,kcal:b.kcal,p:b.p,c:b.c}); K+=b.kcal;P+=b.p;C+=b.c;
     }
-    flav.forEach(f=>{
-      const q=Math.min(f.q,capScoop(f.type,mode));
-      if(q>0){ items.push({n:f.n,q,u:f.u,kcal:f.kcal*q,p:f.p*q,c:f.c*q});
-        K+=f.kcal*q;P+=f.p*q;C+=f.c*q; }
+    allocScoops(blends,mode).forEach(f=>{
+      items.push({n:f.n,q:f.q,u:f.u,kcal:f.kcal*f.q,p:f.p*f.q,c:f.c*f.q});
+      K+=f.kcal*f.q;P+=f.p*f.q;C+=f.c*f.q;
     });
     return {s,base:true,mode,items,K,P,C};
   });
@@ -861,7 +1017,6 @@ function planDay(day,cfg){
 
   const p={meals}; recalcDay(p);
 
-  /* ตัวซ่อมคาร์บ : ถ้ายังเกิน สลับมื้อที่คาร์บสูงสุดให้ต่ำลง */
   let guard=0;
   while(p.C>cfg.carbG+0.5 && guard<4){
     guard++;
@@ -945,12 +1100,13 @@ function readSlots(){
     kcal:+document.getElementById('k_'+s).value, prot:+document.getElementById('p_'+s).value}));
 }
 function run(){
+  if(BOOTING) return;
   const w=+week.value, per=perOf(w), v=+vis.value;
   const pct=v>12?0.18:v>=10?0.25:0.40;
   const bz=baziProfile();
   CFG={week:w,per,start:parseDate(sdate.value),kcal:+kcal.value,prot:+prot.value,slots:readSlots(),vis:v,
        carbPct:pct,carbG:(+kcal.value)*pct/4,style:style.value,breakSlot:breakslot.value,
-       bazi:(style.value==='bazi'&&bz)?bz:null, bzprofile:bz};
+       bazi:(style.value==='bazi'&&bz)?bz:null, bzprofile:bz, who:profName()};
   USED={}; LASTDAY={};
   DAYS=[0,1,2,3,4,5,6].map(d=>planDay(d,CFG));
   renderAll(CURDAY<DAYS.length?CURDAY:0); save(); lockInfo();
@@ -966,10 +1122,9 @@ function toggleItemLock(day,slot,idx){
   if(ex>=0) ITEM_LOCKS[key].splice(ex,1);
   else ITEM_LOCKS[key].push(JSON.parse(JSON.stringify(t)));
   if(!ITEM_LOCKS[key].length) delete ITEM_LOCKS[key];
-  saveLocks(); renderAll(day); lockInfo();
+  save(); renderAll(day); lockInfo();
 }
-function unlockAllItems(){ ITEM_LOCKS={}; saveLocks(); run(); }
-function saveLocks(){ localStorage.setItem('nutri_item_locks',JSON.stringify(ITEM_LOCKS)); }
+function unlockAllItems(){ ITEM_LOCKS={}; save(); run(); }
 function lockInfo(){
   const n=Object.keys(ITEM_LOCKS).reduce((a,k)=>a+ITEM_LOCKS[k].length,0);
   lockinfo.innerHTML=n?`ล็อกเมนูไว้แล้ว <b>${n}</b> รายการ — เมนูเหล่านี้จะไม่เปลี่ยนเมื่อคำนวณใหม่`
@@ -999,7 +1154,8 @@ function dayBlock(p,idx){
   let h=`<div class="card dayblock ${idx%2===1?'pbreak':''} ${idx===0?'':'dhide'}" id="day${idx}">
     <div class="dayttl"><i></i>${thFull(dt)}</div>
     <div style="margin-bottom:12px">
-      <span class="pill p-blue">Week ${c.week}</span>
+      <span class="pill p-acc">${c.who}</span>
+      <span class="pill p-blue" style="margin-left:6px">Week ${c.week}</span>
       <span class="pill p-acc" style="margin-left:6px">Period ${per.id} · ${per.name}</span>
       <span class="pill p-pur" style="margin-left:6px">${c.slots.length} มื้อ/วัน</span>
       <span class="pill ${c.vis>10?'p-warn':'p-acc'}" style="margin-left:6px">Visceral ${c.vis} · คาร์บไม่เกิน ${r0(c.carbG)} ก.</span>
@@ -1056,7 +1212,7 @@ function baziCard(){
     <span style="color:var(--acc)">ควรทาน:</span> ${FOOD[e].good}<br>
     <span style="color:var(--warn)">ควรเลี่ยง:</span> ${FOOD[e].bad}</span></div>`;
   return `<div class="card">
-    <h2><i></i>โภชนาการจีนตามดวงของคุณ</h2>
+    <h2><i></i>โภชนาการจีนของ ${CFG.who}</h2>
     <div class="note" style="margin-top:0">ดิถี <b>${b.cn} ${b.yy}${ELN[b.el]}</b> · ${b.head}</div>
     <div class="note">ธาตุอุปถัมภ์ (เน้นทาน): <b>${b.fav.map(e=>ELN[e]).join(' · ')}</b>
       ${b.avoid.length?` · ธาตุที่ควรลดทอน: <b>${b.avoid.map(e=>ELN[e]).join(' · ')}</b>`:''}</div>
@@ -1078,7 +1234,7 @@ function suppTable(){
   if(nm.length) rows+=`<div class="tl"><b>หลังมื้อที่มีอาหารปกติ</b><span>${nm.join(' · ')}</span></div>`;
   if(orphan.length) rows+=`<div class="tl"><b>ไม่มีมื้อรองรับ</b><span>${orphan.join(' / ')}</span></div>`;
   if(!rows) rows=`<div class="tl"><b>—</b><span>ยังไม่ได้เลือกอาหารเสริมในแผงด้านซ้าย</span></div>`;
-  return `<div class="card"><h2><i></i>ตารางอาหารเสริมประจำวัน</h2>${rows}
+  return `<div class="card"><h2><i></i>ตารางอาหารเสริมประจำวันของ ${CFG.who}</h2>${rows}
     <div class="note">ค่าพลังงานและโปรตีนของผลิตภัณฑ์อ้างอิงตามที่ผู้ใช้ระบุ ค่าของเมนูอาหารเป็นค่าประมาณจากปริมาณเสิร์ฟมาตรฐาน ·
     เครื่องมือนี้ใช้ช่วยคำนวณเชิงโภชนาการทั่วไป ไม่ใช่คำแนะนำทางการแพทย์ ผู้มีโรคประจำตัว ตั้งครรภ์ ให้นมบุตร หรือใช้ยาประจำ ควรปรึกษาแพทย์หรือนักกำหนดอาหารก่อนเริ่มโปรแกรม</div></div>`;
 }
@@ -1121,6 +1277,7 @@ function lineText(){
   const idx=scope==='all'?DAYS.map((_,i)=>i):[CURDAY];
   const t=[];
   t.push(`🥗 NutriPlan 24 — Week ${c.week} | Period ${c.per.id} ${c.per.name}`);
+  t.push(`👤 ผู้รับแผน: ${c.who}`);
   t.push(`🎯 เป้าหมาย ${c.kcal} kcal · โปรตีนขั้นต่ำ ${c.prot} ก./วัน · คาร์บไม่เกิน ${r0(c.carbG)} ก.`);
   if(c.bazi) t.push(`☯️ ดวงจีน ดิถี ${c.bzprofile.cn} ${c.bzprofile.yy}${ELN[c.bzprofile.el]} · เสริมธาตุ ${c.bazi.fav.map(e=>ELN[e]).join(' ')}`);
   idx.forEach(i=>{
@@ -1202,6 +1359,12 @@ function resetSupps(){
 }
 
 /* ================= UI ================= */
+function buildBlendSelects(){
+  [1,2,3].forEach(i=>{
+    document.getElementById('pt'+i).innerHTML='<option value="">— ไม่ใช้ —</option>'+
+      FLAVS.map(k=>`<option value="${k}">${PRODS[k].n.replace('โปรตีน','')} — ${PRODS[k].kcal} kcal / โปรตีน ${PRODS[k].p} ก.</option>`).join('');
+  });
+}
 function buildRows(){
   const slots=SLOTSET[+meals.value], old={};
   document.querySelectorAll('#mrows input').forEach(i=>old[i.id]=i.value);
@@ -1222,12 +1385,14 @@ function sumRows(){
    <span style="color:${dp<0?'var(--warn)':'var(--acc)'}">${dp>0?'+':''}${dp} ก.</span>`;
 }
 function save(){
-  const d={w:week.value,sd:sdate.value,k:kcal.value,p:prot.value,m:meals.value,v:vis.value,
-    pt1:pt1.value,ps1:ps1.value,pt2:pt2.value,ps2:ps2.value,dm:dm.value,ds:dmstr.value,
-    s:style.value,b:breakslot.value,pm:pmode.value,sup:[...SON],rows:{}};
+  if(BOOTING||!PID) return;
+  const d={w:week.value,k:kcal.value,p:prot.value,m:meals.value,v:vis.value,
+    pt1:pt1.value,ps1:ps1.value,pt2:pt2.value,ps2:ps2.value,pt3:pt3.value,ps3:ps3.value,
+    dm:dm.value,ds:dmstr.value,s:style.value,b:breakslot.value,pm:pmode.value,
+    sup:[...SON],supps:SUPPS,locks:ITEM_LOCKS,
+    bazi:{d:bdate.value,t:btime.value},rows:{}};
   document.querySelectorAll('#mrows input').forEach(i=>d.rows[i.id]=i.value);
-  localStorage.setItem('nutriplan24',JSON.stringify(d));
-  localStorage.setItem('nutri_supps',JSON.stringify(SUPPS));
+  localStorage.setItem(dkey(PID),JSON.stringify(d));
 }
 function upd(){
   const p=perOf(+week.value);
@@ -1241,13 +1406,14 @@ function upd(){
     :v>=10?'<span style="color:var(--warn)">เกินเกณฑ์</span>'
     :'<span style="color:var(--acc)">อยู่ในเกณฑ์ปกติ</span>')+
     ` → คาร์บ ${pct}% = ไม่เกิน <b>${g} ก./วัน</b>${v>=10?' · ระบบตัดเมนูข้าวและเส้นที่เกินโควตาออกอัตโนมัติ':''}`;
+  blendSummary();
 
   const b=baziProfile();
   if(b){
     dmnote.innerHTML=`ดิถี <b>${b.cn} ${b.yy}${ELN[b.el]}</b> · ${b.head}<br>
       ธาตุอุปถัมภ์: <b style="color:var(--acc)">${b.fav.map(e=>ELN[e]).join(' · ')}</b>
       ${b.avoid.length?` · ลดทอน: <b style="color:var(--warn)">${b.avoid.map(e=>ELN[e]).join(' · ')}</b>`:''}`;
-    bzsum.innerHTML=`ดิถีของคุณคือ <b>${b.cn} ${b.yy}${ELN[b.el]}</b> (${b.s==='strong'?'ดิถีแกร่ง':b.s==='weak'?'ดิถีอ่อน':'ดิถีสมดุล'})<br>
+    bzsum.innerHTML=`ดิถีของ <b>${profName()}</b> คือ <b>${b.cn} ${b.yy}${ELN[b.el]}</b> (${b.s==='strong'?'ดิถีแกร่ง':b.s==='weak'?'ดิถีอ่อน':'ดิถีสมดุล'})<br>
       ธาตุระบาย ${ELN[b.out]} · ธาตุทรัพย์ ${ELN[b.wealth]} · ธาตุควบคุม ${ELN[b.off]} · ธาตุทรัพยากร ${ELN[b.res]} · ธาตุเพื่อน ${ELN[b.friend]}`;
     bzfood.innerHTML=b.fav.map(e=>`<div class="elrow"><b style="color:var(--acc)">ธาตุ${ELN[e]}</b><span>
       อวัยวะ: ${FOOD[e].organ}<br>รส: ${FOOD[e].taste}<br>
@@ -1255,7 +1421,7 @@ function upd(){
       <span style="color:var(--warn)">ควรเลี่ยง:</span> ${FOOD[e].bad}</span></div>`).join('');
   }else{
     dmnote.innerHTML='ยังไม่ได้ระบุธาตุประจำตัว — เลือกเองจากรายการ หรือกดคำนวณจากวันเกิดในพาเนลที่ 3';
-    bzsum.innerHTML='ยังไม่ได้ระบุธาตุประจำตัว กรอกวันเกิดด้านล่างเพียงครั้งเดียว ระบบจะจำค่าไว้ให้';
+    bzsum.innerHTML='ยังไม่ได้ระบุธาตุประจำตัวของผู้รับแผนคนนี้ กรอกวันเกิดด้านล่างเพียงครั้งเดียว';
     bzfood.innerHTML='';
   }
   stylenote.innerHTML = style.value==='bazi'
@@ -1269,34 +1435,16 @@ function upd(){
 
 /* ================= INIT ================= */
 (function init(){
-  const r=localStorage.getItem('nutri_role'); if(r) enterApp(r);
   for(let w=1;w<=24;w++){const p=perOf(w);week.innerHTML+=`<option value="${w}">Week ${w} — P${p.id} ${p.name}</option>`;}
-  const sv=JSON.parse(localStorage.getItem('nutri_supps')||'null'); if(sv&&sv.length) SUPPS=sv;
-  ITEM_LOCKS=JSON.parse(localStorage.getItem('nutri_item_locks')||'{}');
-  const bz=JSON.parse(localStorage.getItem('nutri_bazi')||'null');
-  if(bz){ bdate.value=bz.d||''; btime.value=bz.t||'12:00'; }
-  const s=JSON.parse(localStorage.getItem('nutriplan24')||'null');
-  sdate.value=todayStr();
-  if(s){
-    week.value=s.w;kcal.value=s.k;prot.value=s.p;meals.value=s.m;vis.value=s.v;
-    if(s.pt1)pt1.value=s.pt1; if(s.ps1)ps1.value=s.ps1;
-    if(s.pt2)pt2.value=s.pt2; if(s.ps2)ps2.value=s.ps2;
-    if(s.dm)dm.value=s.dm; if(s.ds)dmstr.value=s.ds;
-    style.value=s.s||'all'; breakslot.value=s.b||'เช้า'; if(s.pm)pmode.value=s.pm;
-    if(s.sd)sdate.value=s.sd;
-    SON=new Set(s.sup&&s.sup.length?s.sup.filter(id=>SUPPS.some(x=>x.id===id)):SUPPS.map(x=>x.id));
-  }else{
-    pt1.value='allplant'; ps1.value=2;
-    SON=new Set(SUPPS.map(x=>x.id));
-  }
+  buildBlendSelects();
   buildSupps();
-  ['week','vis','meals','breakslot','style','sdate','pt1','ps1','pt2','ps2','dm','dmstr'].forEach(id=>
+  sdate.value=todayStr();
+  ['week','vis','meals','breakslot','style','sdate','pt1','ps1','pt2','ps2','pt3','ps3','dm','dmstr'].forEach(id=>
     document.getElementById(id).addEventListener('change',()=>{upd();run();}));
   ['kcal','prot'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{upd();run();}));
   pmode.addEventListener('change',applyPrintMode);
-  applyPrintMode(); upd();
-  if(s&&s.rows) Object.entries(s.rows).forEach(([k,v])=>{const e=document.getElementById(k);if(e)e.value=v;});
-  sumRows(); run();
+  const r=localStorage.getItem('nutri_role');
+  if(r) enterApp(r);
 })();
 </script>
 </body>

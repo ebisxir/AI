@@ -32,6 +32,12 @@ h1,h2,h3{text-align:center;color:var(--primary);margin:8px 0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
 .small{font-size:12.5px;color:var(--muted);line-height:1.6}
 .tip{font-size:12.5px;color:#5a4634;background:#fffaf0;border-left:3px solid var(--gold);padding:8px 11px;border-radius:0 8px 8px 0;margin-top:10px;line-height:1.7}
+.fix{margin-top:12px;background:#f2f8f4;border:1px solid #cfe3d4;border-left:4px solid #2f7d4f;border-radius:0 10px 10px 0;padding:11px 13px;font-size:13.2px;line-height:1.75;color:#24402f}
+.fix>b{color:#1d5c3a;font-size:13.8px}
+.fixhead{font-weight:600;color:#1d5c3a;margin-top:9px}
+.fix ol{margin:5px 0 0;padding-left:20px}
+.fix li{margin-bottom:5px}
+.fixnote{font-size:11.8px;color:#5c6b61;margin-top:9px;line-height:1.6}
 
 /* ---------- ฟอร์ม ---------- */
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;align-items:end}
@@ -230,7 +236,7 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
   <div class="card">
     <h2>📅 ตรวจวันจรเทียบดวงกำเนิด</h2>
     <div class="form-grid" style="max-width:440px;margin:0 auto">
-      <div class="fld" style="grid-column:span 2"><label>เลือกวันที่</label><input type="date" id="navDate" onchange="loadNavigator()"></div>
+      <div class="fld" style="grid-column:span 2"><label>เลือกวันที่</label><input type="date" id="navDate" onchange="onNavChange()"></div>
       <div class="fld"><button class="wide ghost" onclick="setToday()">📍 วันนี้</button></div>
     </div>
     <div class="box" id="dailyBox" style="margin-top:16px">-</div>
@@ -279,6 +285,8 @@ function toast(msg){
 function LS(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
 function LSdel(k){try{localStorage.removeItem(k);}catch(e){}}
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+/* วันที่แบบเวลาท้องถิ่น — กันบั๊ก valueAsDate ที่ตีความเป็น UTC */
+function toISO(d){const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 
 function switchTab(t){
   document.getElementById('paneUser').style.display=t==='user'?'block':'none';
@@ -319,13 +327,13 @@ function logout(){
 }
 
 /* ============================================================
-   SECTION 0.5 : MULTI-PROFILE  (บันทึกดวงได้หลายคน)
+   SECTION 0.5 : MULTI-PROFILE
    ============================================================ */
 const BF=['by','bm','bd','bh','bmin','lon','tz','country'];
 const uKey=()=>(CURRENT_USER||'guest').trim().toLowerCase();
 const PKEY=()=>'bz_profiles_'+uKey();
 const AKEY=()=>'bz_active_'+uKey();
-const LKEY=()=>'bz_birth_'+uKey();          // คีย์เวอร์ชันเก่า (ใช้ย้ายข้อมูล)
+const LKEY=()=>'bz_birth_'+uKey();
 function getProfiles(){try{const a=JSON.parse(LS(PKEY())||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
 function setProfiles(a){LS(PKEY(),JSON.stringify(a));}
 function getActiveId(){return LS(AKEY())||'';}
@@ -399,7 +407,7 @@ function renameProfile(){
   if(i<0)return;
   const n=(prompt('เปลี่ยนชื่อดวงนี้',ps[i].name)||'').trim();
   if(!n)return;
-  ps[i].name=n;setProfiles(ps);renderProfiles();
+  ps[i].name=n;setProfiles(ps);renderProfiles();updateConfirm();
   toast('✏️ เปลี่ยนชื่อเป็น '+n);
 }
 function delProfile(){
@@ -564,6 +572,57 @@ const EL_HIGH={"ไม้":"ดื้อ ยึดความคิดตัว
 const EL_LOW={"ไม้":"ขาดแรงริเริ่ม ไม่กล้าเริ่มสิ่งใหม่ อ่อนล้าเรื้อรัง","ไฟ":"ขาดความมั่นใจ ไม่กล้าแสดงออก มือเท้าเย็น",
  "ดิน":"ขาดหลักยึด ชีวิตโยกคลอน ระบบย่อยอ่อนแอ","ทอง":"ตัดสินใจไม่เด็ดขาด ปล่อยปละ ภูมิคุ้มกันต่ำ",
  "น้ำ":"ขาดความยืดหยุ่น ปรับตัวยาก พักผ่อนไม่เพียงพอ"};
+
+/* ---------- แนวทางปรับแก้ : เติมธาตุ ---------- */
+const EL_BOOST={
+ "ไม้":{wear:"👕 <b>การแต่งกาย</b> — ใช้โทนเขียว เขียวมะกอก เขียวอ่อนเป็นสีหลัก · เลือกผ้าฝ้าย ลินิน ใยธรรมชาติ และของใช้ลายไม้",
+   eat:"🥬 <b>โภชนาการ</b> — เพิ่มผักใบเขียว บรอกโคลี คะน้า ชาเขียว · รสเปรี้ยวอ่อนอย่างมะนาวหรือน้ำส้มสายชูหมัก บำรุงตับและถุงน้ำดี",
+   act:"🌱 <b>พฤติกรรม</b> — เริ่มงานสำคัญช่วงเช้า 05:00–07:00 น. · ยืดเหยียดร่างกายและเดินในที่มีต้นไม้วันละ 10–15 นาที",
+   env:"🪴 <b>สิ่งแวดล้อม</b> — วางต้นไม้จริงบนโต๊ะทำงาน หันโต๊ะหรือหัวนอนไปทางทิศตะวันออก ใช้เฟอร์นิเจอร์ไม้แทนโลหะ",
+   merit:"🙏 <b>การทำบุญ/ไหว้สิ่งศักดิ์สิทธิ์</b> — ถวายดอกไม้สดหรือต้นไม้มงคล ปลูกต้นไม้ถวายวัด และทำบุญช่วงเช้าตรู่"},
+ "ไฟ":{wear:"👕 <b>การแต่งกาย</b> — ใช้โทนแดง ส้ม ชมพู ม่วงเป็นสีหลัก · เครื่องประดับทรงแหลมหรือลายดาว",
+   eat:"🍅 <b>โภชนาการ</b> — เน้นอาหารปรุงสุกอุ่นร้อน มะเขือเทศ บีทรูท พริกหวาน · รสขมอ่อนอย่างผักขมหรือชาสมุนไพร บำรุงหัวใจ",
+   act:"🔥 <b>พฤติกรรม</b> — ออกกำลังกายให้เหงื่อออกอย่างน้อย 3 วัน/สัปดาห์ · รับแดดอ่อนช่วงเช้า 15 นาที · เพิ่มการพบปะผู้คนและนำเสนองาน",
+   env:"💡 <b>สิ่งแวดล้อม</b> — เพิ่มแสงสว่างในบ้าน เปิดม่านรับแดด ใช้โคมไฟโทนอุ่น หันโต๊ะทำงานไปทางทิศใต้",
+   merit:"🕯️ <b>การทำบุญ/ไหว้สิ่งศักดิ์สิทธิ์</b> — ถวายเทียน ประทีป หรือหลอดไฟให้ศาสนสถาน จุดธูปเทียนบูชาอย่างสม่ำเสมอ"},
+ "ดิน":{wear:"👕 <b>การแต่งกาย</b> — ใช้โทนเหลือง น้ำตาล ครีม เบจเป็นสีหลัก · เครื่องประดับหิน คริสตัล หรือเซรามิก",
+   eat:"🍠 <b>โภชนาการ</b> — ฟักทอง มันหวาน ข้าวกล้อง ธัญพืช รสหวานตามธรรมชาติ · กินให้ตรงเวลาทุกมื้อ บำรุงม้ามและกระเพาะอาหาร",
+   act:"🧱 <b>พฤติกรรม</b> — จัดบ้าน จัดโต๊ะ ทำบัญชีรายรับรายจ่าย และตั้งกิจวัตรประจำวันให้เป็นเวลาเดิมทุกวัน",
+   env:"🏺 <b>สิ่งแวดล้อม</b> — วางแจกันดินเผา หินก้อนใหญ่ หรือคริสตัลที่มุมห้อง ใช้พื้นผิวหินแทนกระจกเงา",
+   merit:"🙏 <b>การทำบุญ/ไหว้สิ่งศักดิ์สิทธิ์</b> — ถวายข้าวสารอาหารแห้ง บริจาคอาหารกลางวัน ร่วมบุญสร้างหรือบูรณะศาสนสถาน"},
+ "ทอง":{wear:"👕 <b>การแต่งกาย</b> — ใช้โทนขาว เงิน เทา ทองแวววาวเป็นสีหลัก · นาฬิกาโลหะ เครื่องประดับเงินทรงกลม",
+   eat:"🧄 <b>โภชนาการ</b> — หัวหอม กระเทียม ขิง ลูกแพร์ เห็ดขาว ไชเท้า · รสเผ็ดอ่อน บำรุงปอดและลำไส้ใหญ่",
+   act:"⚙️ <b>พฤติกรรม</b> — ฝึกหายใจลึกวันละ 5 นาที ตั้งกฎและตารางให้ตัวเอง เก็บกวาดของที่ไม่ใช้ออกทุกสัปดาห์",
+   env:"🔔 <b>สิ่งแวดล้อม</b> — แขวนระฆังลมหรือวางของตกแต่งโลหะทางทิศตะวันตกและตะวันตกเฉียงเหนือ",
+   merit:"🙏 <b>การทำบุญ/ไหว้สิ่งศักดิ์สิทธิ์</b> — ถวายสังฆทานเครื่องใช้โลหะ ระฆัง หรือบาตร · ช่วยเหลือผู้ป่วยระบบทางเดินหายใจ"},
+ "น้ำ":{wear:"👕 <b>การแต่งกาย</b> — ใช้โทนดำ น้ำเงิน ฟ้าเป็นสีหลัก · ลายคลื่นน้ำ เครื่องประดับทรงโค้งมน",
+   eat:"🫘 <b>โภชนาการ</b> — ถั่วดำ งาดำ สาหร่าย ปลาทะเล ซุปใส · ดื่มน้ำอุ่นวันละ 6–8 แก้ว รสเค็มอ่อน บำรุงไต",
+   act:"💧 <b>พฤติกรรม</b> — นอนก่อน 23:00 น. · ว่ายน้ำหรือแช่เท้าน้ำอุ่น · ทบทวนข้อมูลให้ครบก่อนตัดสินใจเรื่องใหญ่",
+   env:"🐟 <b>สิ่งแวดล้อม</b> — วางตู้ปลา น้ำพุขนาดเล็ก หรือแก้วน้ำใสบนโต๊ะทำงาน หันโต๊ะไปทางทิศเหนือ",
+   merit:"🙏 <b>การทำบุญ/ไหว้สิ่งศักดิ์สิทธิ์</b> — ถวายน้ำดื่มสะอาด กรวดน้ำอุทิศส่วนกุศล ร่วมบุญสร้างแหล่งน้ำหรือบริจาคน้ำดื่ม"}};
+/* ---------- แนวทางปรับแก้ : ลดทอนธาตุ ---------- */
+const EL_DRAIN={
+ "ไม้":{wear:"👕 <b>การแต่งกาย</b> — ลดสีเขียวเป็นสีหลัก เพิ่มโทนขาว-เงิน (ทองควบคุมไม้) และแดง (ไฟช่วยระบายไม้)",
+   eat:"🍽️ <b>โภชนาการ</b> — ลดของรสเปรี้ยวจัดและเครื่องดื่มหมักดอง งดแอลกอฮอล์เพื่อพักตับ",
+   act:"📌 <b>พฤติกรรม</b> — เลิกเริ่มหลายโปรเจกต์พร้อมกัน ตั้งกติกา “ปิดงานเดิมก่อนเปิดงานใหม่” และฝึกรับฟังความเห็นต่าง",
+   env:"🪵 <b>สิ่งแวดล้อม</b> — ลดจำนวนต้นไม้ในห้องนอน ย้ายไปไว้ระเบียง เพิ่มของตกแต่งโลหะแทน"},
+ "ไฟ":{wear:"👕 <b>การแต่งกาย</b> — ลดสีแดง-ส้มจัดจ้าน เพิ่มโทนดำ-น้ำเงิน (น้ำควบคุมไฟ) และเหลือง-น้ำตาล (ดินช่วยระบายไฟ)",
+   eat:"🌶️ <b>โภชนาการ</b> — ลดของเผ็ดจัด ของทอด กาแฟ และแอลกอฮอล์ เพิ่มน้ำเปล่าและผลไม้ฉ่ำน้ำ",
+   act:"🧘 <b>พฤติกรรม</b> — นอนก่อน 23:00 น. ฝึกสมาธิหรือหายใจช้าก่อนนอน ลดการใช้มือถือตอนดึก",
+   env:"💡 <b>สิ่งแวดล้อม</b> — ลดไฟสว่างจ้าและของตกแต่งสีแดงในห้องนอน เพิ่มน้ำพุเล็กหรือภาพวิวทะเล"},
+ "ดิน":{wear:"👕 <b>การแต่งกาย</b> — ลดสีเหลือง-น้ำตาลเป็นสีหลัก เพิ่มโทนเขียว (ไม้ควบคุมดิน) และขาว-เงิน (ทองช่วยระบายดิน)",
+   eat:"🍚 <b>โภชนาการ</b> — ลดแป้งขัดสี น้ำตาล และของหวาน เพิ่มผักใบเขียวและอาหารย่อยง่าย",
+   act:"🚶 <b>พฤติกรรม</b> — เคลียร์ของสะสมที่ไม่ใช้ เดินทางเปลี่ยนบรรยากาศ และฝึกตัดสินใจภายในกรอบเวลาที่กำหนด",
+   env:"🏠 <b>สิ่งแวดล้อม</b> — เปิดหน้าต่างให้อากาศถ่ายเท ลดของหนักและกล่องเก็บของรอบเตียง เพิ่มต้นไม้ใบเขียว"},
+ "ทอง":{wear:"👕 <b>การแต่งกาย</b> — ลดโทนขาว-เงิน-เทาเป็นสีหลัก เพิ่มโทนแดง (ไฟหลอมทอง) และดำ-น้ำเงิน (น้ำช่วยระบายทอง)",
+   eat:"🍲 <b>โภชนาการ</b> — ลดของทอด ของแห้ง และเผ็ดจัด เพิ่มซุปอุ่นและผลไม้ที่ให้ความชุ่มชื้น",
+   act:"🗣️ <b>พฤติกรรม</b> — ฝึกพูดให้นุ่มลง ลดการวิจารณ์ และให้โอกาสคนรอบข้างผิดพลาดได้บ้าง",
+   env:"🎵 <b>สิ่งแวดล้อม</b> — ลดของตกแต่งโลหะและระฆังลม เพิ่มผ้า ไม้ และเสียงเพลงโทนอบอุ่นในบ้าน"},
+ "น้ำ":{wear:"👕 <b>การแต่งกาย</b> — ลดโทนดำ-น้ำเงินเข้มเป็นสีหลัก เพิ่มเหลือง-น้ำตาล (ดินควบคุมน้ำ) และเขียว (ไม้ช่วยระบายน้ำ)",
+   eat:"🧂 <b>โภชนาการ</b> — ลดของเค็ม ของดอง และเครื่องดื่มเย็นจัด เพิ่มอาหารอุ่นและธัญพืช",
+   act:"📝 <b>พฤติกรรม</b> — เลิกคิดฟุ้งตอนดึกด้วยการจดสิ่งที่ต้องทำลงกระดาษ ตั้งเดดไลน์ให้การตัดสินใจ และรับแดดช่วงเช้า",
+   env:"🌊 <b>สิ่งแวดล้อม</b> — ลดตู้ปลาและน้ำพุในห้องนอน เพิ่มเซรามิก หิน หรือคริสตัลโทนดิน"}};
+
 const CLASH={"子":"午","午":"子","丑":"未","未":"丑","寅":"申","申":"寅","卯":"酉","酉":"卯","辰":"戌","戌":"辰","巳":"亥","亥":"巳"};
 const COMBINE={"子":"丑","丑":"子","寅":"亥","亥":"寅","卯":"戌","戌":"卯","辰":"酉","酉":"辰","巳":"申","申":"巳","午":"未","未":"午"};
 const HARM={"子":"未","未":"子","丑":"午","午":"丑","寅":"巳","巳":"寅","卯":"辰","辰":"卯","申":"亥","亥":"申","酉":"戌","戌":"酉"};
@@ -579,6 +638,7 @@ const GOD_ACT={
  "ทรัพย์":{g:"💰 ปิดการขาย เจรจาราคา วางแผนการเงิน ลงทุนระยะยาว",b:"🛍️ ใช้จ่ายฟุ่มเฟือย ตัดสินใจซื้อของชิ้นใหญ่แบบเร่งรีบ"},
  "อำนาจ":{g:"📜 เซ็นสัญญา สมัครงาน สอบ ยื่นเอกสารราชการ รับตำแหน่ง",b:"⚔️ ปะทะกับผู้มีอำนาจ ทำงานหักโหม ฝ่าฝืนกฎระเบียบ"},
  "ทรัพยากร":{g:"📚 เรียนรู้ อบรม ตรวจสุขภาพ ขอคำปรึกษาผู้ใหญ่ ทำบุญ",b:"🛌 ผัดวันประกันพรุ่ง คิดมากเกินเหตุ พึ่งพาผู้อื่นมากไป"}};
+const GOD_EMO={"เพื่อน":"🤝","แสดงออก":"🎨","ทรัพย์":"💰","อำนาจ":"📜","ทรัพยากร":"📚"};
 const GOD_MEAN={
  "เพื่อน":"ตัวเรา พี่น้อง เพื่อน คู่แข่ง · เรื่องความร่วมมือและการแข่งขัน",
  "แสดงออก":"ความคิดสร้างสรรค์ ผลงาน คำพูด ลูกหลาน · เรื่องการปล่อยของออกจากตัวเรา",
@@ -588,7 +648,7 @@ const GOD_MEAN={
 const GOD_HIGH={
  "เพื่อน":"มากไป = เสียเงินให้คนใกล้ตัว แย่งงานแย่งโอกาส ชอบลงมือเองจนเหนื่อย",
  "แสดงออก":"มากไป = พูดมากจนเสียงาน ไอเดียล้นแต่ไม่จบ ขัดแย้งกับผู้บังคับบัญชา",
- "ทรัพย์":"มากไป = หมกมุ่นเรื่องเงิน ทำงานหนักจนสุขภาพพัง เจ้าชู้/ใจแตกเรื่องความสัมพันธ์",
+ "ทรัพย์":"มากไป = หมกมุ่นเรื่องเงิน ทำงานหนักจนสุขภาพพัง วุ่นวายเรื่องความสัมพันธ์",
  "อำนาจ":"มากไป = กดดันตัวเองสูง เครียดสะสม เจอเจ้านายหรือกฎเกณฑ์บีบคั้น",
  "ทรัพยากร":"มากไป = คิดเยอะไม่ลงมือ พึ่งคนอื่น ขี้เกียจแฝง ติดสบาย"};
 const GOD_LOW={
@@ -597,6 +657,65 @@ const GOD_LOW={
  "ทรัพย์":"น้อยไป = หาเงินยาก มองไม่เห็นโอกาส ต้องสร้างวินัยการเงินเป็นพิเศษ",
  "อำนาจ":"น้อยไป = ขาดวินัย ไม่ชอบถูกบังคับ เหมาะกับงานอิสระมากกว่างานประจำ",
  "ทรัพยากร":"น้อยไป = ขาดคนหนุนหลัง ต้องพึ่งตัวเอง เรียนรู้จากประสบการณ์ตรง"};
+/* ---------- แนวทางปรับแก้ : สิบเทพ ---------- */
+const GOD_FIX_HIGH={
+ "เพื่อน":[
+  "💸 แยกบัญชีเงินส่วนตัวกับเงินกองกลางให้ชัด งดค้ำประกันและการให้ยืมแบบไม่มีเอกสาร",
+  "📄 ทุกความร่วมมือต้องมีสัญญาเป็นลายลักษณ์อักษร ระบุสัดส่วนและทางออกไว้ล่วงหน้า",
+  "🤝 เปลี่ยนคู่แข่งให้เป็นพันธมิตร — แข่งกับเป้าหมายของตัวเองแทนการแข่งกับคน",
+  "🧑‍🤝‍🧑 กระจายงานให้ทีมแทนการลงมือเองทุกอย่าง เพื่อลดความเหนื่อยสะสม",
+  "🙏 ทำบุญร่วมหมู่คณะ ถวายสังฆทานร่วมกับผู้อื่น และอธิษฐานเรื่องกัลยาณมิตร"],
+ "แสดงออก":[
+  "🤐 ตั้งกติกา “หยุดคิด 3 วินาทีก่อนพูด” โดยเฉพาะเวลาคุยกับผู้บังคับบัญชา",
+  "🎯 โฟกัสโปรเจกต์เดียวให้จบก่อนเริ่มงานใหม่ และตั้งตัวชี้วัดที่วัดผลได้จริง",
+  "💰 เปลี่ยนไอเดียให้เป็นรายได้ — มีช่องทางเผยแพร่ผลงานอย่างเป็นระบบ",
+  "📜 เสริมด้านวินัยด้วยตารางเวลาและการรับงานที่มีกรอบความรับผิดชอบชัดเจน",
+  "🙏 ถวายดอกไม้และของสวยงาม พร้อมอธิษฐานขอสติในการใช้คำพูด"],
+ "ทรัพย์":[
+  "📊 ทำบัญชีรายรับ-รายจ่ายทุกเดือน และตั้งเพดานค่าใช้จ่ายที่ไม่จำเป็น",
+  "🏦 แยกเงินออมอัตโนมัติทันทีที่รายได้เข้า อย่าตัดสินใจเรื่องเงินก้อนตอนดึก",
+  "🩺 ตรวจสุขภาพประจำปี เพราะพลังทรัพย์ที่มากมักมาพร้อมการใช้ร่างกายเกินตัว",
+  "❤️ รักษาขอบเขตความสัมพันธ์ให้ชัดเจน ลดการรับปากหลายทางพร้อมกัน",
+  "🙏 ทำทานอย่างสม่ำเสมอตามกำลัง เพื่อหมุนเวียนพลังทรัพย์ไม่ให้ติดขัด"],
+ "อำนาจ":[
+  "🧘 จัดการความเครียดเป็นระบบ — ออกกำลังกาย 3 วัน/สัปดาห์ และนอนให้ครบ 7 ชั่วโมง",
+  "🚧 ตั้งขอบเขตงานให้ชัด กล้าปฏิเสธงานที่เกินกำลังอย่างมีเหตุผล",
+  "🩺 ตรวจความดัน หัวใจ และภาวะเครียดเป็นประจำ อย่าปล่อยให้สะสม",
+  "📚 เสริมด้านทรัพยากร (ความรู้และผู้ใหญ่สนับสนุน) เพื่อแปลงแรงกดดันเป็นโอกาส",
+  "🙏 ไหว้พระเสริมบารมีและอธิษฐานขอผู้ใหญ่อุปถัมภ์ในหน้าที่การงาน"],
+ "ทรัพยากร":[
+  "🚀 ตั้งกติกา “คิดไม่เกิน 1 วันแล้วต้องลงมือ” กันอาการคิดเยอะจนไม่ได้เริ่ม",
+  "📅 ใส่เดดไลน์ให้ทุกงาน และซอยงานใหญ่เป็นก้อนเล็กที่ทำเสร็จได้ภายใน 1 ชั่วโมง",
+  "🎨 หาเวทีปล่อยของ — สอน เขียน หรือทำผลงานให้ความรู้ที่สะสมไว้ออกมาเป็นรูปธรรม",
+  "🏃 ออกกำลังกายสม่ำเสมอเพื่อลดความเฉื่อยและการติดความสบาย",
+  "🙏 ทำบุญกับผู้มีพระคุณ พร้อมตั้งใจว่าจะลงมือทำสิ่งที่เรียนรู้มาให้เกิดผลจริง"]};
+const GOD_FIX_LOW={
+ "เพื่อน":[
+  "👥 เข้าร่วมกลุ่ม ชมรม หรือคอมมูนิตี้สายงานอย่างน้อยเดือนละครั้ง",
+  "🏃 ออกกำลังกายแบบกลุ่มหรือกีฬาเป็นทีม เพื่อเติมพลังด้านพวกพ้อง",
+  "📣 ฝึกขอความช่วยเหลือให้เป็น อย่าแบกทุกอย่างไว้คนเดียว",
+  "🙏 ทำบุญร่วมกับผู้อื่นและอธิษฐานขอมิตรสหายที่ดีเข้ามาในชีวิต"],
+ "แสดงออก":[
+  "🎨 ฝึกผลิตผลงานสม่ำเสมอ เช่น เขียน ถ่ายภาพ หรือออกแบบ สัปดาห์ละ 1 ชิ้น",
+  "🎤 ฝึกนำเสนอหรือสอนงานให้ผู้อื่น เพื่อเปิดช่องทางการแสดงออก",
+  "📢 ทำให้ผลงานถูกมองเห็น — รายงานความคืบหน้าต่อหัวหน้าอย่างสม่ำเสมอ",
+  "🙏 ทำบุญด้วยการให้ความรู้ สอนหนังสือ หรือถวายอุปกรณ์การเรียน"],
+ "ทรัพย์":[
+  "🔁 ตั้งระบบออมอัตโนมัติแม้จำนวนน้อย เพื่อสร้างฐานทรัพย์ให้มั่นคง",
+  "🛠️ เพิ่มทักษะที่เปลี่ยนเป็นรายได้ได้จริงอย่างน้อยปีละ 1 ทักษะ",
+  "🔍 ฝึกสายตาเรื่องโอกาส — จดบันทึกไอเดียธุรกิจหรือการลงทุนที่ศึกษาแล้วทุกสัปดาห์",
+  "🙏 ทำบุญด้วยทรัพย์ตามกำลัง ถวายปัจจัยหรือบริจาคอาหาร เพื่อเปิดทางทรัพย์"],
+ "อำนาจ":[
+  "⏰ สร้างวินัยด้วยตารางเวลาและระบบเตือน ทำให้ได้ตามแผนอย่างน้อย 80%",
+  "🎓 สอบวุฒิบัตรหรือใบรับรองวิชาชีพ เพื่อสร้างกรอบอำนาจให้ตัวเอง",
+  "👔 หา mentor หรือหัวหน้าที่เคารพได้ แล้วรับงานที่มีความรับผิดชอบเพิ่มขึ้นทีละขั้น",
+  "🙏 ทำบุญกับผู้มีพระคุณและศาสนสถาน เพื่อเสริมบารมีด้านหน้าที่การงาน"],
+ "ทรัพยากร":[
+  "📚 ตั้งเวลาเรียนรู้ให้สม่ำเสมอ อย่างน้อยสัปดาห์ละ 3 ชั่วโมง",
+  "🤝 หาผู้ใหญ่หรือที่ปรึกษาที่ไว้ใจได้ และรักษาความสัมพันธ์ให้ต่อเนื่อง",
+  "😴 ดูแลการนอนและสุขภาพเป็นอันดับแรก เพราะพลังสำรองของคุณมีไม่มาก",
+  "🙏 ทำบุญกับบิดามารดา ครูบาอาจารย์ และถวายหนังสือหรืออุปกรณ์การศึกษา"]};
+
 const DM_STORY={
  "甲":"🌳 <b>ต้นไม้ใหญ่</b> — ตรงไปตรงมา ยึดหลักการ มีความเป็นผู้นำโดยธรรมชาติ เติบโตช้าแต่มั่นคงและเป็นร่มเงาให้คนอื่น จุดที่ต้องระวังคือดื้อและปรับทิศทางยากเมื่อถูกบังคับ",
  "乙":"🌿 <b>เถาวัลย์ดอกไม้</b> — อ่อนโยน ยืดหยุ่น เอาตัวรอดเก่งด้วยการปรับตัวและพึ่งพาเครือข่ายรอบตัว เสน่ห์ดี เจรจาเก่ง แต่บางครั้งลังเลและพึ่งพาผู้อื่นมากไป",
@@ -752,6 +871,7 @@ function evaluateDay(dp){
    SECTION 4 : แสดงผล
    ============================================================ */
 const dots=els=>els.map(e=>EL_COLOR[e].map(c=>`<span class="dot" style="background:${c}"></span>`).join('')).join(' ');
+const fixList=items=>'<ol>'+items.map(x=>'<li>'+x+'</li>').join('')+'</ol>';
 function initCountry(){
   const sel=document.getElementById('country');
   sel.innerHTML=COUNTRIES.map((c,i)=>`<option value="${i}">${c[0]}</option>`).join('');
@@ -788,6 +908,32 @@ function pillarHTML(i,P,dmIdx,isDay){
     (isDay?'':`<br><span style="color:var(--primary)">🌟 ${tenGod(dmIdx,P.si).n}</span>`);
   document.getElementById('h'+i).innerHTML='🫙 ธาตุแฝง:<br>'+P.hidden.map(h=>
     `${h.s} ${EL_EMO[h.el]}${h.el} <b>${h.w}%</b> <span style="color:var(--primary)">(${tenGod(dmIdx,sIdx(h.s)).n.split(' ')[0]})</span>`).join('<br>');
+}
+/* ---- แนวทางปรับแก้ : ธาตุ ---- */
+function buildElemFix(A,eTop){
+  const add=A.fav[0], add2=A.fav[1], cut=A.unfav[0];
+  const B=EL_BOOST[add], D=EL_DRAIN[cut];
+  let h=`<div class="fix"><b>🛠️ แนวทางปรับแก้เฉพาะบุคคล · สมดุลธาตุ</b>`;
+  h+=`<div class="fixhead">① เติมพลัง ${EL_EMO[add]}<b>ธาตุ${add}</b>`+
+     (add2&&add2!==add?` (เสริมรองด้วย ${EL_EMO[add2]}ธาตุ${add2})`:'')+`</div>`;
+  h+=fixList([B.wear,B.eat,B.act,B.env,B.merit]);
+  h+=`<div class="fixhead">② ลดทอน ${EL_EMO[cut]}<b>ธาตุ${cut}</b> ที่มากเกินสมดุลของคุณ</div>`;
+  h+=fixList([D.wear,D.eat,D.act,D.env]);
+  if(eTop&&eTop!==cut)
+    h+=`<div class="fixnote">📌 หมายเหตุ: ธาตุที่มีสัดส่วนสูงที่สุดในดวงคือ ${EL_EMO[eTop]}<b>ธาตุ${eTop}</b> `+
+       `แต่สิ่งที่ควรลดเป็นอันดับแรกคือ ${EL_EMO[cut]}ธาตุ${cut} เพราะเป็นธาตุที่บั่นทอนดิถีโดยตรง</div>`;
+  h+=`<div class="fixnote">⏱️ ทำต่อเนื่องอย่างน้อย 30 วันจึงจะเห็นผล · เริ่มจากข้อที่ทำได้ทันทีก่อน ไม่ต้องทำครบทุกข้อในวันเดียว</div></div>`;
+  return h;
+}
+/* ---- แนวทางปรับแก้ : สิบเทพ ---- */
+function buildGodFix(cTop,cLow){
+  let h=`<div class="fix"><b>🛠️ แนวทางปรับแก้เฉพาะบุคคล · สมดุลสิบเทพ</b>`;
+  h+=`<div class="fixhead">① คุมหมวดที่ล้น — ${GOD_EMO[cTop]}<b>${cTop}</b></div>`;
+  h+=fixList(GOD_FIX_HIGH[cTop]);
+  h+=`<div class="fixhead">② เติมหมวดที่บาง — ${GOD_EMO[cLow]}<b>${cLow}</b></div>`;
+  h+=fixList(GOD_FIX_LOW[cLow]);
+  h+=`<div class="fixnote">⚠️ แนวทางเหล่านี้เป็นการปรับพฤติกรรม สิ่งแวดล้อม และการวางแผนชีวิต ไม่ใช่คำทำนายตายตัว และไม่ใช้แทนคำแนะนำทางการแพทย์หรือการเงินจากผู้เชี่ยวชาญ</div></div>`;
+  return h;
 }
 function buildStory(P,A){
   const dmS=P.day.stem, seas=P.month.animal, lack=Object.keys(A.sc).filter(e=>A.pc(e)<6);
@@ -850,20 +996,21 @@ function calculateBazi(){
   eb+=`<div class="tip">📖 <b>อ่านอย่างไร:</b> ตัวเลขคือสัดส่วนพลังของแต่ละธาตุในดวงคุณ ไม่ใช่คะแนนดี-ไม่ดี · ธาตุที่สูงสุดคือ ${EL_EMO[eTop]}<b>${eTop}</b> (${CH.pc(eTop)}%) `+
       `ถ้าล้นเกินมักแสดงออกเป็น: ${EL_HIGH[eTop]} · ธาตุที่ต่ำสุดคือ ${EL_EMO[eLow]}<b>${eLow}</b> (${CH.pc(eLow)}%) `+
       `ถ้าพร่องมักแสดงออกเป็น: ${EL_LOW[eLow]}<br>⚖️ เป้าหมายของ BaZi ไม่ใช่ให้ทุกธาตุเท่ากัน แต่คือ "เติมธาตุที่ช่วยดิถี ลดธาตุที่บั่นทอนดิถี"</div>`;
+  eb+=buildElemFix(CH,eTop);
   document.getElementById('elemBox').innerHTML=eb;
 
-  const EMO={"เพื่อน":"🤝","แสดงออก":"🎨","ทรัพย์":"💰","อำนาจ":"📜","ทรัพยากร":"📚"};
   const catSorted=Object.keys(CH.cat).sort((a,b)=>CH.cat[b]-CH.cat[a]);
   const cTop=catSorted[0], cLow=catSorted[4];
   let gb='🌟 <b>สิบเทพ (10 Gods) ในดวงกำเนิด</b>';
   Object.keys(CH.cat).forEach(c=>{const v=(CH.cat[c]/CH.ctot*100).toFixed(1);
-    gb+=`<div class="erow"><div class="ename"><span>${EMO[c]} <b>${c}</b></span><b>${v}%</b></div>`+
+    gb+=`<div class="erow"><div class="ename"><span>${GOD_EMO[c]} <b>${c}</b></span><b>${v}%</b></div>`+
         `<div class="bar"><i style="width:${v}%;background:var(--primary)"></i></div>`+
         `<div class="edesc">${GOD_MEAN[c]}</div></div>`;});
   gb+=`<div class="small">เสาปี ${tenGod(P.day.si,P.year.si).n} · เสาเดือน ${tenGod(P.day.si,P.month.si).n} · เสาเวลา ${tenGod(P.day.si,P.hour.si).n}</div>`;
   gb+=`<div class="tip">📖 <b>สิบเทพคืออะไร:</b> คือการแปลง "ธาตุ" ให้กลายเป็น "เรื่องในชีวิตจริง" โดยวัดจากว่าแต่ละธาตุมีความสัมพันธ์กับตัวคุณอย่างไร — หล่อเลี้ยงเรา / เราผลิตออกไป / เราควบคุม / ควบคุมเรา / เหมือนเรา<br>`+
-      `🔝 หมวดเด่นที่สุดของคุณคือ ${EMO[cTop]}<b>${cTop}</b> → ${GOD_HIGH[cTop]}<br>`+
-      `🔻 หมวดที่บางที่สุดคือ ${EMO[cLow]}<b>${cLow}</b> → ${GOD_LOW[cLow]}</div>`;
+      `🔝 หมวดเด่นที่สุดของคุณคือ ${GOD_EMO[cTop]}<b>${cTop}</b> → ${GOD_HIGH[cTop]}<br>`+
+      `🔻 หมวดที่บางที่สุดคือ ${GOD_EMO[cLow]}<b>${cLow}</b> → ${GOD_LOW[cLow]}</div>`;
+  gb+=buildGodFix(cTop,cLow);
   document.getElementById('godsBox').innerHTML=gb;
 
   document.getElementById('yongBox').innerHTML=
@@ -876,22 +1023,35 @@ function calculateBazi(){
 
   document.getElementById('storyBox').innerHTML=buildStory(P,CH);
 
-  if(!document.getElementById('navDate').value)
-    document.getElementById('navDate').valueAsDate=new Date();
+  const nav=document.getElementById('navDate');
+  if(!nav.value)nav.value=toISO(new Date());
   loadNavigator();
   saveActiveProfile();
 }
 function parseLocal(s){const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c,12,0,0,0);}
-function setToday(){document.getElementById('navDate').valueAsDate=new Date();loadNavigator();}
+let NAV_TOUCHED=false;
+function onNavChange(){NAV_TOUCHED=true;loadNavigator();}
+function setToday(){
+  NAV_TOUCHED=false;
+  document.getElementById('navDate').value=toISO(new Date());
+  loadNavigator();
+}
+function syncToday(){
+  if(!CH||NAV_TOUCHED)return;
+  const el=document.getElementById('navDate'),t=toISO(new Date());
+  if(el&&el.value&&el.value!==t){el.value=t;loadNavigator();}
+}
 function loadNavigator(){
   const v=document.getElementById('navDate').value; if(!v||!CH)return;
   const base=parseLocal(v);
+  const todayISO=toISO(new Date());
   const lon=+document.getElementById('lon').value, tz=+document.getElementById('tz').value;
   const DP=d=>getPillars(d.getFullYear(),d.getMonth()+1,d.getDate(),12,0,lon,tz);
 
   const p=DP(base), ev=evaluateDay(p.day);
   document.getElementById('dailyBox').innerHTML=
-   `📆 <b>วัน${TH_DOW[base.getDay()]}ที่ ${base.getDate()} ${TH_MON[base.getMonth()]} ค.ศ. ${base.getFullYear()}</b><br>`+
+   `📆 <b>วัน${TH_DOW[base.getDay()]}ที่ ${base.getDate()} ${TH_MON[base.getMonth()]} ค.ศ. ${base.getFullYear()}</b>`+
+   (toISO(base)===todayISO?' <span class="badge" style="background:#15803d">วันนี้</span>':'')+`<br>`+
    `🥢 เสาวันจร <b style="font-family:var(--cn);font-size:26px;color:var(--primary)">${p.day.stem}${p.day.branch}</b> · `+
    `${EL_EMO[p.day.sEl]} <b>${p.day.yy}${p.day.sEl}</b> · ${p.day.animal} ${EL_EMO[p.day.bEl]}${p.day.bEl}<br>`+
    `🫙 ธาตุแฝง: ${p.day.hidden.map(h=>h.s+' '+EL_EMO[h.el]+h.el+' '+h.w+'%').join(' · ')}<br>`+
@@ -908,14 +1068,14 @@ function loadNavigator(){
   for(let i=0;i<7;i++){
     const d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+i,12,0,0,0);
     const q=DP(d), e=evaluateDay(q.day);
+    const isToday=toISO(d)===todayISO;
     h+=`<tr>
-      <td data-label="📅 วันที่"><div><b>${TH_DOWS[d.getDay()]}</b> ${d.getDate()} ${TH_MONS[d.getMonth()]}${i===0?' <span class="badge" style="background:#15803d">วันนี้</span>':''}</div></td>
+      <td data-label="📅 วันที่"><div><b>${TH_DOWS[d.getDay()]}</b> ${d.getDate()} ${TH_MONS[d.getMonth()]}${isToday?' <span class="badge" style="background:#15803d">วันนี้</span>':''}</div></td>
       <td data-label="🥢 เสาวันจร"><div><b style="font-family:var(--cn);font-size:19px;color:var(--primary)">${q.day.stem}${q.day.branch}</b>
           <span class="badge bg${q.day.sEl}">${EL_EMO[q.day.sEl]}${q.day.yy}${q.day.sEl}</span></div></td>
       <td data-label="🐉 นักษัตร"><div>${q.day.animal} <span class="small">${q.day.hidden.map(x=>x.s+' '+x.w+'%').join(' · ')}</span></div></td>
       <td data-label="🌟 สิบเทพ"><div><span class="small">${e.god.n}</span> <span class="badge" style="background:var(--primary)">${e.god.c}</span><div class="edesc">${GOD_MEAN[e.god.c]}</div></div></td>
-      <td data-label="⚖️ คะแนน"><div><b style="color:${e.lv.c};font-size:15px">${e.lv.e} ${e.sv}</b>
-          <span class="small" style="color:${e.lv.c}"> ${e.lv.t}</span>
+      <td data-label="⚖️ คะแนน"><div><b style="color:${e.lv.c};font-size:14px">${e.lv.e} ${e.lv.t}</b>
           <div class="bar"><i style="width:${e.sv}%;background:${e.lv.c}"></i></div>
           ${e.tags.length?`<span class="small">${e.tags.join(' · ')}</span>`:''}</div></td>
       <td data-label="🎨 สีมงคล"><div>${dots(e.lucky)}</div></td>
@@ -954,6 +1114,9 @@ document.addEventListener('copy',e=>{
   if(iu)iu.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('inKey').focus();});
   const adm=document.getElementById('inAdmin');
   if(adm)adm.addEventListener('keydown',e=>{if(e.key==='Enter')adminLogin();});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncToday();});
+  window.addEventListener('focus',syncToday);
+  setInterval(syncToday,60000);
   try{
     const s=LS('bz_ses');
     if(s){const o=JSON.parse(s);openApp(o.n,o.a);}

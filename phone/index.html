@@ -451,4 +451,3 @@ $('shr').onclick=async()=>{if(canPDF()){try{const pdf=await makePDF(),f=new File
     if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:'ผลวิเคราะห์เบอร์ '+last.ph});return}}catch(e){}}
   alert('เครื่องนี้แชร์ไฟล์ตรงเข้า LINE ไม่ได้ จะเปิดการส่งสรุปข้อความแทน (หรือกดดาวน์โหลด PDF แล้วแนบใน LINE)');window.open(lineURL(),'_blank')};
 </script></body></html>
-

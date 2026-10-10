@@ -101,6 +101,11 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
   .form-grid{grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:9px}
   .box{font-size:13.8px;padding:12px}.profilebar .fld{flex:1 1 100%}
 }
+.lcard{background:#fffdf7;border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:14px;text-align:left}
+.lhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-weight:700;font-size:16px;color:var(--primary)}
+.lhl{font-weight:600;margin:8px 0 4px;line-height:1.7}
+.lcard p{margin:8px 0;font-size:14px;line-height:1.85}
+.lcard .tip,.lcard .fix{margin-top:8px}
 </style>
 </head>
 <body oncontextmenu="return false" ondragstart="return false">
@@ -172,8 +177,7 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
       <div class="fld"><label>📆 วันที่</label><input type="number" id="bd" value="1" min="1" max="31" oninput="updateConfirm()"></div>
       <div class="fld"><label>📅 เดือน</label><input type="number" id="bm" value="1" min="1" max="12" oninput="updateConfirm()"></div>
       <div class="fld"><label>🗓️ ปี ค.ศ.</label><input type="number" id="by" value="2000" oninput="updateConfirm()"></div>
-      <div class="fld"><label>⏰ ชั่วโมง (เวลาตกฟาก)</label><input type="number" id="bh" value="9" min="0" max="23" oninput="updateConfirm()"></div>
-      <div class="fld"><label>🕧 นาที</label><input type="number" id="bmin" value="0" min="0" max="59" oninput="updateConfirm()"></div>
+      <div class="fld"><label>⏰ เวลาตกฟาก (24 ชม.)</label><input type="text" id="bt" value="09:00" inputmode="numeric" maxlength="5" placeholder="ชม:นาที เช่น 14:30" autocomplete="off" oninput="fmtTimeInput(this);updateConfirm()" onblur="normTimeInput(this);updateConfirm()"></div>
       <div class="fld"><label>🚻 เพศกำเนิด</label><select id="gender" onchange="updateConfirm()"><option value="M">ชาย</option><option value="F">หญิง</option></select></div>
       <div class="fld"><label>📍 ละติจูด</label><input type="text" id="lat" readonly></div>
       <div class="fld"><label>📍 ลองจิจูด</label><input type="text" id="lon" readonly></div>
@@ -222,6 +226,12 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
   <div class="card">
     <h2>🌀 ดวงโคจรช่วง 10 ปี (大運)</h2>
     <div id="luckBox">-</div>
+  </div>
+
+  <!-- 2.7 LIFE READING -->
+  <div class="card">
+    <h2>🧭 วิเคราะห์ชีวิต 9 มิติ · BaZi × ลัคนา</h2>
+    <div id="lifeBox">-</div>
   </div>
 
   <!-- 3. NAVIGATOR -->
@@ -417,7 +427,7 @@ async function exportKeys(){
 /* ============================================================
    SECTION 0.5 : MULTI-PROFILE (เก็บในเครื่อง ไม่เกี่ยวกับฐานข้อมูลรหัสผ่าน)
    ============================================================ */
-const BF=['bd','bm','by','bh','bmin','province','gender'];
+const BF=['bd','bm','by','bt','province','gender'];
 const uKey=()=>(CURRENT_USER||'guest').trim().toLowerCase();
 const PKEY=()=>'bz_profiles_'+uKey();
 const AKEY=()=>'bz_active_'+uKey();
@@ -427,9 +437,14 @@ function getActiveId(){return LS(AKEY())||'';}
 function setActiveId(id){LS(AKEY(),id);}
 function newId(){return 'p'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36);}
 function fieldsObj(){const o={};BF.forEach(id=>o[id]=document.getElementById(id).value);return o;}
-function pickFields(src){const o={};BF.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!=='')o[k]=src[k];});return o;}
-function applyFields(o){BF.forEach(id=>{if(o&&o[id]!==undefined&&o[id]!=='')document.getElementById(id).value=o[id];});applyProvince();}
-const DEFAULT_FIELDS={bd:'1',bm:'1',by:'1990',bh:'12',bmin:'0',province:'0',gender:'M'};
+function migrateTime(o){/* ดวงเก่าที่บันทึกแยก ชั่วโมง/นาที -> แปลงเป็นช่องเวลาเดียว */
+  if(o&&(o.bt===undefined||o.bt==='')&&o.bh!==undefined&&o.bh!==''){
+    const p=n=>String(parseInt(n,10)||0).padStart(2,'0');
+    return Object.assign({},o,{bt:p(o.bh)+':'+p(o.bmin)});}
+  return o;}
+function pickFields(src){src=migrateTime(src);const o={};BF.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!=='')o[k]=src[k];});return o;}
+function applyFields(o){o=migrateTime(o);BF.forEach(id=>{if(o&&o[id]!==undefined&&o[id]!=='')document.getElementById(id).value=o[id];});applyProvince();}
+const DEFAULT_FIELDS={bd:'1',bm:'1',by:'1990',bt:'12:00',province:'0',gender:'M'};
 
 function activeProfile(){const ps=getProfiles();return ps.find(x=>x.id===getActiveId())||ps[0]||null;}
 function initProfiles(){
@@ -892,9 +907,44 @@ function evaluateDay(dp){
 const dots=els=>els.map(e=>EL_COLOR[e].map(c=>`<span class="dot" style="background:${c}"></span>`).join('')).join(' ');
 const fixList=items=>'<ol>'+items.map(x=>'<li>'+x+'</li>').join('')+'</ol>';
 
+/* ---------- ช่องเวลาตกฟากช่องเดียว (24 ชม. ชม:นาที) ---------- */
+function parseTimeStr(s){
+  s=String(s||'').trim().replace(/[.\s]+/g,':').replace(/:+/g,':');
+  let h,m;
+  if(s.indexOf(':')>=0){
+    const a=s.split(':');
+    if(!/^\d{1,2}$/.test(a[0]))return null;
+    h=+a[0];
+    if(a[1]===undefined||a[1]==='')m=0;else if(/^\d{1,2}$/.test(a[1]))m=+a[1];else return null;
+    if(a.length>2)return null;
+  }else if(/^\d{1,2}$/.test(s)){h=+s;m=0;}
+  else if(/^\d{3,4}$/.test(s)){h=+s.slice(0,-2);m=+s.slice(-2);}
+  else return null;
+  if(!(h>=0&&h<=23&&m>=0&&m<=59))return null;
+  return {h:h,m:m};
+}
+function fmtTimeInput(el){ /* จัดรูปแบบระหว่างพิมพ์: ใส่ ":" ให้อัตโนมัติ */
+  let v=el.value.replace(/[.\s]/g,':').replace(/[^\d:]/g,'');
+  if(v.indexOf(':')>=0){
+    const a=v.split(':');v=a[0].slice(0,2)+':'+a.slice(1).join('').slice(0,2);
+  }else{
+    const d=v.slice(0,4);
+    if(d.length<=1)v=d;
+    else if(d.length===2)v=(+d>23)?d[0]+':'+d[1]:d;
+    else if(d.length===3)v=(+d.slice(0,2)>23)?d[0]+':'+d.slice(1):d.slice(0,2)+':'+d[2];
+    else v=d.slice(0,2)+':'+d.slice(2);
+  }
+  if(el.value!==v)el.value=v;
+}
+function normTimeInput(el){ /* เมื่อพิมพ์เสร็จ: 9:5 -> 09:05 */
+  const t=parseTimeStr(el.value);
+  if(t)el.value=String(t.h).padStart(2,'0')+':'+String(t.m).padStart(2,'0');
+}
 function updateConfirm(){
   const g=id=>+document.getElementById(id).value;
-  const d=g('bd'), m=g('bm'), y=g('by'), h=g('bh'), mi=g('bmin');
+  const d=g('bd'), m=g('bm'), y=g('by');
+  const tm=parseTimeStr(document.getElementById('bt').value);
+  const h=tm?tm.h:0, mi=tm?tm.m:0;
   const el=document.getElementById('confirmLine');
   const cur=activeProfile();
   const who=cur?`👥 <b>${esc(cur.name)}</b> · `:'';
@@ -902,6 +952,7 @@ function updateConfirm(){
   const dt=new Date(y,m-1,d);
   if(!(dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d)){
     el.innerHTML=who+'⚠️ ไม่มีวันที่นี้ในปฏิทิน กรุณาตรวจสอบอีกครั้ง';return;}
+  if(!tm){el.innerHTML=who+'⚠️ กรุณากรอกเวลาตกฟากให้ถูกต้อง (ชม:นาที แบบ 24 ชม. เช่น 14:30)';return;}
   const loc=currentLatLon();
   const genderTxt=document.getElementById('gender').value==='M'?'ชาย':'หญิง';
   el.innerHTML=who+`📋 <b>ยืนยันข้อมูล:</b> เพศ<b>${genderTxt}</b> เกิด<b>วัน${TH_DOW[dt.getDay()]}</b> ที่ <b>${d} ${TH_MON[m-1]} ค.ศ. ${y}</b> `+
@@ -985,7 +1036,9 @@ function calculateBazi(){
   const g=id=>+document.getElementById(id).value;
   updateConfirm();
   const loc=currentLatLon();
-  const y=g('by'),m=g('bm'),d=g('bd'),h=g('bh'),mi=g('bmin');
+  const tm=parseTimeStr(document.getElementById('bt').value);
+  if(!tm){toast('⚠️ กรุณากรอกเวลาตกฟากให้ถูกต้อง เช่น 14:30 (24 ชม.)');return;}
+  const y=g('by'),m=g('bm'),d=g('bd'),h=tm.h,mi=tm.m;
   const P=getPillars(y,m,d,h,mi,loc.lon,TZ_FIXED);
   CH=analyse(P);
   pillarHTML(0,P.hour,P.day.si,false);
@@ -1026,9 +1079,12 @@ function calculateBazi(){
   document.getElementById('storyBox').innerHTML=buildStory(P,CH);
 
   const jUT=jdn(y,m,d,(h+mi/60)-TZ_FIXED);
-  renderLadkhana(calcLadkhana(jUT, loc.lon, loc.lat));
+  const LKR=calcLadkhana(jUT, loc.lon, loc.lat);
+  renderLadkhana(LKR);
   const gender=document.getElementById('gender').value;
-  renderLuckPillars(calcLuckPillars(P,jUT,gender), y,m,d);
+  const LPR=calcLuckPillars(P,jUT,gender);
+  renderLuckPillars(LPR, y,m,d);
+  renderLifeReading(P,CH,LKR,LPR,y,m,d);
 
   const nav=document.getElementById('navDate');
   if(!nav.value)nav.value=toISO(new Date());
@@ -1080,6 +1136,531 @@ function loadNavigator(){
 }
 
 /* ============================================================
+   SECTION 3.5 : วิเคราะห์ชีวิต 9 มิติ (BaZi × ลัคนา)
+   - BaZi: สิบเทพละเอียด 10 ตัว, โครงสร้างดวง (格局), ดาวคุ้มครอง (神煞), ปฏิสัมพันธ์ระหว่างเสา, ธาตุให้คุณ/โทษ
+   - ลัคนา: ราศีลัคนา, เจ้าเรือน, ธาตุ/ลักษณะราศี, ความเป็นมิตรของเจ้าเรือนแต่ละภพต่อเจ้าเรือนลัคนา
+     (ไม่ได้คำนวณตำแหน่งดาวเคราะห์ จึงใช้เฉพาะข้อมูลที่ได้จากลัคนา)
+   - คะแนนรวม = BaZi 60% + ลัคนา 40% แล้วนำผลทั้งสองฝั่งมากรองกันในข้อความสรุป
+   ============================================================ */
+let LIFE=null;
+const LF_SIGNS=[
+ {n:'เมษ',r:'อังคาร',el:'ไฟ',q:'จร'},{n:'พฤษภ',r:'ศุกร์',el:'ดิน',q:'สถิร'},{n:'เมถุน',r:'พุธ',el:'ลม',q:'อุภัย'},
+ {n:'กรกฎ',r:'จันทร์',el:'น้ำ',q:'จร'},{n:'สิงห์',r:'อาทิตย์',el:'ไฟ',q:'สถิร'},{n:'กันย์',r:'พุธ',el:'ดิน',q:'อุภัย'},
+ {n:'ตุล',r:'ศุกร์',el:'ลม',q:'จร'},{n:'พิจิก',r:'อังคาร',el:'น้ำ',q:'สถิร'},{n:'ธนู',r:'พฤหัสบดี',el:'ไฟ',q:'อุภัย'},
+ {n:'มังกร',r:'เสาร์',el:'ดิน',q:'จร'},{n:'กุมภ์',r:'เสาร์',el:'ลม',q:'สถิร'},{n:'มีน',r:'พฤหัสบดี',el:'น้ำ',q:'อุภัย'}];
+const LF_FR={
+ 'อาทิตย์':{f:['จันทร์','อังคาร','พฤหัสบดี'],e:['ศุกร์','เสาร์']},
+ 'จันทร์':{f:['อาทิตย์','พุธ'],e:[]},
+ 'อังคาร':{f:['อาทิตย์','จันทร์','พฤหัสบดี'],e:['พุธ']},
+ 'พุธ':{f:['อาทิตย์','ศุกร์'],e:['จันทร์']},
+ 'พฤหัสบดี':{f:['อาทิตย์','จันทร์','อังคาร'],e:['พุธ','ศุกร์']},
+ 'ศุกร์':{f:['พุธ','เสาร์'],e:['อาทิตย์','จันทร์']},
+ 'เสาร์':{f:['พุธ','ศุกร์'],e:['อาทิตย์','จันทร์','อังคาร']}};
+const lfRel=(a,b)=>a===b?2:(LF_FR[a].f.includes(b)?1:(LF_FR[a].e.includes(b)?-1:0));
+const LF_RELTXT={'2':'ดาวดวงเดียวกัน (หนุนแรง)','1':'เป็นมิตร','0':'เป็นกลาง','-1':'เป็นศัตรู'};
+const LF_HOUSE={1:'ตนุ',2:'กดุมภะ',3:'สหัชชะ',4:'พันธุ',5:'ปุตตะ',6:'อริ',7:'ปัตนิ',8:'มรณะ',9:'ศุภะ',10:'กัมมะ',11:'ลาภะ',12:'วินาศ'};
+const LF_GOD=['比肩','劫財','食神','傷官','偏財','正財','七殺','正官','偏印','正印'];
+const lfCl=(x,lo,hi)=>Math.max(lo===undefined?5:lo,Math.min(hi===undefined?95:hi,Math.round(x)));
+const lfR=x=>Math.round(x);
+const lfAfter=s=>{const t=String(s).replace(/<[^>]+>/g,'').split(' — ');return t.length>1?t.slice(1).join(' — '):t[0];};
+const LF_PK={year:'เสาปี',month:'เสาเดือน',day:'เสาวัน',hour:'เสาเวลา'};
+
+/* ---------- ตารางดาวคุ้มครอง (神煞) ---------- */
+const LF_TIANYI={0:[1,7],4:[1,7],6:[1,7],1:[0,8],5:[0,8],2:[11,9],3:[11,9],7:[2,6],8:[3,5],9:[3,5]};
+const LF_WENCHANG={0:5,1:6,2:8,3:9,4:8,5:9,6:11,7:0,8:2,9:3};
+const LF_LU={0:2,1:3,2:5,3:6,4:5,5:6,6:8,7:9,8:11,9:0};
+const LF_YANGREN={0:3,2:6,4:6,6:9,8:0};
+const LF_YUEDE={0:8,1:6,2:2,3:0};
+const LF_TIANDE={0:['B',5],1:['S',6],2:['S',3],3:['B',8],4:['S',8],5:['S',7],6:['B',11],7:['S',0],8:['S',9],9:['B',2],10:['S',2],11:['S',1]};
+const LF_STAR={
+ ty:['天乙貴人 · ดาวขุนนางอุปถัมภ์','ในยามคับขันมักมีผู้ใหญ่ ผู้มีพระคุณ หรือคนมีอำนาจยื่นมือช่วยโดยไม่ต้องร้องขอมาก'],
+ md:['月德貴人 · คุณธรรมประจำเดือนเกิด','บุญเก่าและคุณงามความดีจากบรรพบุรุษคอยคุ้มครอง ช่วยลดความรุนแรงของเคราะห์'],
+ td:['天德貴人 · คุณธรรมแห่งฟ้า','มีพลังคุ้มภัยตามธรรมชาติ เรื่องร้ายมักเบาลงหรือมีทางออกเสมอ'],
+ lu:['祿神 · ดาวลาภประจำตัว','รายได้และตำแหน่งมีฐานรองรับ ขยันทำแล้วมีกินมีใช้ ไม่ขัดสนจนถึงที่สุด'],
+ wc:['文昌 · ดาวปัญญา','เรียนรู้ไว ถนัดการเขียน การสอบ และงานที่ใช้ความรู้'],
+ jx:['將星 · ดาวแม่ทัพ','มีบุคลิกผู้นำ รวมคนได้ มีสง่าราศีเมื่ออยู่ในกลุ่ม'],
+ hg:['華蓋 · ดาวร่มทอง','จิตใจลึก ใกล้ชิดศิลปะ ศาสนา หรือศาสตร์เฉพาะทาง แต่บางครั้งรู้สึกโดดเดี่ยวเมื่อไม่มีใครเข้าใจ'],
+ ym:['驛馬 · ดาวม้าเดินทาง','ชีวิตเคลื่อนไหว เดินทาง ย้ายถิ่น หรือเปลี่ยนงานแล้วมักเกิดโอกาสใหม่'],
+ th:['桃花 · ดาวเสน่ห์','มีเสน่ห์ คนเอ็นดู ได้เปรียบงานที่ต้องเข้าหาผู้คน แต่ต้องระวังเรื่องหัวใจทำให้ไขว้เขว'],
+ yr:['羊刃 · ดาวมีดคม','พลังตัดสินใจสูง ใจนักสู้ ถ้าควบคุมได้จะเป็นผู้นำ ถ้าไม่ได้จะใจร้อนและเสี่ยงบาดเจ็บ']};
+function lfStars(P){
+  const K=['year','month','day','hour'],dS=P.day.si,yS=P.year.si,o={};
+  const hit=(arr)=>K.filter(k=>arr.includes(P[k].bi));
+  o.ty=hit([...new Set([...(LF_TIANYI[dS]||[]),...(LF_TIANYI[yS]||[])])]);
+  o.wc=hit([LF_WENCHANG[dS]]);o.lu=hit([LF_LU[dS]]);
+  o.yr=LF_YANGREN[dS]!==undefined?hit([LF_YANGREN[dS]]):[];
+  const gs=arr=>{const s=new Set();['year','day'].forEach(ref=>{const t=arr[P[ref].bi%4];K.forEach(k=>{if(k!==ref&&P[k].bi===t)s.add(k);});});return K.filter(k=>s.has(k));};
+  o.jx=gs([0,9,6,3]);o.hg=gs([4,1,10,7]);o.ym=gs([2,11,8,5]);o.th=gs([9,6,3,0]);
+  const md=LF_YUEDE[P.month.bi%4];o.md=K.filter(k=>P[k].si===md);
+  const t=LF_TIANDE[P.month.bi];
+  o.td=t[0]==='S'?K.filter(k=>P[k].si===t[1]):K.filter(k=>k!=='month'&&P[k].bi===t[1]);
+  return o;
+}
+const lfWhere=a=>a.map(k=>LF_PK[k]).join(' · ');
+
+/* ---------- บริบทลัคนา ---------- */
+function lfLagna(LK){
+  const sg=h=>LF_SIGNS[(LK.idx+h-1)%12];
+  return {idx:LK.idx,sign:LF_SIGNS[LK.idx],lordL:LF_SIGNS[LK.idx].r,sg,lord:h=>sg(h).r};
+}
+function lfLk(L,houses,pb,eb,qb){
+  const raw=X=>{let hs=0;houses.forEach(x=>{hs+=x[1]*lfRel(X.lordL,X.lord(x[0]));});
+    return 7*hs+(pb[X.lordL]||0)+(eb[X.sign.el]||0)+(qb[X.sign.q]||0);};
+  /* ปรับสมดุลให้ค่าเฉลี่ยของทั้ง 12 ลัคนา = 52 เพื่อไม่ให้หัวข้อใดได้คะแนนสูงหรือต่ำเกินจริงเพราะตารางถ่วงน้ำหนัก */
+  let mean=0;for(let i=0;i<12;i++)mean+=raw(lfLagna({idx:i}));mean/=12;
+  return lfCl(raw(L)-mean+52,8,92);
+}
+function lfHouseEv(L,hs){
+  return hs.map(h=>'ภพ'+h+' '+LF_HOUSE[h]+' ราศี'+L.sg(h).n+' ('+L.lord(h)+') '+LF_RELTXT[lfRel(L.lordL,L.lord(h))]).join(' · ');
+}
+const LF_TRI={'ไฟ':['เมษ','สิงห์','ธนู'],'ดิน':['พฤษภ','กันย์','มังกร'],'ลม':['เมถุน','ตุล','กุมภ์'],'น้ำ':['กรกฎ','พิจิก','มีน']};
+const LF_HARM={'ไฟ':['ไฟ','ลม'],'ลม':['ลม','ไฟ'],'ดิน':['ดิน','น้ำ'],'น้ำ':['น้ำ','ดิน']};
+const LF_TENS={'ไฟ':['น้ำ'],'น้ำ':['ไฟ'],'ดิน':['ลม'],'ลม':['ดิน']};
+const lfSignsOf=els=>els.map(e=>'ราศีธาตุ'+e+' ('+LF_TRI[e].join(' ')+')').join(' และ ');
+
+/* ---------- บริบท BaZi ---------- */
+function lfCtx(P,A,LK,LP,y,m,d){
+  const g={};LF_GOD.forEach(k=>g[k]=0);
+  const add=(si,w)=>{g[tenGod(P.day.si,si).n.split(' ')[0]]+=w;};
+  ['year','month','hour'].forEach(k=>add(P[k].si,W_S[k]));
+  ['year','month','day','hour'].forEach(k=>P[k].hidden.forEach(h=>add(sIdx(h.s),W_B[k]*h.w/100)));
+  const tot=LF_GOD.reduce((a,k)=>a+g[k],0);LF_GOD.forEach(k=>g[k]=g[k]/tot*100);
+  const fr=g['比肩']+g['劫財'],out=g['食神']+g['傷官'],wea=g['偏財']+g['正財'],pow=g['七殺']+g['正官'],res=g['偏印']+g['正印'];
+  const st=A.status.k,sup=A.support,stars=lfStars(P),K=['year','month','day','hour'];
+  const fl={
+    ssc:out>=14&&wea>=14,                 /* 食傷生財 */
+    gy:pow>=15&&res>=15,                  /* 官印相生 */
+    sg:g['傷官']>=10&&g['正官']>=8,       /* 傷官見官 */
+    bj:fr>=28&&wea<=22,                   /* 比劫奪財 */
+    cd:wea>=26&&st==='weak',              /* 財多身弱 */
+    xs:g['偏印']>=10&&g['食神']>=8        /* 梟神奪食 */
+  };
+  const cl=(a,b)=>CLASH[P[a].branch]===P[b].branch;
+  const dayClash=K.some(k=>k!=='day'&&cl('day',k));
+  const dayCombine=K.some(k=>k!=='day'&&COMBINE[P.day.branch]===P[k].branch);
+  const monthClash=K.some(k=>k!=='month'&&cl('month',k));
+  const ymClash=cl('year','month');
+  const fam=['year','month'].reduce((a,k)=>a+(A.fav.includes(P[k].sEl)?1:0)+(A.fav.includes(P[k].bEl)?1:0)-(A.unfav.includes(P[k].sEl)?1:0)-(A.unfav.includes(P[k].bEl)?1:0),0);
+  const dayMain=tenGod(P.day.si,sIdx(P.day.hidden[0].s)).c;
+  const monthCat=tenGod(P.day.si,P.month.si).c;
+  let luck=null;
+  if(LP){const age=(Date.now()-new Date(y,m-1,d).getTime())/(365.25*24*3600*1000);
+    const it=LP.list.find(i=>age>=i.ageStart&&age<i.ageEnd);if(it)luck={it:it,god:tenGod(P.day.si,it.si)};}
+  return {P,A,g,fr,out,wea,pow,res,st,sup,stars,fl,dayClash,dayCombine,monthClash,ymClash,fam,dayMain,monthCat,luck,L:lfLagna(LK),LK,
+    fire:A.pc('ไฟ'),water:A.pc('น้ำ'),wood:A.pc('ไม้'),earth:A.pc('ดิน'),metal:A.pc('ทอง')};
+}
+function lfBlend(b,l,tx){
+  const hb=b>=58,hl=l>=58,h='🔗 <b>เมื่อกรองสองศาสตร์:</b> ';
+  if(hb&&hl)return h+'BaZi และลัคนาชี้ไปทางเดียวกัน — '+tx[0];
+  if(hb&&!hl)return h+'BaZi เอื้อ แต่ลัคนายังไม่ช่วยมากนัก — '+tx[1];
+  if(!hb&&hl)return h+'BaZi ยังไม่หนุน แต่ลัคนาช่วยเสริม — '+tx[2];
+  return h+'ทั้งสองศาสตร์ยังไม่ชี้ว่าเป็นจุดแข็ง — '+tx[3];
+}
+function lfLevel(t){return t>=72?0:t>=58?1:t>=43?2:t>=28?3:4;}
+const LF_LV=[['โดดเด่น','#15803d'],['ค่อนข้างดี','#16a34a'],['ปานกลาง','#ca8a04'],['ต้องใส่ใจ','#ea580c'],['ต้องวางระบบ','#b91c1c']];
+function lfMake(id,icon,title,sname,b,l,heads,points,ev,tip,tl){
+  const total=Math.round(b*0.6+l*0.4),lv=lfLevel(total),dd=Math.abs(b-l);
+  return {id,icon,title,sname,b,l,total,label:LF_LV[lv][0],color:LF_LV[lv][1],
+    agree:dd<=12?'🔗 สอดคล้องกัน':dd<=25?'↔️ ต่างกันเล็กน้อย':'⚡ ต่างกันมาก',
+    headline:heads[lv],points,ev,tip,tl:tl||''};
+}
+function lfLuckNote(Z,cats){
+  if(!Z.luck)return '';
+  const it=Z.luck.it,A=Z.A;
+  const f=A.fav.includes(it.sEl)?'ธาตุให้คุณ — ช่วงนี้หนุนเรื่องนี้':A.unfav.includes(it.sEl)?'ธาตุให้โทษ — ช่วงนี้ควรระวังและวางแผนรัดกุมขึ้น':'ธาตุกลาง — ผลขึ้นกับความพยายามของคุณ';
+  const c=cats.includes(Z.luck.god.c)?' · ตรงกับหมวดของเรื่องนี้โดยตรง จังหวะนี้จึงเด่นขึ้น':'';
+  return '🕰️ <b>จังหวะ 10 ปีปัจจุบัน</b> เสา '+it.stem+it.branch+' ('+Z.luck.god.n+') · '+EL_EMO[it.sEl]+it.sEl+' เป็น'+f+c;
+}
+
+/* ============ 1. การเงิน ============ */
+const LF_Q_FIN={'สถิร':'ถือเงินเก่ง ไม่ปล่อยง่าย แต่เปลี่ยนวิธีหาเงินช้า','จร':'ริเริ่มหาเงินเร็ว ใช้เงินเร็วเช่นกัน','อุภัย':'มีรายได้หลายทางได้ แต่ผันผวนตามช่วงเวลา'};
+const LF_R_FIN={'ศุกร์':'ใจรักความสวยงามและความสบาย ใช้เงินกับความสุนทรีย์','พฤหัสบดี':'เงินมักมาจากความน่าเชื่อถือ ผู้ใหญ่ หรือความรู้ และมีใจให้ทาน','พุธ':'หาเงินจากการสื่อสาร การค้า และไหวพริบ',
+ 'อังคาร':'หาเงินด้วยแรงงานและความกล้า แต่ใช้เงินแบบบุ่มบ่ามได้','เสาร์':'ประหยัด ออมระยะยาว เก็บเงินได้ดีเมื่อผ่านวัยกลางคน','อาทิตย์':'ใช้เงินเพื่อเกียรติและภาพลักษณ์','จันทร์':'การเงินผูกกับอารมณ์และครอบครัว'};
+function lfFinance(Z){
+  const {g,fr,out,wea,pow,res,st,L,fl}=Z;
+  let b=50+(wea-20)*1.1;
+  if(fl.ssc)b+=7;if(st==='strong'&&wea>=15)b+=8;if(fl.cd)b-=10;if(st==='strong'&&wea<12&&out<14)b-=5;
+  if(fl.bj)b-=9;if(g['劫財']>=12)b-=4;if(Z.stars.lu.length)b+=3;if(Z.dayMain==='ทรัพย์')b+=3;
+  b=lfCl(b);
+  const l=lfLk(L,[[2,1],[11,.8],[5,.3]],{ศุกร์:8,พฤหัสบดี:8,พุธ:5,จันทร์:3,เสาร์:2,อังคาร:-2},{ดิน:5,ลม:2,น้ำ:1,ไฟ:-2},{สถิร:6,อุภัย:0,จร:-2});
+  let inc;
+  if(wea<10)inc='ธาตุทรัพย์ในดวงบางมาก รายได้ของคุณมักมาจาก "ทักษะ ความรู้ และความสัมพันธ์" มากกว่าการสะสมทรัพย์โดยตรง ควรมีระบบออมอัตโนมัติช่วย';
+  else if(g['正財']>=g['偏財']*1.3)inc='รายได้แนวมั่นคง — เงินเดือน ธุรกิจประจำ หรือรายได้สม่ำเสมอ สะสมทีละน้อยแต่ต่อเนื่อง';
+  else if(g['偏財']>=g['正財']*1.3)inc='รายได้แนวจังหวะและโอกาส — ค้าขาย นายหน้า งานโปรเจกต์ หรือรายได้เป็นก้อน ขึ้นลงตามจังหวะตลาด';
+  else inc='รายได้แบบผสม มีทั้งส่วนที่มั่นคงและส่วนที่มาตามจังหวะ จัดสัดส่วนให้ดีจะเดินได้ทั้งสองขา';
+  if(fl.ssc)inc+=' · มีโครงสร้าง 食傷生財 คือใช้ฝีมือ/ไอเดียของตัวเองแปลงเป็นเงินได้';
+  const sp=[];
+  if(g['食神']>=11)sp.push('ใจดี ชอบใช้เงินเพื่อความสุข อาหาร และประสบการณ์ดี ๆ');
+  if(g['傷官']>=11)sp.push('ใช้เงินตามอารมณ์และไอเดียที่ชอบ ซื้อทันทีเมื่อถูกใจ');
+  if(g['劫財']>=11)sp.push('เงินรั่วไปกับเพื่อน ค่าสังคม และการช่วยเหลือคนใกล้ชิด ควรระวังการให้ยืมและค้ำประกัน');
+  if(res>=26)sp.push('รอบคอบ ชั่งใจนาน เลือกของดีไม่ซื้อพร่ำเพรื่อ ออมได้ แต่บางครั้งช้าจนพลาดโอกาส');
+  if(pow>=26)sp.push('ใช้จ่ายตามภาระและความรับผิดชอบ เงินมักถูกดึงไปกับหน้าที่และครอบครัว');
+  if(wea>=26&&st==='strong')sp.push('มีสายตามองมูลค่าและเก็บเงินเก่ง มีศักยภาพต่อยอดเป็นทรัพย์สิน');
+  if(wea>=26&&st==='weak')sp.push('เงินเข้าได้ แต่แรงถือเงินไม่พอ — เข้าเร็วออกเร็ว ควรกันเงินออมทันทีที่รายได้เข้า');
+  if(!sp.length)sp.push('ใช้เงินตามสถานการณ์ ไม่มีรูปแบบสุดโต่ง');
+  const tip=st==='strong'?'พลังดวงเหลือพอ ควรลงทุนกับทักษะและช่องทางรายได้เพิ่ม โดยตั้งวงเงินและจุดตัดขาดทุนไว้ก่อนเสมอ':
+    st==='weak'?'ดวงต้องเติมพลังก่อนขยาย — สร้างเงินสำรองฉุกเฉินให้ได้ก่อน และเลี่ยงการค้ำประกันหรือกู้เพื่อลงทุน':
+    'ดวงสมดุล เหมาะแบ่งเงินเป็น 3 กอง คือใช้จ่าย ออม และลงทุน แล้วทบทวนทุกไตรมาส';
+  return lfMake('fin','💰','การเงิน · นิสัยด้านเงินทอง','พลังด้านการเงิน',b,l,
+    ['เงินทองเป็นจุดแข็งของคุณ ทั้งหาเก่งและมีโครงสร้างรองรับ','การเงินค่อนข้างหนุน หากวางระบบให้ดีจะเติบโตต่อเนื่อง','การเงินระดับกลาง ๆ ผลลัพธ์ขึ้นกับวินัยและระบบที่คุณสร้าง','การเงินต้องใส่ใจ เงินมีแนวโน้มรั่วหรือหายาก ควรเน้นวินัย','การเงินเป็นด่านที่ต้องวางระบบจริงจังและเลี่ยงความเสี่ยงสูง'],
+    [{h:'🧾 รูปแบบรายได้',t:inc},
+     {h:'🛍️ นิสัยการใช้เงิน',t:sp.join('<br>• ').replace(/^/,'• ')},
+     {h:'⭐ มุมลัคนา'+L.sign.n,t:'ลัคนาราศี'+L.sign.n+' (ลักษณะ'+L.sign.q+'): '+LF_Q_FIN[L.sign.q]+' · เจ้าเรือน'+L.lordL+': '+LF_R_FIN[L.lordL]},
+     {h:'',t:lfBlend(b,l,['ทั้งสองศาสตร์เปิดทางเงินทอง เหมาะสร้างรายได้และสะสมต่อเนื่อง','ศักยภาพหารายได้มีอยู่ แต่นิสัยหรือจังหวะชีวิตอาจทำให้เก็บไม่อยู่ ต้องมีระบบช่วย','ดวงกำเนิดยังไม่เด่นเรื่องเงิน แต่บุคลิกแบบลัคนาช่วยให้บริหารเงินได้ดีขึ้นเมื่อมีวินัย','เงินไม่ได้มาง่ายโดยธรรมชาติ ต้องอาศัยวินัย ความรู้ และระยะเวลา อย่าฝืนเสี่ยงเกินตัว'])}],
+    ['BaZi: ทรัพย์ '+lfR(wea)+'% (正財 '+lfR(g['正財'])+' · 偏財 '+lfR(g['偏財'])+') · เพื่อน '+lfR(fr)+'% · แสดงออก '+lfR(out)+'% · '+Z.A.status.t.replace(/^\S+\s/,'')+' '+Z.sup+'%',
+     'ลัคนา: '+lfHouseEv(L,[2,11,5])],tip,lfLuckNote(Z,['ทรัพย์']));
+}
+
+/* ============ 2. การงาน ============ */
+const LF_FIELDS=[
+ {n:'การศึกษา การสอน การฝึกอบรม โค้ช',el:'ไม้',pl:['พฤหัสบดี','พุธ'],cat:'ทรัพยากร'},
+ {n:'ศิลปะ การออกแบบ แฟชั่น งานครีเอทีฟ',el:'ไม้',pl:['ศุกร์'],cat:'แสดงออก'},
+ {n:'สื่อ การตลาด โฆษณา บันเทิง พิธีกร',el:'ไฟ',pl:['พุธ','ศุกร์','อาทิตย์'],cat:'แสดงออก'},
+ {n:'อาหาร ความงาม พลังงาน ธุรกิจสุขภาพ',el:'ไฟ',pl:['อังคาร','ศุกร์','จันทร์'],cat:'ทรัพย์'},
+ {n:'อสังหาริมทรัพย์ ก่อสร้าง เกษตร ประกันภัย',el:'ดิน',pl:['เสาร์','จันทร์'],cat:'ทรัพย์'},
+ {n:'งานบริหาร ราชการ งานปกครอง การเมือง',el:'ดิน',pl:['อาทิตย์','เสาร์','พฤหัสบดี'],cat:'อำนาจ'},
+ {n:'การเงิน ธนาคาร กฎหมาย บัญชี การลงทุน',el:'ทอง',pl:['พุธ','ศุกร์','พฤหัสบดี'],cat:'ทรัพย์'},
+ {n:'วิศวกรรม เครื่องกล ยานยนต์ งานเทคนิค',el:'ทอง',pl:['อังคาร','เสาร์'],cat:'อำนาจ'},
+ {n:'ทหาร ตำรวจ รักษาความปลอดภัย ศัลยกรรม',el:'ทอง',pl:['อังคาร'],cat:'อำนาจ'},
+ {n:'การแพทย์ สาธารณสุข การดูแลผู้คน',el:'ไม้',pl:['จันทร์','พฤหัสบดี'],cat:'ทรัพยากร'},
+ {n:'ไอที ข้อมูล วิจัย การวิเคราะห์',el:'น้ำ',pl:['พุธ','เสาร์'],cat:'ทรัพยากร'},
+ {n:'ขนส่ง โลจิสติกส์ การค้าต่างประเทศ ท่องเที่ยว',el:'น้ำ',pl:['พุธ','พฤหัสบดี','จันทร์'],cat:'เพื่อน'},
+ {n:'การค้า นายหน้า ขายตรง ธุรกิจส่วนตัว',el:'ทอง',pl:['พุธ','ศุกร์'],cat:'เพื่อน'},
+ {n:'งานบริการ โรงแรม ร้านอาหาร ดูแลลูกค้า',el:'ดิน',pl:['จันทร์','ศุกร์'],cat:'เพื่อน'},
+ {n:'งานให้คำปรึกษา จิตวิทยา ศาสนา สังคมสงเคราะห์',el:'น้ำ',pl:['พฤหัสบดี','จันทร์'],cat:'ทรัพยากร'}];
+const LF_Q_JOB={'จร':'ชอบเป็นผู้ริเริ่ม เบื่องานซ้ำซาก เหมาะงานที่มีโปรเจกต์ใหม่หมุนเวียน','สถิร':'ทนทานต่องานระยะยาว ยึดมั่นและไม่ชอบเปลี่ยนสายบ่อย เหมาะงานที่สะสมความเชี่ยวชาญ','อุภัย':'ปรับตัวได้หลายบทบาท เหมาะงานที่ต้องสลับหน้าที่ แต่ต้องระวังกระจัดกระจาย'};
+const LF_R_JOB={'อังคาร':'งานที่ใช้ความกล้า ความเร็ว และการลงมือ','ศุกร์':'งานที่เกี่ยวกับความงาม ความสัมพันธ์ และบริการ','พุธ':'งานสื่อสาร การค้า และการวิเคราะห์','จันทร์':'งานดูแลผู้คน อาหาร และบริการสาธารณะ','อาทิตย์':'งานบริหารและงานที่เป็นหน้าเป็นตา','พฤหัสบดี':'งานให้ความรู้ ให้คำปรึกษา และงานที่ต้องการความเชื่อถือ','เสาร์':'งานเทคนิคระยะยาวและงานที่มีระบบระเบียบ'};
+function lfFieldRank(Z){
+  const {A,L}=Z,share={เพื่อน:Z.fr,แสดงออก:Z.out,ทรัพย์:Z.wea,อำนาจ:Z.pow,ทรัพยากร:Z.res};
+  return LF_FIELDS.map(f=>{
+    const bz=(A.fav.includes(f.el)?(f.el===A.fav[0]?3:2):(A.unfav.includes(f.el)?-2.5:0))+(share[f.cat]-20)/6;
+    const lk=(f.pl.includes(L.lordL)?2.5:0)+(f.pl.includes(L.lord(10))?2:0)+(f.pl.includes(L.lord(6))?.8:0)+(f.pl.includes(L.lord(2))?.5:0);
+    return {f,bz,lk,t:bz+lk,both:bz>=2&&lk>=2};
+  }).sort((a,b)=>b.t-a.t);
+}
+function lfCareer(Z){
+  const {g,fr,out,wea,pow,res,st,L,fl,A}=Z;
+  let b=50+(pow-20)*0.6;
+  if(fl.gy)b+=8;if((st==='strong'&&pow>=15)||(st==='weak'&&res+fr>=45&&pow>=18))b+=6;
+  if(st==='weak'&&pow>=32)b-=10;if(out>=18&&wea>=14)b+=5;if(Z.stars.ty.length)b+=3;
+  if(['อำนาจ','ทรัพยากร','ทรัพย์'].includes(Z.monthCat))b+=3;if(Z.monthClash)b-=6;if(fl.sg)b-=6;
+  b=lfCl(b);
+  const l=lfLk(L,[[10,1],[6,.6],[2,.3]],{เสาร์:8,อาทิตย์:6,อังคาร:6,พฤหัสบดี:4,พุธ:4,ศุกร์:1,จันทร์:1},{ดิน:3,ไฟ:3,ลม:1,น้ำ:0},{จร:6,สถิร:4,อุภัย:0});
+  const rk=lfFieldRank(Z),good=rk.slice(0,4),bad=rk.filter(x=>x.bz<0).sort((a,c)=>a.t-c.t).slice(0,3);
+  if(bad.length<3)rk.slice().reverse().forEach(x=>{if(bad.length<3&&!bad.includes(x)&&x.t<0)bad.push(x);});
+  const owner=fr*0.5+out*0.8+wea*0.5,emp=pow*1.0+res*0.7;
+  const style=owner>emp+3?'โน้มไปทาง <b>เจ้าของกิจการ ฟรีแลนซ์ หรืองานที่ตัดสินใจเองได้</b> — ได้พลังจากการเป็นนายตัวเองและลงมือเอง':
+    emp>owner+3?'โน้มไปทาง <b>งานในองค์กรที่มีระบบและสายบังคับบัญชาชัด</b> — เติบโตด้วยความรับผิดชอบและความน่าเชื่อถือ':
+    'ได้ทั้งสองแนว ทั้ง <b>งานในองค์กรและงานอิสระ</b> ควรเลือกตามช่วงชีวิตและธาตุที่ได้รับการเสริมในแต่ละช่วง';
+  const warn=[];
+  if(fl.sg)warn.push('มีโครงสร้าง 傷官見官 ปากไวหรือคิดต่างจากหัวหน้า อาจกระทบตำแหน่ง ควรเลือกงานที่ใช้ฝีมือสื่อสารได้แทนการเถียง');
+  if(Z.monthClash)warn.push('เสาเดือน (บ้านของการงาน) ถูกชน — อาชีพมีการเปลี่ยนแปลงใหญ่อย่างน้อยหนึ่งครั้ง');
+  if(st==='weak'&&pow>=32)warn.push('แรงกดดันงานสูงกว่าแรงของดวง ควรเลือกงานที่มีทีมหนุนและเวลาพักชัดเจน');
+  return lfMake('job','🛠️','การงาน · งานที่เหมาะและไม่เหมาะ','แรงส่งด้านการงาน',b,l,
+    ['เส้นทางการงานชัดและมีแรงส่งแรง เหมาะลงหลักปักฐานในสายที่ถนัด','การงานค่อนข้างหนุน หากเลือกสายให้ตรงธาตุจะก้าวหน้าเร็ว','การงานระดับกลาง สำคัญที่การเลือกสายงานให้เหมาะกับธาตุและจังหวะ','การงานต้องใส่ใจ ควรเลือกสายให้ถูกและเลี่ยงงานที่ขัดกับธาตุให้โทษ','การงานต้องจัดระบบชีวิตและเลือกสายอย่างระวัง อย่าฝืนในสายที่กดดันเกินแรง'],
+    [{h:'✅ สายงานที่เหมาะ',t:good.map(x=>'• '+x.f.n+(x.both?' ✨':'')).join('<br>')+(good.some(x=>x.both)?'<br><span class="small">✨ = ตรงกันทั้ง BaZi (ธาตุให้คุณ) และลัคนา (เจ้าเรือน)</span>':'')},
+     {h:'⛔ สายงานที่ไม่เหมาะเป็นอาชีพหลัก',t:(bad.length?bad.map(x=>'• '+x.f.n+' <span class="small">(ธาตุ'+x.f.el+(A.unfav.includes(x.f.el)?' เป็นธาตุให้โทษ':' ไม่ใช่ธาตุที่ดวงต้องการ')+')</span>').join('<br>'):'• ไม่พบสายที่ขัดแย้งชัดเจน')+'<br><span class="small">ไม่ได้แปลว่าทำไม่ได้ แต่ต้องออกแรงมากกว่าและควรมีธาตุเสริมช่วย</span>'},
+     {h:'🧑‍💼 รูปแบบการทำงาน',t:style+(warn.length?'<br>⚠️ '+warn.join('<br>⚠️ '):'')},
+     {h:'⭐ มุมลัคนา'+L.sign.n,t:LF_Q_JOB[L.sign.q]+' · เจ้าเรือน'+L.lordL+' เด่นด้าน'+LF_R_JOB[L.lordL]},
+     {h:'',t:lfBlend(b,l,['สายงานและบุคลิกแบบลัคนาเสริมกัน เลือกสายที่มี ✨ จะได้ทั้งความถนัดและความก้าวหน้า','ศักยภาพการงานมีในดวง แต่บุคลิกหรือสภาพแวดล้อมอาจไม่เอื้อทันที ควรฝึกทักษะและเลือกทีมที่เหมาะ','ดวงกำเนิดไม่ได้หนุนการงานเต็มที่ แต่บุคลิกแบบลัคนาช่วยให้ปรับตัวและเป็นที่ยอมรับได้','การงานต้องค่อย ๆ สร้างจากทักษะเฉพาะทางและสายที่ตรงธาตุ อย่าเปลี่ยนสายบ่อยโดยไม่มีแผน'])}],
+    ['BaZi: อำนาจ '+lfR(pow)+'% · ทรัพยากร '+lfR(res)+'% · แสดงออก '+lfR(out)+'% · เสาเดือน=หมวด'+Z.monthCat+' · ธาตุให้คุณ '+A.fav.join('/')+' · ธาตุให้โทษ '+A.unfav.join('/'),
+     'ลัคนา: เจ้าเรือนลัคนา '+L.lordL+' · เจ้าเรือนภพ10 (กัมมะ) '+L.lord(10)+' · ภพ6 (อริ) '+L.lord(6)+' · '+lfHouseEv(L,[10,6])],
+    ''+(good.some(x=>x.both)?'เลือกสายที่มี ✨ ก่อน แล้วเสริมธาตุให้คุณ (':'เลือกสายที่ตรงธาตุให้คุณ และเสริมธาตุให้คุณ (')+''+A.fav.join(' / ')+') ผ่านสีเสื้อผ้า ทิศโต๊ะทำงาน และเพื่อนร่วมงาน',lfLuckNote(Z,['อำนาจ','ทรัพย์']));
+}
+
+/* ============ 3. บารมี ============ */
+const LF_AUTH_PL={'อาทิตย์':12,'พฤหัสบดี':10,'อังคาร':7,'เสาร์':7,'ศุกร์':2,'จันทร์':1,'พุธ':0};
+function lfAuthority(Z){
+  const {g,fr,out,wea,pow,res,st,L,fl,stars}=Z;
+  let b=45+(pow-20)*0.8;
+  if(fl.gy)b+=10;if(st==='strong'&&pow>=18)b+=8;if(st==='weak'&&pow>=30)b-=12;
+  if(stars.jx.length)b+=6;if(stars.yr.length&&st!=='weak')b+=4;if(stars.ty.length)b+=4;if(stars.md.length||stars.td.length)b+=3;if(stars.hg.length)b+=2;
+  if(out>pow+8&&!fl.gy)b-=4;if(['อำนาจ','ทรัพยากร'].includes(Z.monthCat))b+=3;
+  b=lfCl(b);
+  const l=lfLk(L,[[10,.9],[9,.7],[5,.3]],LF_AUTH_PL,{ไฟ:5,ดิน:2,ลม:0,น้ำ:-1},{สถิร:5,จร:4,อุภัย:-2});
+  if(L.sign.n==='สิงห์'){/* ราศีราชา */}
+  const sc={
+    cmd:pow+(st==='strong'?8:0)+(stars.jx.length?6:0)+(stars.yr.length?4:0)+(L.lordL==='อาทิตย์'||L.lordL==='อังคาร'?3:0),
+    eld:res+(stars.ty.length?6:0)+(stars.md.length||stars.td.length?4:0)+(L.lordL==='พฤหัสบดี'?6:0),
+    net:fr*0.8+out*0.5+(stars.th.length?6:0)+(L.sign.el==='ลม'?4:0),
+    exp:out*0.8+res*0.5+(stars.hg.length?6:0)+(stars.wc.length?4:0)};
+  const NM={cmd:['บารมีแบบผู้นำสั่งการ','คนเกรงใจและเชื่อฟังเมื่อคุณตัดสินใจ','งานบริหาร ราชการ งานควบคุมระบบ หรือหัวหน้าทีม'],
+    eld:['บารมีแบบผู้ใหญ่เมตตา','คนไว้ใจและมาขอคำปรึกษา','งานที่ปรึกษา การศึกษา ดูแลคน'],
+    net:['บารมีแบบนักสร้างเครือข่าย','คนรู้จักเยอะ ชักชวนผู้คนได้','งานขาย สื่อ ธุรกิจเครือข่าย'],
+    exp:['บารมีจากความเชี่ยวชาญ','ผลงานและความรู้ทำให้คนเชื่อถือ','งานวิชาชีพเฉพาะทาง งานครีเอทีฟ']};
+  const ks=Object.keys(sc).sort((a,c)=>sc[c]-sc[a]),k1=ks[0],k2=ks[1];
+  const born=['ty','md','td','jx','yr'].filter(k=>stars[k].length);
+  const bornTxt=born.length?'มีดาวเสริมบารมีติดตัว: '+born.map(k=>LF_STAR[k][0].split(' ·')[0]+' ('+lfWhere(stars[k])+')').join(', ')+' — บารมีส่วนหนึ่งเป็นของที่ติดตัวมาแต่เกิด':
+    'ไม่พบดาวเสริมบารมีเด่นในดวง — บารมีของคุณเป็นแบบ "สร้างเอง" ผ่านผลงาน ความสม่ำเสมอ และความน่าเชื่อถือ';
+  const warn=[];
+  if(fl.sg)warn.push('傷官見官: วาจาและความคิดที่ตรงเกินไปอาจบั่นทอนบารมีต่อหน้าผู้มีอำนาจ ควรฝึกเลือกจังหวะพูด');
+  if(st==='weak'&&pow>=30)warn.push('แรงกดดันจากอำนาจภายนอกสูง ยังไม่ใช่ช่วงที่ควรแบกตำแหน่งใหญ่โดยไม่มีทีมหนุน');
+  if(st==='strong'&&res>=28)warn.push('มีผู้ใหญ่หนุนมาก ระวังบารมีที่ยืมมาโดยยังไม่ได้พิสูจน์ด้วยผลงานของตัวเอง');
+  return lfMake('aut','👑','บารมี · อำนาจและความเกรงใจ','ระดับบารมี',b,l,
+    ['บารมีเด่นชัด คนเกรงใจและยอมรับตั้งแต่ก้าวแรก','มีบารมีพอสมควร เพิ่มขึ้นเร็วเมื่อมีผลงานรองรับ','บารมีระดับกลาง ขึ้นกับความสม่ำเสมอและบทบาทที่ได้รับ','บารมียังไม่เด่น ต้องสะสมความเชื่อถือทีละขั้น','บารมียังต้องสร้างอีกมาก ควรเน้นความเชี่ยวชาญและวินัยเป็นฐาน'],
+    [{h:'👑 รูปแบบบารมีของคุณ',t:'<b>'+NM[k1][0]+'</b> — '+NM[k1][1]+'<br>รองลงมา: '+NM[k2][0]+' — '+NM[k2][1]},
+     {h:'🧬 ติดตัวมาหรือสร้างเอง',t:bornTxt},
+     {h:'🔗 สัมพันธ์กับลักษณะงาน',t:'บารมีแบบนี้ส่องแสงที่สุดเมื่ออยู่ใน'+NM[k1][2]+' และเสริมด้วย'+NM[k2][2]},
+     {h:'⭐ มุมลัคนา'+L.sign.n,t:'เจ้าเรือน'+L.lordL+(['อาทิตย์','พฤหัสบดี'].includes(L.lordL)?' เป็นดาวแห่งเกียรติยศและความเคารพ หนุนบารมีโดยธรรมชาติ':['อังคาร','เสาร์'].includes(L.lordL)?' ให้บารมีจากความเด็ดขาดและความอดทนรับผิดชอบ':' ให้บารมีเชิงเสน่ห์และการประสานคน มากกว่าการสั่งการ')+(L.sign.n==='สิงห์'?' · ลัคนาสิงห์เป็นราศีของผู้นำและเจ้าเมือง':'')},
+     {h:'',t:lfBlend(b,l,['คนรอบข้างจะเห็นความน่าเกรงขามและความน่าเชื่อถือในตัวคุณอย่างชัดเจน','ในดวงมีฐานบารมี แต่ท่าทีที่แสดงออกอาจยังไม่สื่อ ควรฝึกบุคลิกภาพและการนำเสนอ','ภายในยังไม่แกร่ง แต่บุคลิกภายนอกช่วยให้คนให้เกียรติ ควรเสริมความเชี่ยวชาญให้สมกับภาพลักษณ์','เน้นสร้างบารมีจากผลงานและความเชี่ยวชาญ แทนการใช้อำนาจหรือตำแหน่ง'])+(warn.length?'<br>⚠️ '+warn.join('<br>⚠️ '):'')}],
+    ['BaZi: อำนาจ '+lfR(pow)+'% (七殺 '+lfR(g['七殺'])+' · 正官 '+lfR(g['正官'])+') · ทรัพยากร '+lfR(res)+'%'+(fl.gy?' · 官印相生':'')+(born.length?' · ดาว: '+born.map(k=>LF_STAR[k][0].split(' ·')[0]).join(','):''),
+     'ลัคนา: เจ้าเรือน '+L.lordL+' · '+lfHouseEv(L,[10,9])],
+    'เสริมบารมีด้วยการรักษาคำพูด ส่งมอบงานตรงเวลา และเรียนรู้ทักษะที่คนอื่นพึ่งพาได้ — บารมีที่ยั่งยืนมาจากความไว้ใจ',lfLuckNote(Z,['อำนาจ','ทรัพยากร']));
+}
+
+/* ============ 4. เพื่อนพ้อง ============ */
+const LF_PERSONA={'ไม้':'คนใจกว้าง มีเมตตา ชอบเรียนรู้และผลักดันให้คุณเติบโต (ครู นักพัฒนา คนสายสร้างสรรค์)','ไฟ':'คนกระตือรือร้น เปิดเผย เข้าสังคมเก่ง ช่วยเปิดเวทีและสร้างแรงบันดาลใจ','ดิน':'คนมั่นคง น่าเชื่อถือ ใจเย็น เป็นหลักให้เมื่อคุณโยกคลอน','ทอง':'คนมีวินัย ตรงไปตรงมา กล้าเตือนและช่วยจัดระเบียบชีวิตคุณ','น้ำ':'คนฉลาด ยืดหยุ่น สื่อสารเก่ง ช่วยมองมุมใหม่และเชื่อมโยงผู้คนให้คุณ'};
+const LF_PERSONA_BAD={'ไม้':'คนดื้อ ยึดความคิดตัวเอง ชวนเริ่มหลายเรื่องแต่ไม่จบ','ไฟ':'คนใจร้อน อารมณ์ขึ้นลง ชอบดราม่า ชวนใช้จ่ายและเที่ยวเกินตัว','ดิน':'คนยึดติด คิดมาก ตัดสินใจช้า ดึงให้คุณหยุดอยู่กับที่','ทอง':'คนเข้มงวด วิจารณ์แรง เอาแต่เหตุผลจนบั่นทอนกำลังใจ','น้ำ':'คนลื่นไหล เปลี่ยนใจง่าย พูดแล้วไม่ค่อยทำ'};
+function lfFriends(Z){
+  const {g,fr,out,wea,pow,res,st,L,fl,stars,A,P}=Z;
+  let b=50;
+  b+=st==='weak'?(fr-20)*1.0:-(fr-20)*0.8;
+  if(stars.ty.length)b+=5;if(Z.dayCombine)b+=4;if(Z.dayClash)b-=5;if(g['劫財']>=12&&st!=='weak')b-=4;if(res>=18)b+=2;
+  b=lfCl(b);
+  const l=lfLk(L,[[11,1],[3,.6],[7,.6]],{จันทร์:8,ศุกร์:8,พุธ:6,พฤหัสบดี:6,อาทิตย์:2,อังคาร:-3,เสาร์:-4},{ลม:6,น้ำ:3,ไฟ:2,ดิน:-1},{อุภัย:5,จร:3,สถิร:-1});
+  const fav=[...new Set(A.fav)].slice(0,2),unf=[...new Set(A.unfav)].slice(0,2);
+  const yb=P.year.bi,combo=BR_EMO[BRANCH.indexOf(COMBINE[P.year.branch])]+' '+BR_TH[BRANCH.indexOf(COMBINE[P.year.branch])];
+  const clashA=BR_EMO[BRANCH.indexOf(CLASH[P.year.branch])]+' '+BR_TH[BRANCH.indexOf(CLASH[P.year.branch])];
+  const harmA=HARM[P.year.branch]?BR_EMO[BRANCH.indexOf(HARM[P.year.branch])]+' '+BR_TH[BRANCH.indexOf(HARM[P.year.branch])]:'';
+  const tyA=[...new Set([...(LF_TIANYI[P.day.si]||[]),...(LF_TIANYI[P.year.si]||[])])].map(i=>BR_EMO[i]+' '+BR_TH[i]).join(' / ');
+  const hm=LF_HARM[L.sign.el],tn=LF_TENS[L.sign.el];
+  const me=[];
+  if(fr>=28)me.push(st==='weak'?'มีเพื่อนและพวกพ้องเยอะ และเป็นแรงหนุนสำคัญของคุณ':'มีเพื่อนและพี่น้องรายล้อม แต่มีการแข่งขันและเรื่องเงินปะปน');
+  else if(fr<=12)me.push('เพื่อนสนิทน้อยแต่คัดคน มักต้องพึ่งตัวเองมากกว่า');
+  else me.push('เพื่อนระดับกำลังดี ไม่มากไม่น้อย');
+  if(g['劫財']>=11)me.push('ระวังเรื่องให้ยืมเงินหรือค้ำประกันเพื่อน — ควรทำเป็นลายลักษณ์อักษรเสมอ');
+  if(stars.th.length)me.push('มีเสน่ห์ดึงดูดผู้คน แต่ต้องแยกให้ออกระหว่างคนที่รักเราจริงกับคนที่เข้ามาหาประโยชน์');
+  if(Z.dayClash)me.push('เสาวันถูกชน — ความสัมพันธ์ใกล้ชิดมีช่วงห่างหรือเข้าใจผิดได้ ควรสื่อสารตรง ๆ');
+  if(Z.dayCombine)me.push('เสาวันมีการฮะ (六合) — ผูกมิตรกับคนใกล้ตัวได้ง่ายและอยู่กันยืด');
+  return lfMake('fri','🤝','เพื่อนพ้อง · เพื่อนแบบไหนให้คุณ แบบไหนให้โทษ','แรงหนุนจากเพื่อน',b,l,
+    ['เพื่อนและเครือข่ายเป็นแรงหนุนสำคัญของคุณ ทั้งยามสุขและยามทุกข์','มีเพื่อนดีหลายคนช่วยเหลือ ขอเพียงเลือกคนให้ถูกประเภท','มิตรภาพมีทั้งคนที่เป็นคุณและเป็นโทษ ต้องคัดกรองให้ดี','ต้องเลือกเพื่อนอย่างระวัง คนใกล้ตัวอาจดึงพลังหรือเงินของคุณ','ควรตั้งขอบเขตกับเพื่อนให้ชัด และเน้นเพื่อนคุณภาพมากกว่าปริมาณ'],
+    [{h:'✅ เพื่อนที่ให้คุณ',t:fav.map(e=>'• '+EL_EMO[e]+' <b>ธาตุ'+e+'</b>: '+LF_PERSONA[e]).join('<br>')+'<br>• ปีนักษัตรที่เข้ากันง่ายกับปีเกิดของคุณ (六合): <b>'+combo+'</b><br>• ปีนักษัตรที่มักเป็นผู้ใหญ่/ผู้ช่วยเหลือ (天乙貴人): <b>'+tyA+'</b><br>• ลัคนาของเพื่อนที่เข้ากันได้ดี: <b>'+lfSignsOf(hm)+'</b>'},
+     {h:'⚠️ เพื่อนที่ให้โทษ',t:unf.map(e=>'• '+EL_EMO[e]+' <b>ธาตุ'+e+'</b> ที่แรงเกินไป: '+LF_PERSONA_BAD[e]).join('<br>')+'<br>• ปีนักษัตรที่ชงกับปีเกิดของคุณ: <b>'+clashA+'</b>'+(harmA?' · ปีที่เบียดเบียนกัน (六害): <b>'+harmA+'</b>':'')+'<br>• ลัคนาของเพื่อนที่มักขัดกัน: <b>'+lfSignsOf(tn)+'</b><br><span class="small">ไม่ได้แปลว่าคบไม่ได้ แต่ควรระมัดระวังเรื่องเงินและการตัดสินใจร่วมกัน</span>'},
+     {h:'🧩 พฤติกรรมของคุณในมิตรภาพ',t:'• '+me.join('<br>• ')},
+     {h:'⭐ มุมลัคนา'+L.sign.n,t:'ลัคนาธาตุ'+L.sign.el+' ลักษณะ'+L.sign.q+(L.sign.el==='ลม'?': เข้าสังคมคล่อง คุยได้กับคนหลายกลุ่ม':L.sign.el==='น้ำ'?': จับความรู้สึกคนได้ไว มิตรภาพลึกแต่เลือกคน':L.sign.el==='ไฟ'?': ตรงไปตรงมา ชอบมิตรที่กล้าคิดกล้าทำ':': ซื่อสัตย์ มั่นคง ผูกมิตรช้าแต่ยืนยาว')},
+     {h:'',t:lfBlend(b,l,['ทั้งสองศาสตร์บอกว่าคุณมีเกณฑ์ได้คนดีรายล้อม เพียงเลือกให้ตรงกับประเภทที่ให้คุณ','มีเกณฑ์ได้เพื่อนดีตามดวง แต่บุคลิกบางด้านอาจทำให้เข้าถึงยากหรือไม่เปิดใจ ลองเปิดโอกาสให้คนใหม่','ดวงกำเนิดไม่ได้เน้นพวกพ้อง แต่บุคลิกแบบลัคนาช่วยให้เข้ากับผู้คนได้ ควรสร้างเครือข่ายอย่างตั้งใจ','มิตรภาพต้องอาศัยความตั้งใจ คัดคนและรักษาความสัมพันธ์กับกลุ่มเล็ก ๆ ที่ไว้ใจได้'])}],
+    ['BaZi: เพื่อน '+lfR(fr)+'% (比肩 '+lfR(g['比肩'])+' · 劫財 '+lfR(g['劫財'])+') · '+(st==='weak'?'ดิถีอ่อน พวกพ้องช่วยพยุง':st==='strong'?'ดิถีแกร่ง พวกพ้องมากไปจะแย่งทรัพยากร':'ดิถีสมดุล')+' · ธาตุให้คุณ '+A.fav.join('/'),
+     'ลัคนา: '+lfHouseEv(L,[11,3,7])],
+    'คบคนที่มีบุคลิกตามธาตุให้คุณ ('+fav.join(' / ')+') ให้มากขึ้น และแยกเรื่องเงินออกจากมิตรภาพเสมอ',lfLuckNote(Z,['เพื่อน']));
+}
+
+/* ============ 5. โชคลาภ ============ */
+function lfLuck(Z){
+  const {g,fr,out,wea,pow,res,st,sup,L,fl,stars,A}=Z;
+  let b=45+(g['偏財']-6)*2.2;
+  if(out>=14&&wea>=14)b+=5;if(stars.ym.length)b+=3;if(sup>=44&&sup<=62)b+=4;if(st==='strong'&&g['偏財']>=8)b+=5;
+  if(fl.bj)b-=10;if(fl.cd)b-=8;if(g['劫財']>=12)b-=3;
+  b=lfCl(b);
+  const l=lfLk(L,[[5,.9],[9,.7],[11,.7],[8,.4]],{พฤหัสบดี:10,ศุกร์:6,จันทร์:4,พุธ:2,อาทิตย์:2,อังคาร:0,เสาร์:-5},{ไฟ:4,น้ำ:3,ลม:2,ดิน:-2},{จร:3,อุภัย:2,สถิร:-1});
+  let type;
+  if(fl.bj||fl.cd)type='D';
+  else if(g['偏財']>=9&&sup>=44)type='A';
+  else if(g['偏財']>=5||(wea>=18&&g['偏財']>=3))type='B';
+  else type='C';
+  const TY={
+    A:['🎯 มีเกณฑ์ลาภจากจังหวะและโอกาส','ดวงมีธาตุลาภลอย (偏財) ชัดและกำลังดวงรับไหว มีแนวโน้มได้ผลจากการลงทุนที่ศึกษาแล้ว ค้าขายจับจังหวะ งานนายหน้า หรือโปรเจกต์ก้อนใหญ่ — แต่ควรใช้ "เงินเย็น" ตั้งวงเงินและจุดตัดขาดทุนก่อนเสมอ ไม่ใช่การพนัน'],
+    B:['⚖️ โอกาสมี แต่ต้องมีระบบ','ลาภลอยมีบ้างแต่ไม่ใช่ทางหลัก เหมาะลงทุนกระจายความเสี่ยงและระยะยาวมากกว่าเก็งกำไรระยะสั้น ผสมกับการเพิ่มรายได้จากฝีมือ'],
+    C:['💪 ลาภของคุณมาจากแรงกายและความสม่ำเสมอ','ดวงไม่เน้นลาภลอย ความมั่งคั่งของคุณมาจากการลงมือทำ สะสมทักษะ และทำต่อเนื่อง ไม่เหมาะกับการเก็งกำไรหรือพึ่งโชค'],
+    D:['⚠️ เสี่ยงเงินรั่ว ควรเลี่ยงการเสี่ยงโชค','โครงสร้างดวงมีแรงแย่งหรือแรงต้านทรัพย์ (比劫奪財/財多身弱) การเสี่ยงโชค กู้เงินลงทุน หรือการพนันมีโอกาสสูญมากกว่าได้ ควรเน้นออมและลงทุนแบบไม่ใช้ตัวช่วยทวีความเสี่ยง']};
+  const wind=[];
+  if(stars.ty.length||res>=22)wind.push('ลาภที่ได้จากผู้ใหญ่/ผู้อุปถัมภ์ (ของขวัญ โอกาส การแนะนำ)');
+  if(L.lord(8)&&lfRel(L.lordL,L.lord(8))>=1)wind.push('ลาภจากมรดกหรือทรัพย์ร่วมมีแนวโน้มดี (เจ้าเรือนภพมรณะเป็นมิตรกับลัคนา)');
+  if(stars.ym.length)wind.push('โอกาสเงินจากการเดินทางหรือการย้ายที่ (驛馬)');
+  const lead=g['偏財']>=9?'偏財 '+lfR(g['偏財'])+'% ':'偏財 '+lfR(g['偏財'])+'% ';
+  return lfMake('luck','🍀','โชคลาภ · เสี่ยงโชค หุ้น ลาภลอย หรือต้องขวนขวาย','โอกาสโชคลาภ',b,l,
+    ['โชคลาภเด่น มีแนวโน้มได้โอกาสพิเศษมากกว่าคนทั่วไป','มีลาภให้เห็นพอสมควร หากไม่ประมาทจะได้เก็บเกี่ยว','โชคลาภระดับกลาง พึ่งโชคได้เล็กน้อย ควรอาศัยฝีมือเป็นหลัก','ลาภลอยไม่ค่อยมี ควรสร้างความมั่งคั่งจากแรงงานและความรู้','ไม่ควรหวังพึ่งโชค ความมั่งคั่งต้องมาจากวินัยและการทำงานเท่านั้น'],
+    [{h:TY[type][0],t:TY[type][1]},
+     {h:'🎁 ลาภประเภทอื่น',t:wind.length?'• '+wind.join('<br>• '):'• ไม่พบลาภพิเศษเด่นชัด ลาภมักมาจากผลของความพยายามโดยตรง'},
+     {h:'⭐ มุมลัคนา'+L.sign.n,t:'เจ้าเรือน'+L.lordL+(['พฤหัสบดี','ศุกร์'].includes(L.lordL)?' เป็นดาวแห่งโชคและความอุดมสมบูรณ์ โอกาสดี ๆ มักเข้าหาง่าย':L.lordL==='เสาร์'?' เป็นดาวแห่งความล่าช้าและวินัย ลาภมาช้าแต่ถ้าสะสมนานจะมั่นคง':L.lordL==='อังคาร'?' ให้ความกล้าตัดสินใจ แต่ต้องคุมความบุ่มบ่ามเวลาเสี่ยง':' ให้ลาภผ่านไหวพริบ การสื่อสาร และคนรอบข้าง')+' · ภพปุตตะ (ภพเก็งกำไร) ตรงกับราศี'+L.sg(5).n},
+     {h:'',t:lfBlend(b,l,['ทั้งสองศาสตร์ชี้ว่าโอกาสโชคลาภมีจริง ควรเตรียมความพร้อมและใช้เงินส่วนที่รับความเสี่ยงได้','ในดวงมีโอกาส แต่ลัคนาชี้ว่าจังหวะหรือบุคลิกอาจทำให้พลาด ควรไตร่ตรองและไม่รีบ','ลัคนาช่วยให้จังหวะดีกว่าที่ดวงกำเนิดบอก แต่ไม่ควรพึ่งโชคเป็นหลัก','ไม่ควรหวังลาภลอย ให้เน้นสะสมจากแรงกายและทักษะ แล้วโชคจะมาเป็นผลพลอยได้'])+'<br><span class="small">⚠️ เป็นแนวโน้มตามโหราศาสตร์เท่านั้น ไม่ใช่คำแนะนำการลงทุนหรือการพนัน</span>'}],
+    ['BaZi: '+lead+'· 正財 '+lfR(g['正財'])+'% · เพื่อน '+lfR(fr)+'% · แรงหนุน '+sup+'%'+(fl.bj?' · 比劫奪財':'')+(fl.cd?' · 財多身弱':''),
+     'ลัคนา: '+lfHouseEv(L,[5,9,11,8])],
+    type==='A'?'ใช้ลาภให้เป็นระบบ: แยกเงินเสี่ยงออกจากเงินจำเป็น และจดบันทึกทุกการลงทุน':type==='D'?'ตั้งกฎเหล็ก: ไม่ค้ำประกัน ไม่กู้เพื่อลงทุน ไม่เล่นพนัน และออมก่อนใช้':'สะสมทักษะและรายได้หลักให้แข็งแรงก่อน แล้วค่อยแบ่งส่วนเล็ก ๆ ไปลงทุนระยะยาว',lfLuckNote(Z,['ทรัพย์']));
+}
+
+/* ============ 6. วาสนา ============ */
+function lfVasana(Z){
+  const {res,st,L,stars,fam,A,P,fl}=Z;
+  const kinds=['ty','md','td','lu'];
+  const found=kinds.filter(k=>stars[k].length);
+  let b=45+found.length*7+(stars.ty.length>1?4:0)+(res-20)*0.4+fam*3+(fl.gy?4:0);
+  if(Z.ymClash)b-=5;
+  b=lfCl(b);
+  const benefic={'พฤหัสบดี':10,'จันทร์':6,'ศุกร์':6,'อาทิตย์':5,'พุธ':2,'อังคาร':-2,'เสาร์':-3};
+  const l=lfLk(L,[[9,1],[5,.8],[4,.3]],benefic,{ไฟ:2,น้ำ:2,ลม:1,ดิน:1},{});
+  const sTxt=found.length?found.map(k=>'• <b>'+LF_STAR[k][0]+'</b> (พบที่'+lfWhere(stars[k])+') — '+LF_STAR[k][1]).join('<br>'):'• ไม่พบดาวคุ้มครองเด่นในดวง — วาสนาของคุณเป็นแบบ "สร้างเอง" และผลที่ได้จะเป็นของคุณเต็มที่';
+  const extra=['wc','jx','hg','th','ym','yr'].filter(k=>stars[k].length).map(k=>LF_STAR[k][0].split(' ·')[0]);
+  let inh;
+  if(fam>=2)inh='เสาปีและเสาเดือน (รากฐานตระกูล) เป็นธาตุให้คุณ — ได้ทุนเดิมจากครอบครัวหรือผู้ใหญ่ ทั้งโอกาส ชื่อเสียง การศึกษา หรือคุณธรรมที่สืบทอด';
+  else if(fam<=-2)inh='เสาปีและเสาเดือนไม่ค่อยหนุนธาตุของคุณ — สิ่งที่ตกทอดมาอาจน้อยหรือไม่ตรงความต้องการ ต้องสร้างฐานเอง แต่ความสำเร็จจะเป็นของคุณจริง ๆ';
+  else inh='รากฐานตระกูลอยู่ระดับกลาง มีบางส่วนหนุน บางส่วนต้องสร้างเพิ่มเอง';
+  if(Z.ymClash)inh+=' · เสาปีกับเสาเดือนชนกัน — มักห่างหรือเห็นต่างกับตระกูล สิ่งตกทอดอาจมาในรูปแบบที่ไม่ตรงตัว';
+  return lfMake('vas','🌟','วาสนา · ดวงคุ้มครองและสิ่งที่ตกทอดมา','ระดับวาสนา/ผู้คุ้มครอง',b,l,
+    ['วาสนาหนา มีผู้คุ้มครองและทุนเดิมชัดเจน','วาสนาดี มีดาวคุ้มครองและทุนเดิมพอสมควร','วาสนาระดับกลาง มีบางส่วนหนุน ที่เหลือต้องสร้างเอง','วาสนาค่อนข้างบาง ควรเสริมด้วยการทำบุญและสร้างผู้ใหญ่อุปถัมภ์','วาสนาแบบสร้างเองทั้งหมด จงภูมิใจเพราะทุกอย่างเป็นผลงานของคุณจริง ๆ'],
+    [{h:'🛡️ ดาวคุ้มครองในดวง',t:sTxt+(extra.length?'<br><span class="small">ดาวเสริมอื่น: '+extra.join(', ')+'</span>':'')},
+     {h:'🏛️ สิ่งที่ตกทอดมา',t:inh},
+     {h:'🪔 ธาตุคุ้มครองหลัก',t:'ธาตุที่ดวงของคุณต้องการและพึ่งพาที่สุดคือ '+EL_EMO[A.fav[0]]+' <b>'+A.fav[0]+'</b> ('+EL_COLORNAME[A.fav[0]]+') — เมื่ออยู่ในสภาพแวดล้อมและกลุ่มคนที่มีธาตุนี้ วาสนาจะเปิดง่ายขึ้น'},
+     {h:'⭐ มุมลัคนา'+L.sign.n,t:'ภพศุภะ (ภพบุญบารมี) ตรงกับราศี'+L.sg(9).n+' มี'+L.lord(9)+'เป็นเจ้าเรือน — '+LF_RELTXT[lfRel(L.lordL,L.lord(9))]+'กับเจ้าเรือนลัคนา'+(['พฤหัสบดี','ศุกร์','จันทร์'].includes(L.lordL)?' · ลัคนามีเจ้าเรือนเป็นศุภเคราะห์ ช่วยให้เรื่องร้ายคลี่คลายได้ง่าย':' · เจ้าเรือนลัคนาเป็นดาวที่ต้องฝึกฝน ผลดีมักมาหลังผ่านความพยายาม')},
+     {h:'',t:lfBlend(b,l,['วาสนาหนุนทั้งสองศาสตร์ ยามมีเรื่องร้ายมักมีทางออกหรือผู้ช่วยเสมอ','ในดวงมีผู้คุ้มครอง แต่เส้นทางบุคลิกอาจทำให้ไม่รู้ตัวหรือไม่ยอมรับความช่วยเหลือ','ดวงกำเนิดไม่ได้ให้ทุนเดิมมาก แต่ลัคนาช่วยให้สร้างบุญและโอกาสใหม่ได้ง่าย','วาสนาต้องสร้างเอง การทำความดีสม่ำเสมอและการรักษาคำพูดจะเป็นฐานให้ชีวิต'])}],
+    ['BaZi: ดาวคุ้มครอง '+(found.length?found.map(k=>LF_STAR[k][0].split(' ·')[0]).join(', '):'ไม่พบ')+' · ทรัพยากร '+lfR(res)+'% · เสาปี/เดือน='+(fam>0?'ให้คุณ':fam<0?'ให้โทษ':'กลาง')+' ('+(fam>0?'+':'')+fam+')',
+     'ลัคนา: '+lfHouseEv(L,[9,5])],
+    'เสริมวาสนาด้วยการทำบุญตามธาตุให้คุณ เช่น '+lfAfter(EL_BOOST[A.fav[0]].merit)+' และกตัญญูต่อผู้มีพระคุณ',lfLuckNote(Z,['ทรัพยากร']));
+}
+
+/* ============ 7. ปัญญา ============ */
+function lfWisdom(Z){
+  const {g,fr,out,wea,pow,res,st,L,stars,A}=Z;
+  let b=45+(res-20)*0.6+(out-20)*0.5+(Z.water-20)*0.3;
+  if(stars.wc.length)b+=6;if(stars.hg.length)b+=3;if(Z.fl.xs)b-=3;
+  b=lfCl(b);
+  const l=lfLk(L,[[5,1],[3,.6],[9,.5],[4,.2]],{พุธ:12,พฤหัสบดี:10,เสาร์:4,จันทร์:3,อาทิตย์:4,ศุกร์:2,อังคาร:-1},{ลม:6,น้ำ:5,ไฟ:3,ดิน:1},{อุภัย:6,สถิร:2,จร:1});
+  const sc={zy:g['正印'],py:g['偏印'],ss:g['食神'],sg:g['傷官'],pr:(wea+pow)*0.5};
+  const TY={zy:['นักเรียนรู้เชิงระบบ','เรียนเป็นลำดับ เข้าใจเหตุผลลึก ชอบความรู้ที่มีที่มาที่ไป จำแม่น'],
+    py:['นักหยั่งรู้และคิดนอกกรอบ','สัญชาตญาณลึก ชอบศาสตร์เฉพาะทางหรือเรื่องที่คนอื่นมองข้าม เข้าใจสิ่งนามธรรมได้ดี'],
+    ss:['นักสร้างสรรค์แบบนุ่มนวล','เรียนรู้ผ่านการลงมือและความเพลิดเพลิน ไอเดียไหลลื่น ถนัดศิลปะและการถ่ายทอด'],
+    sg:['นักคิดเฉียบคม ท้าทายกรอบ','คิดไว พูดเก่ง ตั้งคำถามกับของเดิม ไอเดียคม แต่ต้องระวังวิจารณ์เกินและไม่อดทนกับคนช้า'],
+    pr:['นักปฏิบัติ','ปัญญาแบบเรียนจากสถานการณ์จริง ตัดสินใจจากประสบการณ์ เก่งแก้ปัญหาหน้างาน']};
+  const ks=Object.keys(sc).sort((a,c)=>sc[c]-sc[a]),k1=ks[0],k2=ks[1];
+  const LE={'ไฟ':'คิดเร็ว ตัดสินใจไว กล้าลอง เรียนรู้ได้ดีเมื่อมีแรงบันดาลใจ','ดิน':'คิดเป็นขั้นตอน เน้นใช้ได้จริง เรียนช้าแต่แม่นและไม่ลืมง่าย','ลม':'ไวต่อข้อมูล เชื่อมโยงแนวคิดเก่ง สื่อสารคล่อง เรียนรู้ได้หลายเรื่องพร้อมกัน','น้ำ':'หยั่งรู้ ไวต่อบรรยากาศและความรู้สึก จำเชิงภาพและเรื่องราวได้ดี'};
+  const bonus=[];
+  if(Z.water>=25)bonus.push('ธาตุน้ำเด่น ('+Z.water+'%) — ความจำ การปรับตัว และปัญญาเชิงกลยุทธ์ดี');
+  if(stars.wc.length)bonus.push('มี 文昌 (ดาวปัญญา) ที่'+lfWhere(stars.wc)+' — ถนัดการสอบ การเขียน และการเรียนรู้');
+  if(stars.hg.length)bonus.push('มี 華蓋 (ดาวร่มทอง) ที่'+lfWhere(stars.hg)+' — จิตลึก สนใจศิลปะ ศาสนา หรือศาสตร์เฉพาะทาง');
+  if(Z.fl.xs)bonus.push('มี 梟神奪食 — ความคิดมากหรือที่ปรึกษาที่ครอบงำอาจกดไอเดียของตัวเองไว้ ควรลงมือทดลองจริงมากขึ้น');
+  if(Z.fl.sg)bonus.push('傷官 คม — ฝึกใช้ความคิดวิพากษ์เชิงสร้างสรรค์แทนการเถียงเพื่อชนะ');
+  const learn=k1==='zy'||k1==='py'?'เรียนจากตำรา คอร์สที่มีโครงสร้างชัด และมีที่ปรึกษา':k1==='pr'?'เรียนจากการลงมือจริง งานโปรเจกต์ และการฝึกงาน':'เรียนจากการทดลอง ทำผลงานจริง และแชร์ให้คนอื่นเห็น';
+  return lfMake('wis','🧠','ปัญญา · วิธีคิดและการเรียนรู้','พลังปัญญา',b,l,
+    ['ปัญญาเป็นจุดแข็งของคุณ คิดลึก เรียนไว และมองการณ์ไกล','ปัญญาค่อนข้างดี ฝึกฝนเพิ่มได้ผลชัด','ปัญญาระดับกลาง ได้ผลดีเมื่อเลือกวิธีเรียนให้ตรงกับธรรมชาติ','ต้องใส่ใจเรื่องการเรียนรู้ ควรหาวิธีที่เหมาะและให้เวลามากกว่าคนอื่น','ควรสร้างนิสัยการเรียนรู้อย่างเป็นระบบ และใช้ผู้ช่วยหรือที่ปรึกษาเสริม'],
+    [{h:'🧠 ธรรมชาติการคิด',t:'<b>'+TY[k1][0]+'</b> — '+TY[k1][1]+'<br>ผสมกับ <b>'+TY[k2][0]+'</b> — '+TY[k2][1]},
+     {h:'✨ ปัจจัยเสริม',t:bonus.length?'• '+bonus.join('<br>• '):'• ไม่มีดาวพิเศษด้านปัญญา ปัญญาของคุณเป็นผลของการฝึกฝนสะสม'},
+     {h:'⭐ มุมลัคนา'+L.sign.n,t:'ลัคนาธาตุ'+L.sign.el+': '+LE[L.sign.el]+' · เจ้าเรือน'+L.lordL+(L.lordL==='พุธ'?' เป็นดาวแห่งปัญญาและการสื่อสารโดยตรง':L.lordL==='พฤหัสบดี'?' เป็นดาวแห่งปัญญาและวิชาการ':'')},
+     {h:'📚 วิธีเรียนที่เหมาะ',t:learn},
+     {h:'',t:lfBlend(b,l,['ทั้งสองศาสตร์ชี้ว่าปัญญาคือเครื่องมือหลักของคุณ ใช้ให้เป็นอาชีพได้','มีฐานปัญญาดีในดวง แต่ลัคนาบอกว่าต้องฝึกสมาธิ/จัดระเบียบเพื่อให้ปัญญาออกผลเต็มที่','ดวงกำเนิดไม่ได้เน้นปัญญา แต่บุคลิกแบบลัคนาทำให้เรียนรู้ผ่านประสบการณ์ได้ดี','ปัญญาเกิดจากความพยายามและเวลา อย่าเทียบกับคนที่เรียนไว ให้เน้นสะสมต่อเนื่อง'])}],
+    ['BaZi: ทรัพยากร '+lfR(res)+'% (正印 '+lfR(g['正印'])+' · 偏印 '+lfR(g['偏印'])+') · แสดงออก '+lfR(out)+'% (食神 '+lfR(g['食神'])+' · 傷官 '+lfR(g['傷官'])+') · น้ำ '+Z.water+'%',
+     'ลัคนา: ธาตุ'+L.sign.el+' · '+L.sign.q+' · '+lfHouseEv(L,[5,3,9])],
+    'ฝึกจดสรุปหลังเรียนทุกครั้ง และเรียนเสริมในช่วงเช้าหรือช่วงที่ธาตุให้คุณ ('+A.fav[0]+') เด่น',lfLuckNote(Z,['ทรัพยากร','แสดงออก']));
+}
+
+/* ============ 8. อารมณ์ ============ */
+function lfEmotion(Z){
+  const {g,fr,out,wea,pow,res,st,L,A,fl,fire,water}=Z;
+  let b=55;
+  if(fire>=28)b-=(fire-26)*0.9;if(water>=30)b-=(water-28)*0.7;
+  if(g['傷官']>=11)b-=5;if(pow>=28&&st==='weak')b-=8;if(res>=14&&res<=30)b+=4;if(g['食神']>=10)b+=4;
+  if(fl.gy)b+=5;if(Z.dayClash)b-=6;if(Z.dayCombine)b+=3;if(st==='bal')b+=3;if(st==='weak'&&res<12)b-=4;
+  b=lfCl(b);
+  const l=lfLk(L,[[4,1],[5,.4]],{เสาร์:6,พฤหัสบดี:6,ศุกร์:4,พุธ:1,อาทิตย์:2,อังคาร:-8,จันทร์:-3},{ดิน:8,ลม:1,น้ำ:-4,ไฟ:-5},{สถิร:4,อุภัย:-2,จร:-4});
+  const DE={'ไม้':'อึดอัดเมื่อถูกบีบหรือขัดใจ ถ้ากดนานจะระเบิดตรง ๆ','ไฟ':'ร้อนเร็ว หายเร็ว แสดงออกชัด ชอบความตื่นเต้น','ดิน':'เก็บนาน นิ่งภายนอก แต่กังวลสะสมอยู่ข้างใน','ทอง':'ควบคุมตัวเองแน่น ใช้เหตุผลกดความรู้สึก แล้วตัดขาดเมื่อสุดทน','น้ำ':'ไหลลึก ไวต่อความรู้สึกคนรอบข้าง คิดซ้ำและเปลี่ยนอารมณ์ตามบรรยากาศ'};
+  const fw=fire>=28&&water>=28?'ไฟและน้ำแรงทั้งคู่ ('+fire+'% / '+water+'%) — อารมณ์ปะทุแล้วคิดซ้ำ ใจร้อนแต่เก็บมาคิดต่อ':
+    fire>=28?'ไฟเด่น ('+fire+'%) — ใจร้อน อารมณ์ขึ้นเร็ว ต้องการระบายพลัง':
+    water>=30?'น้ำเด่น ('+water+'%) — คิดมาก ไวต่อความรู้สึก ต้องการพื้นที่ปลอดภัย':
+    fire<=10&&water<=14?'ไฟและน้ำบางทั้งคู่ — อารมณ์นิ่งเรียบ แต่อาจขาดพลังจุดประกายหรือความยืดหยุ่น':
+    'ไฟ '+fire+'% น้ำ '+water+'% — อยู่ในระดับสมดุล ควบคุมอารมณ์ได้ดีตามธรรมชาติ';
+  const tr=[];
+  if(g['傷官']>=11)tr.push('ถูกวิจารณ์หรือถูกควบคุม แล้วตอบโต้ด้วยวาจา');
+  if(pow>=26)tr.push('แรงกดดันจากงานและความคาดหวังของผู้อื่น');
+  if(Z.dayClash)tr.push('ความไม่สงบในบ้านหรือกับคนใกล้ชิด (เสาวันถูกชน)');
+  if(fr>=28)tr.push('การเปรียบเทียบและการแข่งขันกับคนรอบตัว');
+  if(wea>=26)tr.push('เรื่องเงินและความมั่นคง');
+  if(st==='weak'&&res<12)tr.push('การขาดที่พึ่งทางใจและผู้รับฟัง');
+  if(!tr.length)tr.push('ไม่มีตัวกระตุ้นเด่นชัด อารมณ์ไหวตามสถานการณ์ปกติ');
+  const LQ={'จร':'อารมณ์เปลี่ยนเร็ว มาไวไปไว','สถิร':'เก็บอารมณ์นาน ยึดติด ให้อภัยช้า แต่มั่นคง','อุภัย':'ปรับอารมณ์ตามสถานการณ์ได้ แต่แกว่งได้ง่าย'};
+  return lfMake('emo','🌊','อารมณ์ · ธรรมชาติและความนิ่งของใจ','ความนิ่งทางอารมณ์',b,l,
+    ['ใจนิ่งและสมดุล รับแรงกระแทกได้ดี','อารมณ์ค่อนข้างมั่นคง มีบางช่วงไหวแต่กลับมาตั้งหลักได้','อารมณ์ระดับกลาง ขึ้นลงตามสถานการณ์ ควรมีกิจวัตรดูแลใจ','อารมณ์ไหวง่าย ต้องมีเครื่องมือจัดการความเครียดชัดเจน','อารมณ์ต้องการการดูแลเป็นพิเศษ ควรมีคนรับฟังและกิจวัตรผ่อนคลายสม่ำเสมอ'],
+    [{h:'🧠 ธรรมชาติอารมณ์ (ธาตุ'+Z.A.dm+')',t:DE[Z.A.dm]},
+     {h:'🔥💧 สมดุลไฟ-น้ำ',t:fw},
+     {h:'⚡ ตัวกระตุ้นที่ทำให้ใจไหว',t:'• '+tr.join('<br>• ')},
+     {h:'⭐ มุมลัคนา'+L.sign.n,t:'ลัคนาธาตุ'+L.sign.el+(L.sign.el==='ไฟ'?': ปะทุเร็วและหายเร็ว':L.sign.el==='น้ำ'?': อ่อนไหว ลึก เก็บความรู้สึกไว้ข้างใน':L.sign.el==='ดิน'?': นิ่ง ติดดิน ชอบความมั่นคง':': ใช้ความคิดนำอารมณ์ ใจเปลี่ยนตามข้อมูลใหม่')+' · '+LQ[L.sign.q]},
+     {h:'',t:lfBlend(b,l,['ใจของคุณนิ่งทั้งดวงกำเนิดและบุคลิกลัคนา ช่วยให้ตัดสินใจเรื่องใหญ่ได้ดี','ภายในดวงค่อนข้างนิ่ง แต่บุคลิกภายนอกไวต่อสถานการณ์ ลองหยุดหายใจก่อนตอบสนอง','ดวงกำเนิดมีแรงกดดันทางใจ แต่บุคลิกแบบลัคนาช่วยให้ฟื้นตัวและกลับมาตั้งหลักได้','ทั้งสองศาสตร์ชี้ว่าใจต้องการการดูแล ควรมีกิจวัตรผ่อนคลาย คนรับฟัง และไม่เก็บเรื่องไว้คนเดียว'])+'<br><span class="small">⚠️ ไม่ใช่การวินิจฉัยทางการแพทย์ หากเครียดหรือเศร้าต่อเนื่อง ควรปรึกษาผู้เชี่ยวชาญ</span>'}],
+    ['BaZi: ไฟ '+fire+'% · น้ำ '+water+'% · แสดงออก '+lfR(out)+'% · อำนาจ '+lfR(pow)+'% · ทรัพยากร '+lfR(res)+'%'+(Z.dayClash?' · เสาวันถูกชน':'')+(Z.dayCombine?' · เสาวันฮะ':''),
+     'ลัคนา: ธาตุ'+L.sign.el+' · '+L.sign.q+' · '+lfHouseEv(L,[4,5])],
+    'ปรับกิจวัตรตามธาตุให้คุณ ('+A.fav[0]+'): '+lfAfter(EL_BOOST[A.fav[0]].act)+' และทำสม่ำเสมอเป็นกิจวัตรดูแลใจ',lfLuckNote(Z,['แสดงออก','อำนาจ']));
+}
+
+/* ============ 9. การอุปถัมภ์ ============ */
+function lfPatron(Z){
+  const {g,fr,out,wea,pow,res,st,L,stars,fl,A,fam}=Z;
+  let b=45+(res-20)*0.9;
+  if(stars.ty.length)b+=6;if(stars.md.length||stars.td.length)b+=4;if(fl.gy)b+=6;if(st==='weak'&&res>=18)b+=6;
+  if(st==='strong'&&res>=30)b-=4;if(fl.xs)b-=6;if(fl.sg)b-=5;if(['ทรัพยากร','อำนาจ'].includes(Z.monthCat))b+=3;b+=fam*1.5;
+  b=lfCl(b);
+  const l=lfLk(L,[[9,1],[4,.8],[10,.6]],{พฤหัสบดี:10,จันทร์:8,อาทิตย์:5,ศุกร์:5,พุธ:3,เสาร์:1,อังคาร:-2},{น้ำ:3,ดิน:3,ไฟ:2,ลม:0},{อุภัย:2});
+  const who=[];
+  if(g['正印']>=g['偏印']&&g['正印']>=6)who.push('ผู้ใหญ่แบบแม่/ครู ที่ให้ความเมตตาอย่างเปิดเผยและห่วงใยตรง ๆ (正印)');
+  if(g['偏印']>g['正印']&&g['偏印']>=6)who.push('ผู้ใหญ่แบบที่ปรึกษาเฉพาะทางหรือพี่เลี้ยงที่ให้ความรู้นอกตำรา อุปถัมภ์ทางอ้อม (偏印)');
+  if(pow>=22)who.push('ผู้บังคับบัญชาหรือผู้มีอำนาจที่ผลักดันอย่างเข้มงวด และเปิดทางให้เมื่อคุณพิสูจน์ตัว');
+  if(stars.ty.length)who.push('ในยามคับขันมักมีผู้ใหญ่โผล่มาช่วยแบบไม่คาดคิด (天乙貴人)');
+  if(!who.length)who.push('ผู้อุปถัมภ์ไม่ได้เด่นชัดในดวง ผู้ใหญ่ที่ช่วยคุณมักเป็นผลจากการสร้างความสัมพันธ์เอง');
+  const how=out>=pow&&out>=res?'ได้รับความเอ็นดูจาก <b>ความสามารถและความจริงใจที่แสดงออก</b> ผู้ใหญ่ชอบเมื่อคุณมีผลงานให้เห็น':
+    fr>=28?'ได้รับความเอ็นดูผ่าน <b>เครือข่ายเพื่อนและพี่น้อง</b> ผู้ใหญ่มักรู้จักคุณจากคนใกล้ตัว':
+    res>=pow?'ได้รับความเอ็นดูจาก <b>ความอ่อนน้อมและใฝ่เรียนรู้</b> ผู้ใหญ่รู้สึกอยากสอนและดูแล':
+    'ได้รับความเอ็นดูผ่าน <b>ความรับผิดชอบและความน่าเชื่อถือ</b> ผู้ใหญ่ไว้ใจมอบงานสำคัญให้';
+  const away=[];
+  if(fl.sg)away.push('วาจาตรงหรือคิดต่างต่อหน้าผู้ใหญ่ (傷官見官) อาจทำให้ถูกมองว่าไม่เคารพ');
+  if(fl.xs)away.push('ผู้ใหญ่บางคนช่วยจนครอบงำ (梟神奪食) จนความคิดของคุณไม่ได้ออกมา');
+  if(st==='strong'&&res>=28)away.push('มีผู้ใหญ่หนุนมาก ระวังการพึ่งพามากไปจนไม่ได้พิสูจน์ตัวเอง');
+  if(res<12)away.push('ไม่ค่อยขอหรือรับความช่วยเหลือ ผู้ใหญ่จึงไม่รู้ว่าคุณต้องการอะไร');
+  if(!away.length)away.push('ไม่มีปัจจัยที่ทำให้ผู้ใหญ่ห่างเด่นชัด ขอเพียงรักษามารยาทและตอบแทนน้ำใจ');
+  return lfMake('pat','🙏','การอุปถัมภ์ · ความเอ็นดูจากผู้ใหญ่','แรงอุปถัมภ์จากผู้ใหญ่',b,l,
+    ['ผู้ใหญ่เอ็นดูและพร้อมอุปถัมภ์คุณมาก เป็นแรงหนุนสำคัญของชีวิต','มีผู้ใหญ่คอยช่วยเหลือพอสมควร เมื่อรู้จักขอและตอบแทนจะยิ่งได้มาก','การอุปถัมภ์ระดับกลาง ได้ตามที่สร้างความสัมพันธ์','ต้องสร้างความสัมพันธ์กับผู้ใหญ่อย่างตั้งใจ แรงอุปถัมภ์ไม่ได้มาเอง','ควรเรียนรู้ที่จะพึ่งตัวเองก่อน และสร้างผู้ใหญ่อุปถัมภ์ทีละคนด้วยความจริงใจ'],
+    [{h:'🧓 ผู้ใหญ่ที่หนุนคุณ',t:'• '+who.join('<br>• ')},
+     {h:'💞 รูปแบบความเอ็นดู',t:how},
+     {h:'⚠️ สิ่งที่ทำให้ผู้ใหญ่ห่าง',t:'• '+away.join('<br>• ')},
+     {h:'⭐ มุมลัคนา'+L.sign.n,t:'ภพศุภะ (ครูบาอาจารย์) ราศี'+L.sg(9).n+' · ภพพันธุ (มารดา) ราศี'+L.sg(4).n+' · ภพกัมมะ (บิดา/ผู้บังคับบัญชา) ราศี'+L.sg(10).n+' — '+(lfRel(L.lordL,L.lord(9))>=1?'เจ้าเรือนภพครูบาอาจารย์เป็นมิตรกับลัคนา ผู้ใหญ่สายความรู้เข้าถึงง่าย':'ผู้ใหญ่สายความรู้อาจต้องใช้เวลาสร้างความไว้ใจ')},
+     {h:'',t:lfBlend(b,l,['ผู้ใหญ่จะเอ็นดูและเปิดทางให้คุณทั้งโดยโครงสร้างดวงและบุคลิก — ขอเพียงไม่ประมาทน้ำใจ','ดวงมีผู้อุปถัมภ์ แต่ท่าทีหรือบุคลิกอาจทำให้ผู้ใหญ่เข้าถึงคุณยาก ลองเปิดใจและเล่าเป้าหมายให้ฟัง','ดวงกำเนิดไม่ได้หนุนผู้ใหญ่มาก แต่บุคลิกแบบลัคนาช่วยให้ผู้ใหญ่รู้สึกเอ็นดูได้ง่าย','การอุปถัมภ์เกิดจากการสร้างความสัมพันธ์ ทำให้ผู้ใหญ่เห็นผลงานและความจริงใจอย่างสม่ำเสมอ'])}],
+    ['BaZi: ทรัพยากร '+lfR(res)+'% (正印 '+lfR(g['正印'])+' · 偏印 '+lfR(g['偏印'])+')'+(fl.gy?' · 官印相生':'')+(stars.ty.length?' · 天乙貴人':'')+' · '+(st==='weak'?'ดิถีอ่อน ต้องการแรงหนุนจากผู้ใหญ่':st==='strong'?'ดิถีแกร่ง ไม่ได้ต้องพึ่งมาก':'ดิถีสมดุล'),
+     'ลัคนา: '+lfHouseEv(L,[9,4,10])],
+    'ทำบุญและเยี่ยมเยียนผู้มีพระคุณสม่ำเสมอ และเมื่อได้รับความช่วยเหลือให้ตอบแทนหรือขอบคุณเป็นลายลักษณ์อักษร',lfLuckNote(Z,['ทรัพยากร','อำนาจ']));
+}
+
+/* ============ ประกอบ + แสดงผล ============ */
+function buildLife(P,A,LK,LP,y,m,d){
+  const Z=lfCtx(P,A,LK,LP,y,m,d);
+  const topics=[lfFinance(Z),lfCareer(Z),lfAuthority(Z),lfFriends(Z),lfLuck(Z),lfVasana(Z),lfWisdom(Z),lfEmotion(Z),lfPatron(Z)];
+  return {topics,L:Z.L,Z};
+}
+function lfBar(t){return '<div class="bar"><i style="width:'+t.total+'%;background:'+t.color+'"></i></div>';}
+function lifeCardHTML(t){
+  let h='<div class="lcard"><div class="lhead"><span>'+t.icon+' '+t.title+'</span><span class="badge" style="background:'+t.color+'">'+t.label+' · '+t.total+'</span></div>'+
+    '<div class="small">'+t.sname+' — BaZi <b>'+t.b+'</b> · ลัคนา <b>'+t.l+'</b> · รวม <b>'+t.total+'</b> · '+t.agree+'</div>'+lfBar(t)+
+    '<div class="lhl">'+t.headline+'</div>';
+  t.points.forEach(p=>{h+='<p>'+(p.h?'<b>'+p.h+'</b><br>':'')+p.t+'</p>';});
+  if(t.tl)h+='<p>'+t.tl+'</p>';
+  h+='<div class="tip">🔎 <b>ที่มาจากดวง</b><br>'+t.ev.join('<br>')+'</div><div class="fix">💡 <b>แนวทาง:</b> '+t.tip+'</div></div>';
+  return h;
+}
+function lifeOverviewHTML(L){
+  const s=L.sign;
+  let h='<div class="box lover"><div class="small" style="margin-bottom:6px">นำ <b>BaZi</b> (สิบเทพละเอียด 10 ตัว · โครงสร้างดวง · ดาวคุ้มครอง · ปฏิสัมพันธ์ระหว่างเสา) มากรองร่วมกับ <b>ลัคนาราศี'+s.n+'</b> '+
+    '(เจ้าเรือน'+s.r+' · ธาตุ'+s.el+' · ลักษณะ'+s.q+' · ความเป็นมิตรของเจ้าเรือนแต่ละภพ) — คะแนนรวม = BaZi 60% + ลัคนา 40% '+
+    'ลัคนาในที่นี้ใช้เฉพาะราศีลัคนาและเจ้าเรือนภพ ไม่รวมตำแหน่งดาวเคราะห์ ผลทั้งหมดเป็นแนวโน้มสำหรับวางแผนชีวิต ไม่ใช่คำทำนายตายตัว</div>';
+  LIFE.topics.forEach(t=>{h+='<div class="erow"><div class="ename"><span>'+t.icon+' <b>'+t.title.split(' · ')[0]+'</b> <span class="small">'+t.sname+'</span></span><b style="color:'+t.color+'">'+t.label+' · '+t.total+'</b></div>'+lfBar(t)+'</div>';});
+  return h+'</div>';
+}
+function renderLifeReading(P,A,LK,LP,y,m,d){
+  try{
+    LIFE=buildLife(P,A,LK,LP,y,m,d);
+    document.getElementById('lifeBox').innerHTML=lifeOverviewHTML(LIFE.L)+LIFE.topics.map(lifeCardHTML).join('');
+  }catch(e){
+    console.error('life reading failed',e);LIFE=null;
+    document.getElementById('lifeBox').innerHTML='<div class="small">⚠️ ไม่สามารถสร้างการวิเคราะห์ 9 มิติได้ในขณะนี้</div>';
+  }
+}
+function lifeLineText(){
+  if(!LIFE)return [];
+  const h2t=s=>String(s).replace(/<br\s*\/?>/gi,'\n').replace(/<\/?[a-zA-Z][^>]*>/g,'').replace(/&amp;/g,'&');
+  const S=['🧭 วิเคราะห์ชีวิต 9 มิติ (BaZi × ลัคนาราศี'+LIFE.L.sign.n+')\n'+LIFE.topics.map(t=>t.icon+' '+t.title.split(' · ')[0]+': '+t.label+' '+t.total+'/100').join('\n')+'\n(คะแนนรวม = BaZi 60% + ลัคนา 40% · เป็นแนวโน้ม ไม่ใช่คำทำนายตายตัว)'];
+  LIFE.topics.forEach(t=>{
+    let s=t.icon+' '+t.title+'\n'+t.sname+': '+t.label+' '+t.total+'/100 (BaZi '+t.b+' · ลัคนา '+t.l+')\n'+h2t(t.headline);
+    t.points.forEach(p=>{s+='\n\n'+(p.h?h2t(p.h)+'\n':'')+h2t(p.t);});
+    if(t.tl)s+='\n\n'+h2t(t.tl);
+    s+='\n\n🔎 ที่มา: '+t.ev.map(h2t).join(' | ')+'\n💡 แนวทาง: '+h2t(t.tip);
+    S.push(s);
+  });
+  return S;
+}
+
+/* ============================================================
    SECTION 4.5 : ส่งออก PDF / LINE
    ============================================================ */
 /* ---------- ตัวช่วยสำหรับ PDF ---------- */
@@ -1108,6 +1689,10 @@ function buildPDFSections(){
   });
   S.push(pdfWrap(pdfH2('🔯 ลัคนาราศี (โหราศาสตร์ไทย)')+$('ladkhanaBox').innerHTML));
   S.push(pdfWrap(pdfH2('🌀 ดวงโคจรช่วง 10 ปี (大運)')+$('luckBox').innerHTML.replace(/class="rtable"/g,'class="pdft"')));
+  if(document.querySelector('#lifeBox .lover')){
+    S.push(pdfWrap(pdfH2('🧭 วิเคราะห์ชีวิต 9 มิติ · BaZi × ลัคนา')+document.querySelector('#lifeBox .lover').outerHTML));
+    document.querySelectorAll('#lifeBox .lcard').forEach(cd=>S.push(pdfWrap(cd.outerHTML)));
+  }
   S.push(pdfWrap(pdfH2('📅 ตรวจวันจรเทียบดวงกำเนิด')+'<div class="box">'+$('dailyBox').innerHTML+'</div>'));
   [...document.querySelectorAll('#wk tr')].forEach((tr,k)=>{
     const cells=[...tr.children].filter(td=>td.hasAttribute('data-label'));
@@ -1119,6 +1704,18 @@ function buildPDFSections(){
       '<div style="border:1px solid #e7d7c1;border-radius:12px;padding:2px 12px;background:#fff">'+body+'</div>'));
   });
   return S;
+}
+/* ตัดคำไทยด้วย Intl.Segmenter แล้วคั่นด้วย ZWSP — ให้ไลบรารีถ่ายภาพตัดบรรทัดตรงกับเบราว์เซอร์ (กันตัวอักษรไทยซ้อนทับเมื่อขึ้นบรรทัดใหม่) */
+function pdfSegThai(root){
+  if(!(window.Intl&&Intl.Segmenter))return;
+  const seg=new Intl.Segmenter('th',{granularity:'word'});
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
+  while(w.nextNode())nodes.push(w.currentNode);
+  nodes.forEach(n=>{
+    const t=n.nodeValue;
+    if(!/[\u0E00-\u0E7F]/.test(t))return;
+    n.nodeValue=Array.from(seg.segment(t),x=>x.segment).join('\u200b');
+  });
 }
 let PDF_BUSY=false;
 async function exportPDF(){
@@ -1149,6 +1746,7 @@ async function exportPDF(){
     for(let i=0;i<secs.length;i++){
       toast('📄 กำลังสร้างไฟล์ PDF… '+(i+1)+'/'+secs.length);
       holder.innerHTML=secs[i];
+      pdfSegThai(holder);
       await new Promise(r=>setTimeout(r,30));
       const cv=await html2pdf().set({html2canvas:h2cOpt}).from(holder).toCanvas().get('canvas');
       const hmm=cv.height*CW/cv.width;
@@ -1222,6 +1820,7 @@ function buildLineSections(){
     lk+='\n• '+[...tr.children].map(td=>lineClean(td.innerText).replace(/\n/g,' ')).join(' · ');
   });
   S.push(lk);
+  lifeLineText().forEach(x=>S.push(x));
   const v=$('navDate').value;
   if(v){
     const base=parseLocal(v);

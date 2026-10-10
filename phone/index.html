@@ -1,263 +1,445 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BaZi & Numerology Engine v2</title>
+<title>BaZi + ลัคนา + เลขศาสตร์ไทย</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{--ink:#1d2430;--mut:#5b6677;--bg:#eef1f4;--card:#fff;--acc:#0f766e;--good:#15803d;--mid:#b45309;--bad:#b42318;--line:#d9dee5}
 *{box-sizing:border-box}body{margin:0;padding:16px;background:var(--bg);color:var(--ink);font:16px/1.6 'Sarabun','Noto Sans Thai',Tahoma,sans-serif}
-.w{max-width:920px;margin:auto}h1{margin:.2em 0}h2{margin:0 0 12px;font-size:19px}h3{margin:20px 0 8px;font-size:17px}
+.w{max-width:960px;margin:auto}h1{margin:.2em 0}h2{margin:0 0 12px;font-size:19px}h3{margin:22px 0 8px;font-size:17px}
 .c{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:16px}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:640px){.g2{grid-template-columns:1fr}}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:700px){.g2,.g3{grid-template-columns:1fr}}
 label{display:block;font-weight:600;margin-bottom:4px}select,input,button{width:100%;padding:11px;font:inherit;border:1px solid #b8c0cc;border-radius:6px}
-button{background:var(--acc);color:#fff;border:0;font-weight:700;cursor:pointer;margin-top:10px}button.l{background:#06c755}button.o{background:#3b4a5e}
+button{background:var(--acc);color:#fff;border:0;font-weight:700;cursor:pointer;margin-top:10px}button.l{background:#06c755}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #7dd3c8}
-.sm{font-size:14px;color:var(--mut)}#res{display:none}.ex{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}@media(max-width:640px){.ex{grid-template-columns:1fr}}.ex button{margin:0}
+.sm{font-size:14px;color:var(--mut)}#res{display:none}.ex{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}@media(max-width:700px){.ex{grid-template-columns:1fr}}.ex button{margin:0}
 .v{padding:14px;border-left:6px solid var(--acc);background:#e7f3f1;font-weight:700;font-size:18px;margin-bottom:14px}
-.b{padding:14px;border:1px solid var(--line);border-radius:6px;text-align:center}.b strong{display:block;font-size:28px;line-height:1.3}
-.chip{display:inline-block;padding:1px 9px;border-radius:10px;color:#fff;font-size:13px;margin-right:4px}
-.dim{display:grid;grid-template-columns:140px 1fr 150px;gap:10px;align-items:center;margin:6px 0}@media(max-width:640px){.dim{grid-template-columns:100px 1fr 110px}}
+.b{padding:12px;border:1px solid var(--line);border-radius:6px;text-align:center}.b strong{display:block;font-size:26px;line-height:1.3}
+.chip{display:inline-block;padding:1px 9px;border-radius:10px;color:#fff;font-size:13px;margin:1px 4px 1px 0}
+.dim{display:grid;grid-template-columns:170px 1fr 170px;gap:10px;align-items:center;margin:6px 0}@media(max-width:700px){.dim{grid-template-columns:110px 1fr 110px}}
 .bar{position:relative;height:12px;background:#e6eaef;border-radius:6px}.bar:before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:#8793a3}.bar i{position:absolute;top:0;bottom:0;border-radius:6px}
 .p{border-left:5px solid var(--line);padding:10px 14px;margin:8px 0;background:#fafbfc;border-radius:4px;break-inside:avoid}.p.G{border-color:var(--good)}.p.C{border-color:var(--mid)}.p.B{border-color:var(--bad)}
-ul{margin:6px 0;padding-left:22px}li{margin:3px 0}
+.pil{text-align:center;border:1px solid var(--line);border-radius:6px;padding:6px;background:#fff}.cn{font-size:26px;line-height:1.3}
 .gc{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid #b8c0cc;border-radius:20px;margin:4px 6px 4px 0;cursor:pointer;background:#fff;font-weight:400}.gc input{width:auto;margin:0}.gc:has(input:checked){background:#e7f3f1;border-color:var(--acc);font-weight:700}
-.cols{columns:2;column-gap:14px}.cols>div{break-inside:avoid}@media(max-width:640px){.cols{columns:1}}
-@media print{.p,.dim,.b,.v,li{break-inside:avoid}h3{break-after:avoid}body{background:#fff;padding:0}.noprint{display:none!important}.c{border:0;padding:0}}
+.cols{columns:2;column-gap:14px}.cols>div{break-inside:avoid}@media(max-width:700px){.cols{columns:1}}
+table{width:100%;border-collapse:collapse;font-size:15px}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:center}td:first-child,th:first-child{text-align:left}
+ul{margin:6px 0;padding-left:22px}li{margin:3px 0}
+@media print{body{background:#fff;padding:0}.noprint{display:none!important}.c{border:0;padding:0}.p,.dim,.b,.v,li{break-inside:avoid}h3{break-after:avoid}}
 </style></head><body><div class="w">
-<h1>🔮 BaZi & Numerology Engine v2</h1>
-<p class="sm noprint">แกน 1: ความเข้ากับดวง (BaZi) · แกน 2: ความหมายคู่เลข (ศาสตร์ไทย) ถ่วงน้ำหนักตามตำแหน่ง · มิติ 5 ด้านมาจากศาสตร์ไทยล้วน</p>
+<h1>🔮 BaZi + ลัคนา + เลขศาสตร์ไทย</h1>
+<p class="sm noprint">แกน 1: BaZi (Day Master/ดิถี + กำลังธาตุ จากวันเดือนปีเกิดและเวลาตกฟาก) · แกน 2: ภาระความเสี่ยงคู่เลข (ศาสตร์ไทย ถ่วงตำแหน่ง) · แกน 3: ลัคนาราศีแบบไทย (ลัคนาธิบดี ↔ ดาวประจำเลข)</p>
 
-<div class="c noprint"><h2>⚙️ 1. ตั้งค่า</h2><div class="g2">
-<div><label for="dm">🧬 ธาตุเจ้าชะตา (Day Master)</label><select id="dm">
-<option value="ไม้">ไม้หยาง 甲</option><option value="ไม้">ไม้หยิน 乙</option><option value="ไฟ">ไฟหยาง 丙</option><option value="ไฟ">ไฟหยิน 丁</option>
-<option value="ดิน">ดินหยาง 戊</option><option value="ดิน" selected>ดินหยิน 己</option><option value="ทอง">ทองหยาง 庚</option><option value="ทอง">ทองหยิน 辛</option>
-<option value="น้ำ">น้ำหยาง 壬</option><option value="น้ำ">น้ำหยิน 癸</option></select></div>
-<div><label for="st">⚖️ กำลังธาตุ</label><select id="st">
-<option value="Strong">แข็งแกร่ง</option><option value="Weak">อ่อนแอ</option><option value="Bal" selected>สมดุลพอดี (ไม่มีข้อมูลทิศทาง)</option><option value="BalS">สมดุลเอนแข็ง</option><option value="BalW">สมดุลเอนอ่อน</option>
-<option value="FW">ตามกระแส: ตามทรัพย์</option><option value="FP">ตามกระแส: ตามอำนาจ</option><option value="FO">ตามกระแส: ตามผลผลิต</option></select></div>
-<div><label for="ph">📱 เบอร์ 10 หลัก</label><input id="ph" inputmode="numeric" maxlength="12" placeholder="เช่น 0814916249"></div></div>
-<p class="sm">ถ้าทราบธาตุที่ดวงต้องการ/ควรเลี่ยงจากผังจริงหรือหมอดู (用神) เลือกได้ จะใช้แทนโหมดกำลังธาตุ (ดวงสมดุลควรใช้ช่องนี้)</p><div id="ov" class="ex" style="grid-template-columns:repeat(5,1fr)"></div><p class="sm" id="sum"></p><button id="go">🔍 วิเคราะห์</button></div>
+<div class="c noprint"><h2>⚙️ 1. ข้อมูลเจ้าของดวง</h2>
+<div class="g4"><div><label for="bd">📅 วันที่</label><input id="bd" type="number" min="1" max="31" placeholder="เช่น 15"></div>
+<div><label for="bm">เดือน</label><select id="bm"></select></div>
+<div><label for="by">ปีเกิด (พ.ศ. หรือ ค.ศ.)</label><input id="by" type="number" placeholder="เช่น 2530"></div>
+<div><label for="bt">🕐 เวลาตกฟาก</label><input id="bt" type="time"></div></div>
+<div class="g4" style="margin-top:12px"><div style="grid-column:span 2"><label for="pl">📍 จังหวัดที่เกิด (77 จังหวัด)</label><select id="pl"></select></div><div><label for="sx">⚧ เพศ</label><select id="sx"><option value="M">👨 ชาย</option><option value="F">👩 หญิง</option></select></div><div></div></div>
+<div style="margin-top:12px"><label for="ph">📱 เบอร์โทรศัพท์ 10 หลัก</label><input id="ph" inputmode="numeric" maxlength="12" placeholder="เช่น 0814916249"></div>
+<p class="sm">ใช้เวลาตกฟากจริง (ไม่ทราบเวลา ผลเสาชั่วโมงและลัคนาจะคลาดเคลื่อน) · ระบบใช้พิกัดตัวจังหวัดคำนวณเวลาสุริยคติท้องถิ่น ฤดูกาล และลัคนาให้เอง (เวลามาตรฐานไทย UTC+7) · เพศมีผลกับความหมายของบางคู่เลขและดาวคู่ครอง</p>
+<button id="go">🔍 วิเคราะห์</button></div>
 
 <div id="res"><div class="ex noprint"><button id="pdf">📄 ดาวน์โหลด PDF</button><button id="shr" class="l">💬 ส่ง PDF เข้า LINE</button><button id="ln" class="l">📝 ส่งสรุปข้อความเข้า LINE</button></div>
-<div class="c noprint" id="glbox" style="display:none"><b>🎯 เบอร์นี้ควรเปลี่ยน: เลือกเรื่องที่อยากได้จากเบอร์ใหม่ (เลือกได้หลายเรื่อง)</b><div id="gls" style="margin-top:6px"></div><p class="sm">ระบบจะแสดงเฉพาะคู่เลขที่ตอบเรื่องที่เลือก และบอกเลขที่ต้องเลี่ยงสำหรับเรื่องนั้น</p></div>
 <div class="c" id="report"><h2 id="ttl"></h2><div class="v" id="ver"></div>
-<div class="g2"><div class="b" id="b1"></div><div class="b" id="b2"></div></div>
+<div class="g3"><div class="b" id="b1"></div><div class="b" id="b2"></div><div class="b" id="b3"></div></div>
 
+<h3>🧬 ดวงของคุณ (ที่ใช้เทียบกับเบอร์)</h3><div id="chart"></div>
 <h3>🤔 ต้องเปลี่ยนเบอร์ไหม</h3><div id="dec"></div>
-<h3>📊 มิติชีวิต 6 ด้าน (จากความหมายคู่เลขศาสตร์ไทย)</h3><p class="sm">ถ่วงน้ำหนักตามตำแหน่ง ช่วง −100 ถึง +100 · ขวา = ส่งเสริม ซ้าย = เป็นโทษ · ใกล้ 0 = ไม่มีผล (ไม่ใช่ร้าย) · BaZi ไม่ได้ปนในคะแนนนี้</p><div id="dims"></div>
-<h3>🔮 ลักษณะที่ผู้ใช้เบอร์นี้มักจะเจอ</h3><ul id="pre"></ul>
+<h3>📊 มิติชีวิต 6 ด้าน (จากความหมายคู่เลขศาสตร์ไทย)</h3><p class="sm">ถ่วงน้ำหนักตามตำแหน่ง ช่วง −100 ถึง +100 · ขวา = ส่งเสริม ซ้าย = เป็นโทษ · ใกล้ 0 = ไม่มีผล (ไม่ใช่ร้าย) · แถบนี้เป็นศาสตร์ไทยล้วน ส่วนการปรับด้วยดวงอยู่ในหัวข้อถัดไป</p><div id="dims"></div>
+<h3>🔮 ลักษณะที่ผู้ใช้เบอร์นี้มักจะเจอ</h3><div id="ovr"></div><ul id="pre"></ul>
+<h3>🔢 วิเคราะห์เบอร์รายคู่ (คู่ท้ายมีน้ำหนักมากที่สุด)</h3><div id="pairs"></div>
 <h3>📌 ข้อสังเกต</h3><ul id="obs"></ul>
-<div id="avbox" style="display:none"><h3>🚫 เลขที่ควรหลบเลี่ยงในเบอร์ใหม่ (ศาสตร์ไทย + BaZi)</h3><div id="av"></div></div>
-<div id="recbox" style="display:none"><h3>🔄 คู่เลขที่แนะนำสำหรับเบอร์ใหม่ (เสริมดวงชะตา)</h3><p class="sm" id="recn"></p><div id="rec"></div></div>
-<h3>🔢 รายคู่ (คู่ท้ายมีน้ำหนักมากที่สุด)</h3><div id="pairs"></div>
-<p class="sm">⚠️ ผลนี้อิงความเชื่อด้านเลขศาสตร์ ใช้เป็นแนวทางประกอบการตัดสินใจ ไม่ใช่การรับประกัน · น้ำหนักตำแหน่ง (WT) และน้ำหนักมิติรายคู่เป็นข้อสมมติของเครื่องมือ ปรับได้ในโค้ด · ธาตุของเลขใช้ระบบ 河图</p></div></div></div>
+
+<div id="advbox" style="display:none">
+<h3>🚫 เลขที่ควรหลบเลี่ยงในเบอร์ใหม่ (ศาสตร์ไทย + BaZi + ลัคนา)</h3><div id="av"></div>
+<h3>🔄 คู่เลขที่แนะนำสำหรับเบอร์ใหม่ (เสริมดวงชะตา)</h3>
+<div class="noprint"><b>🎯 เลือกเรื่องที่อยากได้จากเบอร์ใหม่ (เลือกได้หลายเรื่อง)</b><div id="gls" style="margin-top:6px"></div></div>
+<p class="sm" id="recn"></p><div id="rec"></div></div>
+<p class="sm">⚠️ ผลนี้อิงความเชื่อด้านโหราศาสตร์/เลขศาสตร์ ใช้ประกอบการตัดสินใจ ไม่ใช่การรับประกัน · น้ำหนักตำแหน่ง (WT), น้ำหนักมิติรายคู่ และเกณฑ์ต่างๆ เป็นข้อสมมติของเครื่องมือ ปรับได้ในโค้ด · ธาตุของเลขใช้ระบบ 河图 (1,6 น้ำ · 2,7 ไฟ · 3,8 ไม้ · 4,9 ทอง · 5,0 ดิน) · ลัคนาคำนวณแบบนิรายนะ อายนางศ์ลาหิรี อาจต่างจากตำราสุริยยาตร์ใกล้เส้นแบ่งราศี</p></div>
+
+<div class="c noprint" id="cmp" style="display:none"><h2>🆚 วิเคราะห์เบอร์ใหม่ที่ค้นหามา เทียบกับเบอร์เดิม</h2>
+<label for="ph2">📱 เบอร์ใหม่ 10 หลัก</label><input id="ph2" inputmode="numeric" maxlength="12" placeholder="เช่น 0891445566">
+<button id="go2">⚖️ เปรียบเทียบกับเบอร์เดิม</button><div id="cmpout" style="margin-top:12px"></div></div></div>
 
 <script>
-// คู่(น้อย→มาก)|ระดับ G ดี C ต้องพิจารณา B เสีย|ความหมาย|การเงิน,การงาน,รัก,สุขภาพ,ปัญญา,โชคลาภ (00–49 ตาม decoder159, 50–99 ตามตารางสายเดียวกัน)
-const N={};`00|B|เก็บตัว ความลับเยอะ ระวังเนื้องอก|0,0,-1,-2,0,0
-01|B|ใจร้อน ถูกโกง ทรยศ ไมเกรน|-1,-1,0,-1,-1,-1
-02|B|ผิดหวังเงินและรัก เสียเปรียบ|-1,0,-1,-1,0,0
-03|B|ช่างสังเกต ใจร้อน ระบบประสาท|0,0,0,-1,0,0
-04|B|ล่วงรู้ความลับ โรคกระเพาะ|0,0,0,-1,0,0
-05|B|ชอบค้นคว้า ดื้อ มักโสดนาน|0,0,-1,0,1,0
-06|B|เงินรั่ว รักซ้อน ให้ยืมไม่ได้คืน|-2,0,-2,-1,0,-1
-07|B|ลำบาก งานหนัก ปวดกระดูก|0,-1,0,-1,0,0
-08|B|ใจนักเลง ติดอบายมุข|-1,0,-1,-1,0,-1
-09|B|ลางสังหรณ์แม่น ปลีกวิเวก|0,0,-1,-1,1,0
-11|B|พูดตรง มั่นใจสูง ถูกหมั่นไส้|0,1,-1,0,0,0
-12|B|อารมณ์ขึ้นลง ทะเลาะคนใกล้ชิด|0,0,-2,-1,0,0
-13|B|บุกตะลุย อุบัติเหตุ ผ่าตัด|0,1,-1,-2,0,-1
-14|G|พูดเก่ง เจรจา ผู้ใหญ่เมตตา|1,2,0,0,1,0
-15|G|ปัญญาดี ใฝ่เรียน ผู้ใหญ่อุปถัมภ์|0,1,0,0,2,0
-16|G|นักวางแผน มุ่งหาเงิน ไม่เด่นความรัก|2,1,0,0,1,0
-17|B|ใจร้อน เผด็จการ เครียด|0,1,-1,-2,0,0
-18|B|ถูกอิจฉา ถูกหักหลัง|-1,-2,-2,0,0,-1
-19|G|ผู้นำ เด่นดัง วิสัยทัศน์ดี|1,2,0,0,1,0
-22|G|ใจดี เสน่ห์ งานบริการ ศิลปะ|0,1,2,1,0,0
-23|G|เสน่ห์แรง ดึงดูดเงิน (ระวังคนรุมจีบ)|1,1,2,0,0,1
-24|G|เมตตามหานิยม เงินคล่อง|1,1,2,0,0,0
-25|B|ขัดแย้งผู้ใหญ่ ติดขัด|0,-1,-1,-1,-1,0
-26|G|วาจาดี พูดแล้วได้เงิน ที่ปรึกษา|1,1,1,0,1,0
-27|B|หนี้สิน รายจ่ายสูง|-2,-1,0,0,0,-1
-28|G|หมุนเงินก้อนโต นักลงทุน|2,1,0,0,0,0
-29|G|เสน่ห์ รายได้ดี ศิลปะ|1,1,1,0,0,0
-33|C|จอมพลัง ขาลุย ใจร้อน เหมาะงานใช้แรง|0,1,0,1,0,0
-34|B|ปากจัด ปะทะคารม อุบัติเหตุ|0,-1,-1,-1,0,0
-35|G|อำนาจ ปกครองคน ผู้ใหญ่อุปถัมภ์|0,2,0,0,1,0
-36|G|หาเงินคล่อง เสน่ห์แรง มีคนเมตตา|1,0,2,0,1,0
-37|B|เครียด กดดัน งานหนัก|0,-1,0,-2,0,0
-38|B|บ้าบิ่น ใจร้อน ทะเลาะ|0,-1,-1,-1,0,-1
-39|G|โชคแข่งขัน เซ้นส์ดี ท้าทาย|1,1,0,0,0,2
-44|G|ช่างเจรจา ประสานงานดี|0,2,1,0,1,0
-45|G|ถ่ายทอดความรู้ น่าเชื่อถือ|1,1,0,0,2,1
-46|G|เสน่ห์ มีกินมีใช้ ร่าเริง|2,0,1,1,0,1
-47|C|นักสู้ อดทน งานโครงการ แต่เครียด|0,2,0,-1,0,0
-48|B|เล่ห์เหลี่ยม วุ่นวาย ระวังคดี|-1,-2,-1,0,0,-1
-49|G|ไหวพริบ เรียนรู้เร็ว ต่างประเทศ|1,1,0,0,2,0
-55|G|มีเหตุผล เป็นขั้นตอน รุ่งโรจน์|0,1,1,1,1,1
-56|G|โอกาสดีเข้ามาบ่อย รัก เงิน คนช่วย|1,1,1,0,1,1
-57|B|ขัดแย้งผู้ใหญ่ เครียดสูง ใช้ช่วงบุกเบิก|0,1,0,-1,-1,0
-58|C|ฉลาด เล่ห์เหลี่ยม เหมาะงานเจรจา|1,1,0,0,1,0
-59|G|มีสิ่งศักดิ์สิทธิ์คุ้มครอง โชคลาภ|1,0,0,2,1,2
-66|G|เสน่ห์ดีมาก หาเงินเก่ง โดดเด่น|2,1,2,0,1,1
-67|B|ชีวิตพลิกคว่ำ เลิกรา ถูกโกง|-1,-1,-2,0,0,-1
-68|C|รวยเร็ว แต่ต้องใช้จ่ายเพื่อหากำไร|2,1,0,0,0,1
-69|G|เสน่ห์ เด่นดัง เงินเข้าแรง (อย่าอยู่คู่สุดท้าย)|2,1,1,0,0,1
-77|B|อุปสรรครุมเร้า เครียดสุดๆ|-1,-1,0,-2,0,-1
-78|C|มิตรใหญ่ จับเงินก้อนโต อสังหา|2,2,0,0,0,2
-79|C|วิสัยทัศน์แปลก เหมาะงานไอที|0,1,-1,0,2,0
-88|C|อำนาจ บารมี ต้องคุมบริวาร|2,2,0,0,0,0
-89|C|อำนาจ บารมี เหมาะเจ้าของกิจการใหญ่|2,2,0,0,0,1
-99|G|เลขปาฏิหาริย์ มุมมองต่างจากใคร|1,0,0,1,1,2`.trim().split('\n').forEach(r=>{const[k,t,d,v]=r.split('|');N[k]={t,d,v:v.split(',').map(Number)}});
+// คู่(น้อย→มาก)|G ดี C ต้องพิจารณา B เสีย|ความหมาย (จากไฟล์ความหมายเลขศาสตร์ไทย)|การเงิน,การงาน/ผู้ใหญ่,รัก/ครอบครัว,สุขภาพ,โชคลาภ,ปัญญา
+const N={};`00|C|มฤตยู: ล้ำสมัย แตกต่าง ญาณพิเศษ|0,0,0,0,0,1
+01|B|บริวารให้โทษ พึ่งใครยาก ปัญหาครอบครัว หย่าร้าง|0,-1,-2,0,0,0
+02|B|อ่อนไหว โลเล รักไม่สมหวัง เงินไม่มั่นคง|-1,0,-1,0,0,0
+03|C|กล้าได้กล้าเสีย โกรธง่าย เครียด แต่ขยัน|0,1,0,-1,0,1
+04|G|บุกเบิก ร่ำรวย มีชื่อเสียง บริหารเงินเก่ง|2,1,0,0,1,1
+05|G|ก้าวหน้า ปัญญาดี สิ่งศักดิ์สิทธิ์คุ้มครอง|1,1,0,0,1,2
+06|C|หาเงินง่ายแต่เก็บไม่อยู่ มีโชค เสน่ห์ รักซ้อน|0,1,0,0,1,0
+07|B|เลวร้าย เครียด โรคร้าย ถูกปล้น ไม่ควรใช้|-1,-1,0,-2,-1,0
+08|B|ภัยวิบัติ ถูกข่มเหง คุกตาราง โรคร้ายแรง|0,-2,-1,-2,-1,0
+09|G|เกตุ: มั่นคง ยั่งยืน มีทรัพย์ แคล้วคลาด|1,1,0,1,1,1
+11|C|ทะเยอทะยาน เด่นดัง ผู้นำ แต่ใจร้อน ท้ายล้มเหลว|0,1,0,0,0,-1
+12|B|อารมณ์แปรปรวน สองบุคลิก ลังเล ระวังประสาท|0,0,-1,-1,0,-1
+13|B|ชีวิตพลิกผัน อุบัติเหตุ ผ่าตัด สมรสไม่แน่นอน|0,1,-2,-2,-1,0
+14|G|รุ่งโรจน์ เจรจาเป็นเลิศ ฉลาด ค้าขายดี|1,2,0,0,1,2
+15|G|รื่นรมย์ เสน่ห์ การเงินดีมาก มีคนช่วย|2,1,1,0,1,0
+16|G|หาเงินคล่อง วางแผนดี ได้ลาภและตำแหน่ง|2,2,0,0,0,1
+17|C|ปัญญาดี ผู้นำ สำเร็จสูง แต่เหนื่อยก่อน|0,2,0,-1,0,2
+18|B|นักเลง ถูกทรยศ ความดัน-หัวใจ หย่าร้าง|0,-1,-2,-1,0,0
+19|G|ความสำเร็จยิ่งใหญ่ ผู้นำ มีผู้ใหญ่อุปถัมภ์|1,2,0,0,1,1
+22|G|อ่อนโยน หาเงินคล่อง มีโชคลาภ เพื่อนมาก|2,1,1,0,2,0
+23|G|เสน่ห์ ดีด้านรัก ใฝ่เรียนรู้ ช่วยเหลือผู้อื่น|0,1,2,0,1,1
+24|G|เสน่ห์ เงินคล่อง ผู้บริหาร เลขดีที่สุด|2,2,2,0,1,1
+25|C|ฐานะมั่นคง ปัญญาดี แต่ต้องสู้ ปัญหาไม่ขาด|2,1,1,-1,0,2
+26|G|ได้ดีเพราะปาก หาเงินเก่ง (ระวังรักสามเส้า)|2,1,1,0,0,1
+27|B|หนี้สิน รายจ่ายสูง ผิดหวัง เสียเงินไม่คาดฝัน|-2,-1,-1,-1,-1,0
+28|C|หมุนเงินก้อนโต ลุย เสี่ยงสูง ระวังรักซ้อน|2,1,-1,0,0,0
+29|G|รสนิยมดี หัวไว เรียนเร็ว การเงินคล่อง|2,1,0,0,1,2
+33|C|วู่วาม ขยัน อดทน ระวังอุบัติเหตุ ความรักรุนแรง|1,1,-1,-1,0,0
+34|G|ปัญญาดี ขยัน กล้า เป็นหัวหน้า (ระวังคำพูด)|1,2,0,0,0,2
+35|G|คล่องงาน ผู้ใหญ่อุปถัมภ์ ตำแหน่งก้าวหน้า|1,2,0,0,0,0
+36|G|รักสมหวัง มีคนอุปถัมภ์ หาเงินคล่อง|2,1,2,0,0,1
+37|B|สิ้นหวัง โรคร้าย อุบัติเหตุ หนี้สิน สมรสไม่แน่นอน|-2,-1,-2,-2,-1,0
+38|B|นักเลง ใจร้อน เสี่ยง ระวังคดีความ ไฟลวก|0,-1,-1,-1,0,-1
+39|C|ทะเยอทะยาน โชคแข่งขัน ระวังรถ รักมือที่สาม|1,1,-1,0,1,0
+44|G|อุปถัมภ์ค้ำจุน วาจาน่าเชื่อ ผู้ใหญ่เมตตา|0,2,1,0,1,1
+45|G|มหาโชค ร่ำรวย ปัญญาดี ลาภไม่คาดฝัน|2,1,0,0,2,2
+46|G|สุขสบาย การเงินคล่อง เสน่ห์ ค้าขายกำไรดี|2,1,1,1,1,2
+47|C|พากเพียร อดทน ขยัน แต่ใจอ่อนและมีอุปสรรค|0,2,0,-1,0,0
+48|B|หลงผิด อบายมุข เอกสาร-คดีความ ห้ามค้ำประกัน|-1,-2,-1,-1,0,-1
+49|C|เจรจาเป็นเลิศ ฉลาด แต่ไม่ราบรื่น สุขภาพ-รักมีอุปสรรค|0,1,-1,-1,0,2
+55|G|เจริญก้าวหน้า ผู้ใหญ่อุปถัมภ์ ฐานะมั่นคง|1,2,0,1,1,2
+56|G|คู่ทรัพย์คู่โชค หารายได้หลายทาง มีบารมี|2,2,1,0,2,1
+57|B|ขัดแย้งกับผู้ใหญ่ ดื้อ ทำครึ่งๆ กลางๆ|0,-1,0,-1,0,-1
+58|B|ลืมตัว หลงผิด สุขภาพแย่ ครอบครัวแตกแยก|-1,-1,-2,-2,-1,-1
+59|G|สมบูรณ์พูนสุข โชคลาภ สิ่งศักดิ์สิทธิ์คุ้มครอง|2,2,0,1,2,2
+66|G|การเงินและความรักคล่อง โชคลาภไม่ขาด|2,1,2,0,2,0
+67|B|แตกร้าว ปัญหาเงิน ครอบครัวแตก โรคภัยเบียดเบียน|-2,-1,-2,-2,0,0
+68|B|มัวเมา อบายมุข ผิดศีล แต่หาเงินเก่ง|1,0,-1,-1,0,-1
+69|G|เงินสะพัด เสน่ห์ ชื่อเสียง (เก็บเงินไม่อยู่)|2,1,1,0,1,1
+77|B|ทุกข์สองเท่า เก็บกด เครียด โรคร้ายแรง|-1,0,-1,-2,-1,0
+78|G|บริวารมาก โชคลาภไม่คาดคิด ดวงเสี่ยงโชค|1,2,0,0,2,0
+79|G|โภคทรัพย์ ร่ำรวย เกียรติยศ (ต้องอดทนสู้)|2,1,0,0,1,1
+88|C|ใจใหญ่ มีอำนาจ ได้เงินเสี่ยงโชค แต่หมดไปกับอบายมุข|1,2,-1,-1,2,-1
+89|G|อำนาจ บารมี แคล้วคลาด โชคแบบฟลุค|0,2,0,1,1,1
+99|G|ปาฏิหาริย์ โชคลาภ การงานก้าวหน้า แคล้วคลาด|1,2,0,1,2,1`.trim().split('\n').forEach(r=>{const[k,t,d,v]=r.split('|');N[k]={t,d,v:v.split(',').map(Number)}});
 
-const EL=['น้ำ','ไม้','ไฟ','ดิน','ทอง'],DE=['ดิน','น้ำ','ไฟ','ไม้','ทอง','ดิน','น้ำ','ไฟ','ไม้','ทอง'];
-const EM={'น้ำ':'💧','ไม้':'🌳','ไฟ':'🔥','ดิน':'⛰️','ทอง':'🪙'};
-const COL={'น้ำ':'#34495e','ไม้':'#27ae60','ไฟ':'#e74c3c','ดิน':'#b9651d','ทอง':'#7f8c8d'};
-const PR={Strong:[-2,2,2,1,-2],Weak:[2,-1,-1,-2,2],FW:[-2,2,2,1,-2],FP:[-2,-1,2,2,-2],FO:[1,2,2,-2,-2],Bal:null,BalS:[-1,1,1,.5,-1],BalW:[1,-.5,-.5,-1,1]};
-const ovv=()=>{const o={};let a=0;EL.forEach(e=>{const v=+$('ov_'+e).value;o[e]=v;if(v)a=1});return a?o:null};
-const has=st=>!!(ovv()||PR[st]);
-const ROLE=['เพื่อน/ธาตุตน','ผลผลิต','ทรัพย์','อำนาจ','ตัวหนุน'];
-// น้ำหนักตำแหน่งของ 6 คู่ (หน้า→ท้าย) ข้อสมมติ: คู่ท้ายส่งผลหนักและยาวนานที่สุด
-const WT=[.6,.7,.85,1,1.2,1.5],SW=WT.reduce((a,b)=>a+b);
-const DW=[0,1,2,3,4,5,6].map(i=>(WT[Math.max(i-1,0)]+WT[Math.min(i,5)])/2); // น้ำหนักรายหลัก
+// ===== ค่าคงที่ BaZi (ตามไฟล์ BaZi Precision Navigator) =====
+const STEMS=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"],STEM_EL=["ไม้","ไม้","ไฟ","ไฟ","ดิน","ดิน","ทอง","ทอง","น้ำ","น้ำ"],STEM_YY=["หยาง","หยิน","หยาง","หยิน","หยาง","หยิน","หยาง","หยิน","หยาง","หยิน"];
+const BRANCH=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"],BR_EL=["น้ำ","ดิน","ไม้","ไม้","ดิน","ไฟ","ไฟ","ดิน","ทอง","ทอง","ดิน","น้ำ"],BR_TH=['ชวด','ฉลู','ขาล','เถาะ','มะโรง','มะเส็ง','มะเมีย','มะแม','วอก','ระกา','จอ','กุน'];
+const HIDDEN={"子":[["癸",100]],"丑":[["己",60],["癸",30],["辛",10]],"寅":[["甲",60],["丙",30],["戊",10]],"卯":[["乙",100]],"辰":[["戊",60],["乙",30],["癸",10]],"巳":[["丙",60],["庚",30],["戊",10]],"午":[["丁",70],["己",30]],"未":[["己",60],["丁",30],["乙",10]],"申":[["庚",60],["壬",30],["戊",10]],"酉":[["辛",100]],"戌":[["戊",60],["辛",30],["丁",10]],"亥":[["壬",70],["甲",30]]};
+const PRODUCE={"ไม้":"ไฟ","ไฟ":"ดิน","ดิน":"ทอง","ทอง":"น้ำ","น้ำ":"ไม้"},CONTROL={"ไม้":"ดิน","ดิน":"น้ำ","น้ำ":"ไฟ","ไฟ":"ทอง","ทอง":"ไม้"};
+const EM={'น้ำ':'💧','ไม้':'🌳','ไฟ':'🔥','ดิน':'⛰️','ทอง':'🪙'},COL={'น้ำ':'#34495e','ไม้':'#27ae60','ไฟ':'#e74c3c','ดิน':'#b9651d','ทอง':'#7f8c8d'};
+const DE=['ดิน','น้ำ','ไฟ','ไม้','ทอง','ดิน','น้ำ','ไฟ','ไม้','ทอง']; // เลข 0-9 → ธาตุ (河图)
+const TH_MON=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+
+// ===== ดาราศาสตร์ + เสาสี่ (ตามไฟล์ที่แนบ) =====
+const mod=(a,n)=>((a%n)+n)%n,sIdx=ch=>STEMS.indexOf(ch);
+function jdn(y,m,d,h){if(m<=2){y-=1;m+=12}const A=Math.floor(y/100),B=2-A+Math.floor(A/4);return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5+h/24}
+function sunLon(j){const d=j-2451543.5,w=282.9404+4.70935e-5*d,M=mod(356.0470+0.9856002585*d,360),e=0.016709-1.151e-9*d,E=M+(180/Math.PI)*e*Math.sin(M*Math.PI/180),xv=Math.cos(E*Math.PI/180)-e,yv=Math.sin(E*Math.PI/180)*Math.sqrt(1-e*e);return mod(Math.atan2(yv,xv)*180/Math.PI+w,360)}
+function eotMin(doy){const B=2*Math.PI*(doy-81)/364;return 9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B)}
+function getPillars(y,mo,d,hr,mi,lon,tz){
+  const clock=hr+mi/60,jUT=jdn(y,mo,d,clock-tz),doy=Math.floor(jUT-jdn(y,1,0,-tz)),corr=(lon-tz*15)*4/60+eotMin(doy)/60,solarH=clock+corr;
+  let dayShift=0;if(solarH>=23)dayShift=1;else if(solarH<0)dayShift=-1;
+  const di=mod(Math.floor(jdn(y,mo,d,12)+0.5)+49+dayShift,60),dS=di%10,dB=di%12;
+  const sl=sunLon(jUT),k=Math.floor(mod(sl-315,360)/30);let bzY=y;if(k>=10&&mo<=2)bzY-=1;
+  const yS=mod(bzY-4,10),yB=mod(bzY-4,12),mB=mod(k+2,12),mS=mod((yS%5)*2+2+k,10),hB=Math.floor(mod(solarH+1,24)/2),hS=mod((dS%5)*2+hB,10);
+  const mk=(s,b)=>({si:s,bi:b,stem:STEMS[s],branch:BRANCH[b],sEl:STEM_EL[s],bEl:BR_EL[b],yy:STEM_YY[s],animal:BR_TH[b],hidden:HIDDEN[BRANCH[b]].map(x=>({s:x[0],w:x[1],el:STEM_EL[sIdx(x[0])]}))});
+  return{year:mk(yS,yB),month:mk(mS,mB),day:mk(dS,dB),hour:mk(hS,hB),solarH,corr,k}}
+function tenGod(dm,t){const de=STEM_EL[dm],te=STEM_EL[t],same=(dm%2)===(t%2);
+  if(te===de)return same?{n:"比肩 พี่น้อง",c:"เพื่อน"}:{n:"劫財 เพื่อนฝูง",c:"เพื่อน"};
+  if(PRODUCE[de]===te)return same?{n:"食神 บริวาร",c:"แสดงออก"}:{n:"傷官 วาทะ",c:"แสดงออก"};
+  if(CONTROL[de]===te)return same?{n:"偏財 ลาภลอย",c:"ทรัพย์"}:{n:"正財 ทรัพย์มั่นคง",c:"ทรัพย์"};
+  if(CONTROL[te]===de)return same?{n:"七殺 อำนาจแกร่ง",c:"อำนาจ"}:{n:"正官 การงาน",c:"อำนาจ"};
+  return same?{n:"偏印 ปราชญ์",c:"ทรัพยากร"}:{n:"正印 อุปถัมภ์",c:"ทรัพยากร"}}
+const W_S={year:.8,month:1.3,hour:.8},W_B={year:1.0,month:2.2,day:1.5,hour:1.0};
+function analyse(P,ex){const sc={"ไม้":0,"ไฟ":0,"ดิน":0,"ทอง":0,"น้ำ":0};
+  ["year","month","hour"].forEach(k=>sc[P[k].sEl]+=W_S[k]);sc[P.day.sEl]+=1.0;
+  ["year","month","day","hour"].forEach(k=>P[k].hidden.forEach(h=>sc[h.el]+=W_B[k]*h.w/100));
+  if(ex){sc[ex.sEl]+=1.0;ex.hidden.forEach(h=>sc[h.el]+=1.5*h.w/100)} // เสาวัยจร (大運) นับเป็นอีกเสาหนึ่งของดวง
+  const tot=Object.values(sc).reduce((a,b)=>a+b,0),pc=e=>+(sc[e]/tot*100).toFixed(1),dm=P.day.sEl,res=Object.keys(PRODUCE).find(k=>PRODUCE[k]===dm),out=PRODUCE[dm],wea=CONTROL[dm],pow=Object.keys(CONTROL).find(k=>CONTROL[k]===dm),support=+(pc(dm)+pc(res)).toFixed(1);
+  let status,fav,unfav;
+  if(support>55){status={t:"💪 ดิถีแกร่ง (Strong)",k:"strong"};fav=[out,wea,pow];unfav=[dm,res]}
+  else if(support<45){status={t:"🌱 ดิถีอ่อน (Weak)",k:"weak"};fav=[res,dm];unfav=[out,wea,pow]}
+  else{status={t:"⚖️ ดิถีสมดุล (Balanced)",k:"bal"};const so=Object.keys(sc).sort((a,b)=>sc[a]-sc[b]);fav=[so[0],so[1]];unfav=[so[4]]}
+  return{sc,pc,dm,res,out,wea,pow,support,status,fav,unfav,P}}
+// ===== ดวงจรโชค 10 ปี (大運) =====
+const mkP=(s,b)=>({si:s,bi:b,stem:STEMS[s],branch:BRANCH[b],sEl:STEM_EL[s],bEl:BR_EL[b],yy:STEM_YY[s],animal:BR_TH[b],hidden:HIDDEN[BRANCH[b]].map(x=>({s:x[0],w:x[1],el:STEM_EL[sIdx(x[0])]}))});
+function termJD(j0,target,dir){const g=j=>mod(sunLon(j)-target+180,360)-180;let a=j0,s=0;
+  while(s<45){const b=a+dir*0.5;if(dir>0?(g(b)>=0&&g(a)<0):(g(b)<=0&&g(a)>0)){let lo=dir>0?a:b,hi=dir>0?b:a;for(let i=0;i<50;i++){const m=(lo+hi)/2;if(g(m)<0)lo=m;else hi=m}return(lo+hi)/2}a=b;s+=.5}return null}
+// ทิศทาง: ชาย+ปีหยาง หรือ หญิง+ปีหยิน = เดินหน้า (順行) ที่เหลือถอยหลัง · อายุเริ่ม = จำนวนวันถึงเทศกาลสุริยคติ (節) ที่ใกล้ที่สุดตามทิศ ÷ 3
+function luckCycles(b,P,sex){const jUT=jdn(b.y,b.m,b.d,b.hh+b.mi/60-b.tz),yang=P.year.si%2===0,fwd=(yang&&sex==='M')||(!yang&&sex==='F');
+  const tj=fwd?termJD(jUT,mod(315+30*(P.k+1),360),1):termJD(jUT,mod(315+30*P.k,360),-1),dd=Math.abs(tj-jUT),age0=dd/3;
+  let n=0;for(let i=0;i<60;i++)if(i%10===P.month.si&&i%12===P.month.bi)n=i;
+  const bf=b.y+(jUT-jdn(b.y,1,1,0))/365.25,dir=fwd?1:-1,cyc=[];
+  for(let i=1;i<=10;i++){const idx=mod(n+dir*i,60),a0=age0+10*(i-1);cyc.push({p:mkP(idx%10,idx%12),a0,a1:a0+10,y0:Math.floor(bf+a0)})}
+  const now=(Date.now()-Date.UTC(b.y,b.m-1,b.d,b.hh-b.tz,b.mi))/(365.2425*864e5);let cur=-1;cyc.forEach((c,i)=>{if(now>=c.a0&&now<c.a1)cur=i});
+  const nxt=cur>=0?(cur<9?cur+1:-1):(now<age0?0:-1);return{fwd,yang,dd,age0,cyc,now,cur,nxt}}
+// คะแนนธาตุต่อเลข: แกร่ง/อ่อน ตามบทบาท, สมดุล ตามอันดับธาตุขาด→เกิน; ปรับให้เฉลี่ย 0 เพื่อไม่เอนเอียงบวก
+function elScores(A){const s={};if(A.status.k==='strong'){s[A.out]=2;s[A.wea]=2;s[A.pow]=1;s[A.dm]=-2;s[A.res]=-2}
+  else if(A.status.k==='weak'){s[A.res]=2;s[A.dm]=2;s[A.pow]=-2;s[A.wea]=-1;s[A.out]=-1}
+  else{const so=Object.keys(A.sc).sort((a,b)=>A.sc[a]-A.sc[b]||a.localeCompare(b));[2,1,0,-1,-2].forEach((v,i)=>s[so[i]]=v)}
+  const m=Object.values(s).reduce((a,b)=>a+b)/5;for(const k in s)s[k]=+(s[k]-m).toFixed(2);return s}
+
+// ===== ลัคนาราศีแบบไทย (นิรายนะ) =====
+const SIGN=['เมษ','พฤษภ','เมถุน','กรกฎ','สิงห์','กันย์','ตุลย์','พิจิก','ธนู','มกร','กุมภ์','มีน'],RULER=[3,6,4,2,1,4,6,3,5,7,7,5];
+const PLN={1:'อาทิตย์',2:'จันทร์',3:'อังคาร',4:'พุธ',5:'พฤหัสบดี',6:'ศุกร์',7:'เสาร์',8:'ราหู',9:'เกตุ',0:'มฤตยู'};
+function ascendant(y,mo,d,hr,mi,lat,lon,tz){const jUT=jdn(y,mo,d,hr+mi/60-tz),T=(jUT-2451545)/36525,gmst=280.46061837+360.98564736629*(jUT-2451545)+0.000387933*T*T,
+  lst=mod(gmst+lon,360)*Math.PI/180,eps=(23.4392911-0.0130042*T)*Math.PI/180,phi=lat*Math.PI/180;
+  const asc=mod(Math.atan2(Math.cos(lst),-(Math.sin(lst)*Math.cos(eps)+Math.tan(phi)*Math.sin(eps)))*180/Math.PI,360),ay=23.857+(jUT-2451545)/365.25*0.013972,sid=mod(asc-ay,360);
+  return{trop:asc,sid,sign:Math.floor(sid/30),deg:sid%30,ay}}
+// ความสัมพันธ์ดาวเจ้าเรือน (มิตร/ศัตรู) เลข 8 นับเป็นแบบเสาร์ เลข 9 แบบอังคาร เลข 0 เป็นกลาง
+const REL={1:{f:[2,3,5],e:[6,7]},2:{f:[1,4],e:[]},3:{f:[1,2,5],e:[4]},4:{f:[1,6],e:[2]},5:{f:[1,2,3],e:[4,6]},6:{f:[4,7],e:[1,2]},7:{f:[4,6],e:[1,2,3]}};
+function lagRaw(r,d){if(d===0)return 0;const p=d===8?7:d===9?3:d;if(d===r)return 2;if(p===r||REL[r].f.includes(p))return 1;if(REL[r].e.includes(p))return -2;return 0}
+const LAG={};for(let r=1;r<=7;r++){const a=[...Array(10).keys()].map(d=>lagRaw(r,d)),m=a.reduce((x,y)=>x+y)/10;LAG[r]=a.map(x=>+(x-m).toFixed(2))}
+
+// ===== เลขศาสตร์ไทย =====
+const WT=[.6,.7,.85,1,1.2,1.5],SW=WT.reduce((a,b)=>a+b),DW=[0,1,2,3,4,5,6].map(i=>(WT[Math.max(i-1,0)]+WT[Math.min(i,5)])/2);
 const POS=['1️⃣ คู่ที่ 1 (หน้าสุด)','2️⃣ คู่ที่ 2','3️⃣ คู่ที่ 3','4️⃣ คู่ที่ 4','5️⃣ คู่ที่ 5','6️⃣ คู่ที่ 6 (ท้ายสุด)'];
 const TN={G:'🟢 ดี',C:'🟡 ต้องพิจารณา',B:'🔴 เสีย'},TC={G:'var(--good)',C:'var(--mid)',B:'var(--bad)'};
-const DN=['💰 การเงิน','💼 การงาน/บารมี','❤️ ความรัก/เสน่ห์','🩺 สุขภาพ/ความสุข','🧠 ปัญญา/ผู้ใหญ่','🍀 โชคลาภ'],DC=['#15803d','#1d6fb8','#8e3b9e','#c2570c','#a07a00','#0f9d58'];
-// ข้อความทำนายต่อมิติ [ส่งเสริม, ไม่มีผล, เป็นโทษ]
-const PT=[['มีช่องทางหาเงินและโอกาสการเงินเข้ามาสม่ำเสมอ','เงินไม่ได้รับแรงส่งเสริมพิเศษ ต้องอาศัยการวางแผนเอง','มักเจอเงินรั่ว ภาระรายจ่าย หรือถูกเอาเปรียบเรื่องเงิน'],
-['การงานก้าวหน้า มีบารมี ผู้ใหญ่/ลูกค้าเชื่อถือ','การงานเรียบๆ ไม่ได้แรงส่งเด่น','มักเจออุปสรรคที่ทำงาน ถูกหักหลังหรือขัดแย้ง'],
-['เสน่ห์ดี คนเปิดรับเข้ามาง่าย ความรักราบรื่น','เรื่องความรักไม่โดดเด่น','มักเจอปัญหาคนรัก อารมณ์ขึ้นลง ทะเลาะ หรือรักไม่ราบรื่น'],
-['สุขภาพกายใจค่อนข้างดี อารมณ์นิ่ง','สุขภาพอยู่เกณฑ์ปกติ ไม่มีแรงส่งเด่น','ควรระวังสุขภาพ ความเครียด และอุบัติเหตุ'],
-['ใฝ่เรียนรู้ มีผู้ใหญ่เมตตา คิดวิเคราะห์ดี','ไม่ได้แรงส่งด้านปัญญา/ผู้ใหญ่เป็นพิเศษ','มักขัดแย้งกับผู้ใหญ่ หรือตัดสินใจสับสน'],
-['มีโชคช่วย โอกาสเสี่ยงโชคและลาภลอยเข้ามา','ไม่ได้แรงส่งด้านโชคลาภเป็นพิเศษ อย่าพึ่งโชคอย่างเดียว','ดวงมักสะดุด ระวังพลาดโอกาส ถูกโกง หรือเสียเงินจากการเสี่ยง']];
-// ระดับคำแนะนำ
-const D=[['ไม่จำเป็นต้องเปลี่ยน','var(--good)','🌟','ไม่มีคู่เสียที่มีน้ำหนักมากพอจะกระทบ'],
-['ใช้ได้ แต่รู้จุดอ่อน','var(--mid)','✅','คู่เสียอยู่ตำแหน่งน้ำหนักน้อย หรือรุนแรงไม่มาก'],
-['ควรพิจารณาเปลี่ยน','#c2570c','⚠️','คู่เสียอยู่ตำแหน่งสำคัญ หรือมีหลายคู่รวมกัน'],
-['แนะนำให้เปลี่ยน','var(--bad)','🚨','คู่เสียรุนแรงอยู่ในตำแหน่งที่น้ำหนักสูง']];
-const BZT={s:['🟢 หนุนดวง','var(--good)'],n:['🟡 กลาง','var(--mid)'],c:['🔴 ขัดดวง','var(--bad)'],x:['⚪ ไม่ประเมิน','var(--mut)']};
-
-const $=id=>document.getElementById(id),sg=n=>n>0?'+'+n:''+n;
-const sc=(el,dm,st)=>{const o=ovv();return o?o[el]:PR[st]?PR[st][(EL.indexOf(el)-EL.indexOf(dm)+5)%5]:0};
+const DN=['💰 การเงิน','💼 การงาน/ผู้ใหญ่อุปถัมภ์','❤️ ความรัก/ครอบครัว','🩺 สุขภาพ','🍀 โชคลาภ','🧠 ปัญญา/การศึกษา'],DC=['#15803d','#1d6fb8','#8e3b9e','#c2570c','#0f9d58','#a07a00'];
+const PT=[['การเงินคล่องตัว มีช่องทางหาเงิน','การเงินไม่ได้แรงส่งพิเศษ ต้องวางแผนเอง','เสี่ยงเงินรั่ว หนี้สิน หรือถูกเอาเปรียบเรื่องเงิน'],
+['การงานก้าวหน้า มีผู้ใหญ่/บริวารอุปถัมภ์ ได้รับการยอมรับ','การงานเรียบๆ ไม่ได้แรงส่งเด่น','อุปสรรคการงาน ถูกหักหลัง หรือขัดแย้งกับผู้ใหญ่/ลูกน้อง'],
+['เสน่ห์ดี ความรักและครอบครัวราบรื่น','ความรัก/ครอบครัวไม่โดดเด่น','ความรัก/ครอบครัวมีปัญหา อารมณ์แปรปรวน ทะเลาะ หรือรักซ้อน/สามเส้า'],
+['สุขภาพแข็งแรง แคล้วคลาดอันตราย','สุขภาพอยู่เกณฑ์ปกติ','ระวังโรคร้าย อุบัติเหตุ และความเครียด'],
+['มีโชคลาภ ลาภลอย โอกาสเสี่ยงโชคเข้ามา','ไม่ได้แรงส่งด้านโชคลาภ อย่าพึ่งโชคอย่างเดียว','ดวงสะดุด เสียโอกาส หรือเสียเงินจากการเสี่ยง'],
+['ปัญญาดี ใฝ่เรียนรู้ เจรจาและคิดวิเคราะห์เด่น','ปัญญา/การศึกษาไม่ได้แรงส่งพิเศษ','ตัดสินใจสับสน หลงผิด หรือเรียนรู้ไม่สำเร็จ']];
+const D=[['ไม่จำเป็นต้องเปลี่ยน','var(--good)','🌟','เกรด A: เบอร์ดีทั้งความหมายคู่เลขและความเข้ากับดวง'],['(ไม่ใช้)','var(--mid)','✅',''],['ควรพิจารณาเปลี่ยน','#c2570c','⚠️','เกรดต่ำกว่า A (เกรด B)'],['แนะนำให้เปลี่ยน','var(--bad)','🚨','เกรดต่ำกว่า B (เกรด C-E)']];
+const BZT={s:'🟢 หนุนดวง',n:'🟡 กลาง',c:'🔴 ขัดดวง'},LGT={s:'🟢 เข้ากับลัคนา',n:'🟡 กลาง',c:'🔴 ขัดลัคนา'},LC={s:'var(--good)',n:'var(--mid)',c:'var(--bad)'};
+const GN={'13':'ผลต่างตามเพศ: ชายระวังชู้สาว','18':'ผลต่างตามเพศ: ไม่เหมาะสตรียิ่ง','19':'ผลต่างตามเพศ: เหมาะบุรุษ ไม่เหมาะสตรี','22':'ผลต่างตามเพศ: เหมาะสตรีหรือชายอ่อนโยน','23':'ผลต่างตามเพศ: สตรีใช้ดีกว่า'};
+const $=id=>document.getElementById(id),sg=n=>{const v=Math.round(n*10)/10;return(v>0?'+':'')+v};
 const ng=v=>v.reduce((a,x)=>a+(x<0?-x:0),0),sev=n=>n>=4?'รุนแรง':n>=2?'ปานกลาง':'เบา';
 const lv=v=>v>=35?'โดดเด่น':v>=15?'ส่งเสริมชัด':v>=5?'ส่งเสริมเล็กน้อย':v>-5?'ไม่มีผล':v>-25?'เป็นโทษ':'เป็นโทษชัด';
-function summary(){const dm=$('dm').value,st=$('st').value;
-  $('sum').innerHTML=has(st)?EL.map(e=>{const s=sc(e,dm,st);return `<span class="chip" style="background:${COL[e]}">${EM[e]} ${e}</span>${ROLE[(EL.indexOf(e)-EL.indexOf(dm)+5)%5]} <b style="color:${s>0?'var(--good)':s<0?'var(--bad)':'var(--mut)'}">${sg(s)}</b> &nbsp;`}).join(''):'สมดุลพอดีและไม่ระบุธาตุที่ต้องการ: ไม่มีข้อมูลทิศทาง จึงไม่ให้คะแนนธาตุ ผลอิงแกนคู่เลขอย่างเดียว (เลือกเอนแข็ง/เอนอ่อน หรือระบุธาตุที่ต้องการเพื่อให้แม่นขึ้น)'}
-$('ov').innerHTML=EL.map(e=>`<div><label class="sm"><span class="chip" style="background:${COL[e]}">${EM[e]} ${e}</span></label><select id="ov_${e}"><option value="0">–</option><option value="2">เสริม</option><option value="-2">เลี่ยง</option></select></div>`).join('');
-$('dm').onchange=$('st').onchange=summary;EL.forEach(e=>$('ov_'+e).onchange=summary);summary();
-let last={};
-// ---- แนะนำ/หลบเลี่ยง (ใช้เมื่อเบอร์ต้องเปลี่ยน) ----
+const GA=25,GB=5,GC=-15,GD=-40,grade=c=>c>=GA?'A':c>=GB?'B':c>=GC?'C':c>=GD?'D':'E';
+const N0=JSON.parse(JSON.stringify(N));
+// ความหมายที่แตกต่างตามเพศ (ตามไฟล์ความหมายเลขศาสตร์): M ชาย, F หญิง
+const GEN={'19':{F:{t:'C',v:[1,2,-2,0,1,1],d:'ผู้นำ สำเร็จ แต่ไม่เหมาะสตรี คู่ครองมีปัญหา แต่งช้าหรือเลิกกัน'}},
+'18':{F:{v:[0,-1,-3,-1,0,0],d:'นักเลง ถูกทรยศ ไม่เหมาะสตรียิ่ง หย่าร้าง รักสามเส้า'}},
+'23':{M:{t:'C',v:[0,-1,2,0,1,1],d:'เสน่ห์ ดีด้านรัก แต่อาจเสียงานเพราะเพศตรงข้าม (สตรีใช้ดีกว่า)'}},
+'22':{M:{v:[2,0,1,0,2,0],d:'อ่อนโยน หาเงินคล่อง โชคลาภ (เหมาะสตรีหรือชายอ่อนโยน)'}},
+'13':{M:{v:[0,1,-3,-2,-1,0],d:'ชีวิตพลิกผัน อุบัติเหตุ ผ่าตัด ชายมีเรื่องชู้สาว/รักสามเส้า'}}};
+function setGender(s){for(const k in N0){N[k]=JSON.parse(JSON.stringify(N0[k]));const o=GEN[k]&&GEN[k][s];if(o)Object.assign(N[k],o)}}
+let CTX=null,R0=null,last={};
+const bzp=k=>(CTX.es[DE[+k[0]]]+CTX.es[DE[+k[1]]])/2,lgp=k=>(CTX.lag[+k[0]]+CTX.lag[+k[1]])/2;
+
+// ===== ประเมินเบอร์ (ใช้ทั้งเบอร์เดิมและเบอร์ใหม่) =====
+function evalPhone(ph){
+  const core=ph.slice(3),ds=[...core].map(c=>{const d=+c,e=DE[d];return{d,e,s:CTX.es[e],l:CTX.lag[d]}});
+  const ws=DW.reduce((a,b)=>a+b),cl=v=>Math.max(-100,Math.min(100,Math.round(v)));
+  const fitOf=es=>es?cl(ds.reduce((a,x,i)=>a+es[x.e]*DW[i],0)/(ws*2)*100):null,fit=cl(ds.reduce((a,x,i)=>a+x.s*DW[i],0)/(ws*2)*100),fitC=fitOf(CTX.esC),fitN=fitOf(CTX.esN),lg=cl(ds.reduce((a,x,i)=>a+x.l*DW[i],0)/(ws*2)*100),lv3=v=>v>=25?'s':v>=-15?'n':'c',bz=lv3(fit),lgl=lv3(lg);
+  const ps=[],dim=[0,0,0,0,0,0];let R=0;
+  for(let i=0;i<6;i++){const p=core.slice(i,i+2),k=[...p].sort().join(''),m=N[k],v=m.v.slice();if(k==='69'&&i===5)v[0]=0;
+    v.forEach((x,j)=>dim[j]+=x*WT[i]);const n=ng(v),r=m.t==='B'?WT[i]*Math.min(Math.max(n,1),6):0;R+=r;ps.push({p,k,m,v,i,n,r,b:bzp(k),l:lgp(k)})}
+  const dp=dim.map(x=>Math.round(x/(SW*2)*100)),nB=ps.filter(x=>x.m.t==='B').length;
+  const f=(bz==='c'?1.25:bz==='s'?.85:1)*(lgl==='c'?1.15:lgl==='s'?.9:1),Re=R*f,rL=Re<1?0:Re<4?1:Re<8?2:3;
+  const avg=dp.reduce((a,b)=>a+b)/6,m=(fit+lg)/2,comp=Math.round(avg+.3*fit+.3*lg-3*R),adj=dp.map(x=>Math.round(x+.3*(m/100)*Math.abs(x))),g=grade(comp);
+  // ตัดสินตามเกรด: A = ไม่จำเป็นต้องเปลี่ยน · ต่ำกว่า A (B) = ควรพิจารณาเปลี่ยน · ต่ำกว่า B (C-E) = แนะนำให้เปลี่ยน · ภาระความเสี่ยงคู่เลขสูงมากยกระดับได้อย่างเดียว
+  const gL=g==='A'?0:g==='B'?2:3,L=Math.max(gL,rL>=2?rL:0);
+  return{ph,ds,fit,fitC,fitN,lg,bz,lgl,ps,dp,adj,R,Re,L,gL,rL,g,nB,avg,m,comp}}
+
+// ===== คู่เลขแนะนำ / หลบเลี่ยง (เมื่อเบอร์ต้องเปลี่ยน) =====
 const goals=()=>[...document.querySelectorAll('#gls input:checked')].map(c=>+c.value);
 const eligible=k=>N[k].t!=='B'&&ng(N[k].v)===0;
-const rl=x=>x.k[0]===x.k[1]?x.k:x.k+' / '+x.k[1]+x.k[0],bl=b=>b>=1?'หนุนดวง':b>-1?'ไม่ขัดดวง':'ขัดดวง';
-const bz2=(k,dm,st)=>(sc(DE[+k[0]],dm,st)+sc(DE[+k[1]],dm,st))/2;
-// คู่ที่ตอบเป้าหมาย j: ไม่เสีย ไม่มีด้านลบ เรียงตามคะแนนมิติ + ความเข้ากับธาตุ และตัดคู่ที่ BaZi ขัดดวงออก
-function rec(dm,st,j,n){return Object.keys(N).filter(k=>eligible(k)&&N[k].v[j]>=1).map(k=>({k,m:N[k],b:bz2(k,dm,st),s:N[k].v[j]*2+bz2(k,dm,st)})).filter(x=>!has(st)||x.b>-1).sort((a,b)=>b.s-a.s||a.k.localeCompare(b.k)).slice(0,n)}
-// คู่ที่ตอบหลายเป้าหมายพร้อมกัน (อย่างน้อย 2 เป้าหมายที่เลือก)
-function recMulti(dm,st,gs,n){return Object.keys(N).filter(k=>eligible(k)).map(k=>{const hit=gs.filter(j=>N[k].v[j]>=1),b=bz2(k,dm,st);return{k,m:N[k],b,hit,s:hit.reduce((a,j)=>a+N[k].v[j],0)*2+b}}).filter(x=>x.hit.length>=2&&(!has(st)||x.b>-1)).sort((a,b)=>b.hit.length-a.hit.length||b.s-a.s||a.k.localeCompare(b.k)).slice(0,n)}
-const row=(x,st,ex)=>`<div class="sm"><b>${rl(x)}</b> <span class="chip" style="background:${TC[x.m.t]}">${TN[x.m.t]}</span>${has(st)?`<span class="chip" style="background:${x.b>=1?'var(--good)':'#5b6677'}">${bl(x.b)}</span>`:''}${x.m.d}${ex?' · <b>'+ex+'</b>':''}</div>`;
-function recHTML(dm,st,gs){
-  if(!gs.length)return '<div class="p C" id="recph">👆 เลือกเรื่องที่อยากได้จากเบอร์ใหม่ด้านบนอย่างน้อย 1 เรื่อง ระบบจะแสดงเฉพาะคู่เลขที่ตอบเรื่องนั้น</div>';
-  let h='';
-  if(gs.length>1){const m=recMulti(dm,st,gs,4);if(m.length)h+=`<div class="p G"><b>⭐ คู่ที่ตอบหลายเป้าหมายพร้อมกัน</b>${m.map(x=>row(x,st,'ครอบคลุม '+x.hit.map(j=>DN[j]).join(' + '))).join('')}</div>`}
-  return h+gs.map(j=>{const l=rec(dm,st,j,5);return `<div class="p G"><b>🎯 ${DN[j]}</b>${l.length?l.map(x=>row(x,st)).join(''):'<div class="sm">ไม่มีคู่ที่เข้าเกณฑ์</div>'}</div>`}).join('')}
-// เลขที่ต้องเลี่ยง: ศาสตร์ไทย (คู่เสีย + คู่ที่ขัดเป้าหมายที่เลือก) และ BaZi (เลขธาตุขัดดวง)
-function avHTML(dm,st,gs){
-  const ks=Object.keys(N),sv=k=>ng(N[k].v),ln=(k,ex)=>`<div class="sm"><b>${rl({k})}</b> <span class="chip" style="background:var(--bad)">${sev(Math.max(sv(k),1))}</span>${N[k].d}${ex||''}</div>`;
-  let h=`<div class="p B"><b>📍 จุดที่ทำให้เบอร์เดิมเสีย</b>${last.ps.filter(x=>x.m.t==='B').map(x=>`<div class="sm"><b>${x.p}</b> ${POS[x.i]} · ${x.m.d}</div>`).join('')}</div>`;
+const rl=x=>x.k[0]===x.k[1]?x.k:x.k+' / '+x.k[1]+x.k[0],bl=b=>b>=1?'หนุนดวง':b>-1?'ไม่ขัดดวง':'ขัดดวง',ll=l=>l>=.5?'เข้ากับลัคนา':l>-1.5?'ไม่ขัดลัคนา':'ขัดลัคนา';
+const okx=x=>x.b>-1&&x.l>-1.5;
+function rec(j,n){const all=Object.keys(N).filter(k=>eligible(k)&&N[k].v[j]>=1).map(k=>({k,m:N[k],b:bzp(k),l:lgp(k),s:N[k].v[j]*2+bzp(k)+.5*lgp(k)})).sort((a,b)=>b.s-a.s||a.k.localeCompare(b.k)),ok=all.filter(okx).slice(0,n);
+  // ถ้าคู่ที่ลงตัวกับดวงมีน้อยกว่า 3 คู่ เติมคู่ที่ดีที่สุดที่เหลือ (ติดป้ายเตือน) เพื่อให้มีตัวเลือกอย่างน้อย 2-3 คู่
+  return ok.length>=3?ok:ok.concat(all.filter(x=>!okx(x)).map(x=>({...x,weak:true})).slice(0,3-ok.length))}
+function recMulti(gs,n){return Object.keys(N).filter(eligible).map(k=>{const hit=gs.filter(j=>N[k].v[j]>=1),b=bzp(k),l=lgp(k);return{k,m:N[k],b,l,hit,s:hit.reduce((a,j)=>a+N[k].v[j],0)*2+b+.5*l}}).filter(x=>x.hit.length>=2&&okx(x)).sort((a,b)=>b.hit.length-a.hit.length||b.s-a.s||a.k.localeCompare(b.k)).slice(0,n)}
+const row=(x,ex)=>`<div class="sm"><b>${rl(x)}</b> <span class="chip" style="background:${TC[x.m.t]}">${TN[x.m.t]}</span><span class="chip" style="background:${x.b>=1?'var(--good)':'#5b6677'}">🧬 ${bl(x.b)}</span><span class="chip" style="background:${x.l>=.5?'var(--good)':'#5b6677'}">🌙 ${ll(x.l)}</span>${x.weak?'<span class="chip" style="background:var(--mid)">⚠️ ไม่ลงตัวกับดวงบางส่วน</span>':''}${x.m.d}${ex?' · <b>'+ex+'</b>':''}</div>`;
+function recHTML(gs){if(!gs.length)return '<div class="p C" id="recph">👆 เลือกเรื่องที่อยากได้จากเบอร์ใหม่ด้านบนอย่างน้อย 1 เรื่อง ระบบจะแสดงเฉพาะคู่เลขที่ตอบเรื่องนั้น</div>';
+  let h='';if(gs.length>1){const m=recMulti(gs,4);if(m.length)h+=`<div class="p G"><b>⭐ คู่ที่ตอบหลายเป้าหมายพร้อมกัน</b>${m.map(x=>row(x,'ครอบคลุม '+x.hit.map(j=>DN[j]).join(' + '))).join('')}</div>`}
+  return h+gs.map(j=>{const l=rec(j,5);return `<div class="p G"><b>🎯 ${DN[j]}</b>${l.length?l.map(x=>row(x)).join(''):'<div class="sm">ไม่มีคู่ที่เข้าเกณฑ์</div>'}</div>`}).join('')}
+function avHTML(gs){const ks=Object.keys(N),sv=k=>ng(N[k].v),ln=(k,ex)=>`<div class="sm"><b>${rl({k})}</b> <span class="chip" style="background:var(--bad)">${sev(Math.max(sv(k),1))}</span>${N[k].d}${ex||''}</div>`;
+  let h=`<div class="p B"><b>📍 จุดที่ทำให้เบอร์เดิมเสีย</b>${R0.ps.filter(x=>x.m.t==='B').map(x=>`<div class="sm"><b>${x.p}</b> ${POS[x.i]} · ${x.m.d}</div>`).join('')}</div>`;
   if(gs.length){const hit=ks.filter(k=>gs.some(j=>N[k].v[j]<0)).sort((a,b)=>gs.reduce((s,j)=>s+Math.min(N[a].v[j],0),0)-gs.reduce((s,j)=>s+Math.min(N[b].v[j],0),0));
     h+=`<div class="p B"><b>⛔ ศาสตร์ไทย: ขัดกับเรื่องที่เลือก (ห้ามใส่ในเบอร์ใหม่)</b><div class="cols">${hit.map(k=>ln(k,' · <b>'+gs.filter(j=>N[k].v[j]<0).map(j=>DN[j]+' '+N[k].v[j]).join(', ')+'</b>')).join('')||'<div class="sm">ไม่มี</div>'}</div></div>`}
   h+=`<div class="p B"><b>🇹🇭 ศาสตร์ไทย: คู่เลขเสียทั้งหมด (เรียงตามความรุนแรง)</b><div class="cols">${ks.filter(k=>N[k].t==='B').sort((a,b)=>sv(b)-sv(a)).map(k=>ln(k)).join('')}</div></div>`;
-  if(has(st)){const dg=[...Array(10).keys()].map(d=>({d,e:DE[d],s:sc(DE[d],dm,st)})),ch=x=>`<span class="chip" style="background:${COL[x.e]}">${x.d} ${EM[x.e]} ${x.e} ${sg(x.s)}</span>`,
-      avd=dg.filter(x=>x.s<=-1),fav=dg.filter(x=>x.s>=1),cross=ks.filter(k=>N[k].t!=='B'&&bz2(k,dm,st)<=-1),mine=last.ds.filter(x=>x.s<0);
-    h+=`<div class="p B"><b>🧬 BaZi: เลขที่ธาตุขัดดวง (หลบเลี่ยง)</b><div class="sm">${avd.map(ch).join('')||'ไม่มี'}</div>${fav.length?`<div class="sm">✅ เลขที่หนุนดวง (ใช้ได้): ${fav.map(ch).join('')}</div>`:''}${cross.length?`<div class="sm">🔀 คู่ที่ศาสตร์ไทยไม่ได้ว่าเสีย แต่ขัดดวงทั้งสองหลัก: <b>${cross.map(k=>rl({k})).join(', ')}</b></div>`:''}${mine.length?`<div class="sm">📍 ในเบอร์เดิมมีเลขขัดดวง: ${mine.map(x=>x.d+' ('+x.e+')').join(', ')}</div>`:''}</div>`}
-  else h+='<div class="p C"><b>🧬 BaZi:</b> <span class="sm">ไม่มีข้อมูลทิศทางธาตุ จึงไม่ระบุเลขที่ขัดดวง (เลือกกำลังธาตุหรือระบุธาตุที่ต้องการ/ควรเลี่ยงที่หน้าตั้งค่า)</span></div>';
+  const dg=[...Array(10).keys()].map(d=>({d,e:DE[d],s:CTX.es[DE[d]],l:CTX.lag[d]})),ch=x=>`<span class="chip" style="background:${COL[x.e]}">${x.d} ${EM[x.e]} ${sg(x.s)}</span>`,cl=x=>`<span class="chip" style="background:#5b6677">${x.d} 🌙 ${sg(x.l)}</span>`;
+  const cross=ks.filter(k=>N[k].t!=='B'&&bzp(k)<=-1),mine=R0.ds.filter(x=>x.s<0);
+  h+=`<div class="p B"><b>🧬 BaZi: เลขที่ธาตุขัดดวง (หลบเลี่ยง)</b><div class="sm">${dg.filter(x=>x.s<=-1).map(ch).join('')||'ไม่มี'}</div><div class="sm">✅ เลขที่หนุนดวง: ${dg.filter(x=>x.s>=1).map(ch).join('')||'ไม่มี'}</div>${cross.length?`<div class="sm">🔀 คู่ที่ศาสตร์ไทยไม่ได้ว่าเสีย แต่ขัดดวงทั้งสองหลัก: <b>${cross.map(k=>rl({k})).join(', ')}</b></div>`:''}${mine.length?`<div class="sm">📍 ในเบอร์เดิมมีเลขขัดดวง: ${mine.map(x=>x.d+' ('+x.e+')').join(', ')}</div>`:''}</div>`;
+  h+=`<div class="p B"><b>🌙 ลัคนา: เลขที่ขัดลัคนา (ลัคนาธิบดี ${PLN[CTX.ruler]}) (หลบเลี่ยง)</b><div class="sm">${dg.filter(x=>x.l<=-1).map(cl).join('')||'ไม่มี'}</div><div class="sm">✅ เลขเข้ากับลัคนา: ${dg.filter(x=>x.l>=.5).map(cl).join('')||'ไม่มี'}</div></div>`;
   return h}
-$('go').onclick=()=>{
-  const ph=$('ph').value.replace(/\D/g,'');
-  if(ph.length!==10||ph[0]!=='0'){alert('กรุณากรอกเบอร์ 10 หลักที่ขึ้นต้นด้วย 0');return}
-  const dm=$('dm').value,st=$('st').value,core=ph.slice(3);
+function showRec(){const on=R0.L>=2;$('advbox').style.display=on?'block':'none';$('cmp').style.display=on?'block':'none';if(!on){$('cmpout').innerHTML='';return}
+  const gs=goals();$('av').innerHTML=avHTML(gs);
+  $('recn').textContent=gs.length?'เลือกจากคู่ที่ไม่เสียและไม่มีด้านลบเลย เรียงตามความเข้ากับธาตุเจ้าชะตาและลัคนา ตัดคู่ที่ขัดดวง/ขัดลัคนาออก · วางคู่ที่ตรงเป้าหมายไว้ท้ายเบอร์ (น้ำหนักสูงสุด) และไม่วาง 69/96 ไว้ท้ายสุด':'';
+  $('rec').innerHTML=recHTML(gs)}
 
-  // แกน BaZi ถ่วงน้ำหนักตามตำแหน่งหลัก
-  const ds=[...core].map((d,i)=>({d,e:DE[+d],s:sc(DE[+d],dm,st)}));
-  const fit=has(st)?Math.round(ds.reduce((a,x,i)=>a+x.s*DW[i],0)/(DW.reduce((a,b)=>a+b)*2)*100):null;
-  const bz=fit===null?'x':fit>=30?'s':fit>=-15?'n':'c';
-
-  // แกนคู่เลข: ถ่วงน้ำหนักตามตำแหน่งคู่
-  const ps=[],dim=[0,0,0,0,0,0];let R=0;
-  for(let i=0;i<6;i++){const p=core.slice(i,i+2),k=[...p].sort().join(''),m=N[k],v=m.v.slice();
-    if(k==='69'&&i===5)v[0]=0; // 69/96 ท้ายเบอร์ เงินไหลออกเร็ว ไม่นับด้านการเงิน
-    v.forEach((x,j)=>dim[j]+=x*WT[i]);
-    const n=ng(v),r=m.t==='B'?WT[i]*Math.max(n,1):0;R+=r;ps.push({p,k,m,v,i,n,r})}
-  const dp=dim.map(x=>Math.round(x/(SW*2)*100));
-  const nB=ps.filter(x=>x.m.t==='B').length;
-
-  // ตัดสินใจ "ต้องเปลี่ยนไหม": น้ำหนักตำแหน่ง × ความรุนแรง ปรับด้วย BaZi และเป้าหมาย
-  const Re=R*(bz==='c'?1.25:bz==='s'?.85:1);
-  let L=Re<1?0:Re<3.5?1:Re<7?2:3;
-  $('ttl').textContent='📞 ผลวิเคราะห์เบอร์ '+ph.replace(/(\d{3})(\d{3})(\d{4})/,'$1-$2-$3');
-  $('ver').innerHTML=`${D[L][2]} ${D[L][0]} · ธาตุ: ${BZT[bz][0]}`;
-  $('b1').innerHTML=`<div class="sm">แกน BaZi (ความเข้ากับดวง)</div><strong style="color:${BZT[bz][1]}">${fit===null?'–':sg(fit)}</strong><b style="color:${BZT[bz][1]}">${BZT[bz][0]}</b><div class="sm">ดัชนี −100..+100 ถ่วงตำแหน่งหลัก</div>`;
-  $('b2').innerHTML=`<div class="sm">ภาระความเสี่ยงคู่เลข (ถ่วงตำแหน่ง)</div><strong style="color:${D[L][1]}">${R.toFixed(1)}</strong><b style="color:${D[L][1]}">เสีย ${nB} คู่</b><div class="sm">คู่เสีย × ความรุนแรง × น้ำหนักตำแหน่ง (0 = ไม่มีความเสี่ยง)</div>`;
-
-  const why=ps.filter(x=>x.m.t==='B').map(x=>`คู่ ${x.p} อยู่${POS[x.i]} · ความรุนแรง${sev(x.n)} · น้ำหนัก ×${WT[x.i]}`);
-  $('dec').innerHTML=`<div class="p ${L<1?'G':L<2?'C':'B'}"><b style="color:${D[L][1]}">${D[L][0]}</b> <span class="sm">— ${D[L][3]}</span>
-  <ul>${why.map(w=>`<li>${w}</li>`).join('')||'<li>ไม่มีคู่เสีย</li>'}${bz==='c'?'<li>ธาตุขัดดวง: เพิ่มความเสี่ยงอีก 25%</li>':bz==='s'?'<li>ธาตุหนุนดวง: ลดความเสี่ยงลงราว 15%</li>':''}</ul>
-  ${nB?'<span class="sm">การมีเลขเสียไม่ได้แปลว่าต้องเปลี่ยนเสมอไป: คู่หน้าเบอร์ที่ไม่รุนแรงมีน้ำหนักน้อย ส่วนคู่ท้ายเบอร์ที่รุนแรงควรเปลี่ยน</span>':''}</div>`;
-
-  $('dims').innerHTML=dp.map((v,j)=>{const w=Math.min(Math.abs(v),60)/60*50;
-    return `<div class="dim"><span>${DN[j]}</span><div class="bar"><i style="background:${v<0?'var(--bad)':DC[j]};${v<0?'right':'left'}:50%;width:${w}%"></i></div><span><b>${sg(v)}</b> ${lv(v)}</span></div>`}).join('');
-
-  // การทำนาย: ต่อมิติ + คู่ที่ส่งผลแรงสุดตามน้ำหนักตำแหน่ง
-  const pre=dp.map((v,j)=>`<b>${DN[j]}:</b> ${PT[j][v>=15?0:v<=-5?2:1]}`);
-  const top=ps.slice().sort((a,b)=>WT[b.i]*(b.v.reduce((s,x)=>s+Math.abs(x),0))-WT[a.i]*(a.v.reduce((s,x)=>s+Math.abs(x),0))).slice(0,3);
-  const tx=top.map(x=>`<b>คู่ ${x.p} (${POS[x.i]}):</b> ${x.m.d}`);
-  $('pre').innerHTML=pre.map(x=>`<li>${x}</li>`).join('')+`<li><b>คู่ที่ส่งผลแรงที่สุดต่อผู้ใช้:</b><ul>${tx.map(x=>`<li>${x}</li>`).join('')}</ul></li>`;
-
+// ===== แสดงผลหลัก =====
+function overall(r){const a=[],g=grade(r.comp),pos=[r.bz==='s',r.lgl==='s'].filter(Boolean).length,neg=[r.bz==='c',r.lgl==='c'].filter(Boolean).length;
+  a.push(`<div class="p ${r.L<1?'G':r.L<2?'C':'B'}"><b>ภาพรวมเบอร์: เกรด ${g}</b> <span class="sm">(คะแนนรวม ${sg(r.comp)} = ศาสตร์ไทยเฉลี่ย ${sg(r.avg)} + ดวง BaZi/ลัคนา − ภาระความเสี่ยง)</span>`);
+  a.push(pos===2?'<div class="sm">✨ ดวงหนุนซ้อนสองชั้น (ธาตุ BaZi + ลัคนา) ผลดีของเบอร์จะออกเต็ม และผลเสียถูกทุเลาลง</div>':neg===2?'<div class="sm">⚠️ ทั้งธาตุ BaZi และลัคนาไม่รับเบอร์นี้ ผลเสียจะถูกขยาย ผลดีออกไม่เต็มที่</div>':pos===1&&neg===1?'<div class="sm">⚖️ ดวงสองระบบเห็นไม่ตรงกัน: '+(r.bz==='s'?'ธาตุหนุนแต่ลัคนาขัด':'ลัคนาหนุนแต่ธาตุขัด')+' ผลจะปะปน ให้ดูคู่ท้ายเป็นตัวตัดสิน</div>':'<div class="sm">ดวงทั้งสองระบบอยู่ในระดับกลาง ผลของเบอร์จึงขึ้นกับความหมายคู่เลขเป็นหลัก</div>');
+  if(r.fitC!==null){const d=r.fitC-r.fit;a.push(`<div class="sm">🔄 ในช่วงโชค 10 ปีปัจจุบัน ธาตุของเลข${d>=15?'<b>หนุนดวงมากขึ้น</b>':d<=-15?'<b>ขัดดวงมากขึ้น</b>':'ส่งผลใกล้เคียงดวงเดิม'} (BaZi ${sg(r.fit)} → ${sg(r.fitC)})</div>`)}
+  if(r.fitN!==null&&r.fitN<-15&&(r.fitC===null||r.fitC>=-15))a.push('<div class="sm">⏭️ ช่วงโชคถัดไปธาตุของเลขจะเริ่มขัดดวง ('+sg(r.fitN)+') ถ้าจะใช้เบอร์นี้ยาว ควรวางแผนเปลี่ยนก่อนถึงช่วงนั้น</div>');
+  else if(r.fitN!==null&&r.fitN>=25&&r.fitC!==null&&r.fitC<25)a.push('<div class="sm">⏭️ ช่วงโชคถัดไปธาตุของเลขจะหนุนดวงมากขึ้น ('+sg(r.fitN)+')</div>');
+  const full=DN.map((n,j)=>({n,j})).filter(x=>r.dp[x.j]>=15&&r.m>=0),part=DN.map((n,j)=>({n,j})).filter(x=>r.dp[x.j]>=15&&r.m<0),warn=DN.map((n,j)=>({n,j})).filter(x=>r.dp[x.j]<=-5);
+  if(full.length)a.push(`<div class="sm">✅ ด้านที่ได้ประโยชน์เต็มที่ (เบอร์ดี + ดวงรับ): <b>${full.map(x=>x.n).join(', ')}</b></div>`);
+  if(part.length)a.push(`<div class="sm">🔸 ด้านที่เบอร์ดีแต่ดวงรับไม่เต็มที่: <b>${part.map(x=>x.n).join(', ')}</b></div>`);
+  if(warn.length)a.push(`<div class="sm">⛔ ด้านที่ต้องระวัง${r.m<0?' (ดวงขยายผลลบ)':''}: <b>${warn.map(x=>x.n).join(', ')}</b></div>`);
+  const sp=CTX.A.pc(CTX.sex==='M'?CTX.A.wea:CTX.A.pow);if(sp<12&&r.dp[2]>=15)a.push('<div class="sm">💞 ดวงเดิมคู่ครองบาง แต่เบอร์นี้ส่งเสริมความรัก/ครอบครัว ช่วยเติมจุดอ่อนได้</div>');else if(sp>28&&r.dp[2]<=-5)a.push('<div class="sm">💞 ดวงเดิมมีคู่ครองเด่น แต่เบอร์นี้กดความรัก/ครอบครัว ระวังความสัมพันธ์ไม่ราบรื่น</div>');
+  const lp=r.ps[5],rd=CTX.ruler,same=r.ds.filter(x=>x.d===rd).length,foe=r.ds.filter(x=>x.l<=-1).length;
+  a.push(`<div class="sm">🎯 คู่ท้ายสุด <b>${lp.p}</b> (${TN[lp.m.t]}): ${lp.m.d} — แรงที่รู้สึกชัดและยาวนานที่สุด</div>`);
+  a.push(`<div class="sm">🌙 ลัคนาราศี${SIGN[CTX.asc.sign]} ลัคนาธิบดีดาว${PLN[rd]} เลขประจำลัคนาคือ <b>${rd}</b> พบในเบอร์ ${same} ตัว · เลขขัดลัคนา ${foe} ตัว</div></div>`);return a.join('')}
+function spouseLine(){const{A,sex}=CTX,el=sex==='M'?A.wea:A.pow,p=A.pc(el),lvl=p<12?'บาง คู่ครองมาช้าหรือต้องใช้ความพยายาม':p>28?'เด่นมาก มีเสน่ห์/ผู้คนเข้ามาเยอะ ระวังรักซ้อนหรือเลือกไม่ถูก':'พอดี';return `ธาตุดาวคู่ครอง (${sex==='M'?'ชาย = ธาตุทรัพย์':'หญิง = ธาตุอำนาจ'}): <b>${EM[el]}${el} ${p}%</b> → ${lvl}`}
+const SC3=s=>s>=.8?['หนุน','var(--good)']:s<=-.8?['ท้าทาย','var(--bad)']:['กลาง','var(--mid)'];
+function luckHTML(){const{LK,P,es}=CTX,A=CTX.A,age=a=>Math.floor(a)+' ปี'+(Math.floor((a%1)*12)?' '+Math.floor((a%1)*12)+' ด.':'');
+  const rows=LK.cyc.map((c,i)=>{const s=(es[c.p.sEl]+es[c.p.bEl])/2,l=SC3(s),cur=i===LK.cur;return `<tr${cur?' style="background:#e7f3f1;font-weight:700"':''}><td>${i+1}${cur?' ◀ ตอนนี้':''}</td><td>${Math.floor(c.a0)}-${Math.floor(c.a1)}</td><td>${c.y0+543}-${c.y0+553}</td><td>${c.p.stem}${c.p.branch}</td><td>${tenGod(P.day.si,c.p.si).n}</td><td>${EM[c.p.sEl]}${EM[c.p.bEl]}</td><td style="color:${l[1]}">${l[0]}</td></tr>`}).join('');
+  let cur='';if(LK.cur>=0){const c=LK.cyc[LK.cur],A2=analyse(P,c.p),ch=A2.status.k!==A.status.k||A2.fav[0]!==A.fav[0];cur=`<div class="sm">📍 ช่วงโชคปัจจุบัน: อายุ ${Math.floor(c.a0)}-${Math.floor(c.a1)} ปี เสา <b>${c.p.stem}${c.p.branch}</b> · ดวงรวมช่วงนี้ <b>${A2.status.t}</b> · ธาตุที่ควรเสริม: <b>${A2.fav.map(e=>EM[e]+e).join(' ')}</b> · ควรเลี่ยง: <b>${A2.unfav.map(e=>EM[e]+e).join(' ')}</b>${ch?' · ⚠️ ความต้องการธาตุเปลี่ยนไปจากดวงเดิม':''}</div>`}
+  else cur=`<div class="sm">📍 อายุปัจจุบัน ${Math.floor(LK.now)} ปี ${LK.now<LK.age0?'ยังไม่เข้าช่วงโชคแรก (เริ่มอายุ '+age(LK.age0)+')':'พ้นช่วงโชคที่คำนวณไว้'}</div>`;
+  return `<div class="p"><b>🔄 ดวงจรโชค 10 ปี (大運)</b><div class="sm">ทิศทาง: <b>${LK.fwd?'เดินหน้า (順行)':'ถอยหลัง (逆行)'}</b> เพราะ${CTX.sex==='M'?'ชาย':'หญิง'}เกิดปีธาตุ${LK.yang?'หยาง':'หยิน'} (${P.year.stem}) · เริ่มจรอายุ <b>${age(LK.age0)}</b> (นับจาก ${LK.dd.toFixed(1)} วันถึงเทศกาลสุริยคติ ÷ 3)</div>${cur}
+  <div style="overflow-x:auto"><table><tr><th>ช่วง</th><th>อายุ</th><th>พ.ศ.</th><th>เสา</th><th>สิบเทพ</th><th>ธาตุ</th><th>ผลกับดวงเดิม</th></tr>${rows}</table></div></div>`}
+function chartHTML(){const{P,A,asc,ruler}=CTX,pil=[['ปี','year'],['เดือน','month'],['วัน (ดิถี)','day'],['เวลา','hour']];
+  const cells=pil.map(([n,k])=>{const p=P[k];return `<div class="pil"><div class="sm">${n}</div><div class="cn">${p.stem}${p.branch}</div><div class="sm">${EM[p.sEl]}${p.yy}${p.sEl} · ${p.animal}</div><div class="sm">${k==='day'?'👑 Day Master':tenGod(P.day.si,p.si).n}</div></div>`}).join('');
+  const els=Object.keys(A.sc).map(e=>`<span class="chip" style="background:${COL[e]}">${EM[e]} ${e} ${A.pc(e)}%</span>`).join(''),es=Object.keys(CTX.es).map(e=>`<span class="chip" style="background:${COL[e]}">${EM[e]} ${sg(CTX.es[e])}</span>`).join('');
+  const edge=asc.deg<1.5||asc.deg>28.5;
+  return `<div class="g4">${cells}</div>${luckHTML()}<div class="p"><div class="sm"><b>${A.status.t}</b> · Day Master = ${EM[A.dm]}ธาตุ${A.dm} · กำลังหนุน ${A.support}% (แกร่ง >55 · อ่อน <45)</div><div class="sm">สัดส่วนธาตุ: ${els}</div><div class="sm">ธาตุที่ควรเสริม: <b>${A.fav.map(e=>EM[e]+e).join(' ')}</b> · ธาตุที่ควรเลี่ยง: <b>${A.unfav.map(e=>EM[e]+e).join(' ')}</b></div><div class="sm">คะแนนธาตุที่ใช้กับตัวเลข (เฉลี่ย 0): ${es}</div>
+  <div class="sm">💞 ${spouseLine()}</div><div class="sm">🌙 <b>ลัคนาราศี${SIGN[asc.sign]}</b> ${Math.floor(asc.deg)}°${String(Math.round((asc.deg%1)*60)).padStart(2,'0')}′ · ลัคนาธิบดี = ดาว${PLN[ruler]} (เลข ${ruler})${edge?' · ⚠️ ใกล้เส้นแบ่งราศี ควรตรวจเวลาตกฟากให้แม่น':''}</div></div>`}
+function render(r){
+  const{A,asc}=CTX;
+  $('ttl').textContent='📞 ผลวิเคราะห์เบอร์ '+r.ph.replace(/(\d{3})(\d{3})(\d{4})/,'$1-$2-$3');
+  $('ver').innerHTML=`${D[r.L][2]} ${D[r.L][0]} · BaZi ${BZT[r.bz]} · ลัคนา ${LGT[r.lgl]}`;
+  const bx=(t,v,l,c,s)=>`<div class="sm">${t}</div><strong style="color:${c}">${v}</strong><b style="color:${c}">${l}</b><div class="sm">${s}</div>`;
+  const l3=v=>v>=25?'s':v>=-15?'n':'c';
+  $('b1').innerHTML=bx('🧬 แกน BaZi',sg(r.fit),BZT[r.bz],LC[r.bz],'ดัชนี −100..+100 ถ่วงตำแหน่งหลัก'+(r.fitC!==null?`<br>🔄 ช่วงโชคปัจจุบัน ${sg(r.fitC)} ${BZT[l3(r.fitC)]}`:'')+(r.fitN!==null?`<br>⏭️ ช่วงโชคถัดไป ${sg(r.fitN)} ${BZT[l3(r.fitN)]}`:''));
+  $('b2').innerHTML=bx('🔢 ภาระความเสี่ยงคู่เลข',r.R.toFixed(1),'เสีย '+r.nB+' คู่',D[r.L][1],'คู่เสีย × ความรุนแรง × น้ำหนักตำแหน่ง');
+  $('b3').innerHTML=bx('🌙 แกนลัคนา',sg(r.lg),LGT[r.lgl],LC[r.lgl],'ลัคนาธิบดีดาว'+PLN[CTX.ruler]+' ↔ ดาวประจำเลข');
+  $('chart').innerHTML=chartHTML();
+  const why=r.ps.filter(x=>x.m.t==='B').map(x=>`คู่ ${x.p} อยู่${POS[x.i]} · ความรุนแรง${sev(x.n)} · น้ำหนัก ×${WT[x.i]}`);
+  $('dec').innerHTML=`<div class="p ${r.L<1?'G':r.L<2?'C':'B'}"><b style="color:${D[r.L][1]}">${D[r.L][0]}</b> <span class="sm">— ${D[r.L][3]}${r.L>r.gL?' · ภาระความเสี่ยงคู่เลขสูง ยกระดับคำแนะนำ':''}</span><ul><li>เกรดเบอร์ <b>${r.g}</b> (คะแนนรวม ${sg(r.comp)}) · เกณฑ์: A ไม่ต้องเปลี่ยน · ต่ำกว่า A ควรพิจารณา · ต่ำกว่า B ควรเปลี่ยน</li>${why.map(w=>`<li>${w}</li>`).join('')||'<li>ไม่มีคู่เสีย</li>'}${r.bz==='c'?'<li>ธาตุ BaZi ขัดดวง: เพิ่มความเสี่ยง 25%</li>':r.bz==='s'?'<li>ธาตุ BaZi หนุนดวง: ลดความเสี่ยงราว 15%</li>':''}${r.lgl==='c'?'<li>ขัดลัคนา: เพิ่มความเสี่ยง 15%</li>':r.lgl==='s'?'<li>เข้ากับลัคนา: ลดความเสี่ยงราว 10%</li>':''}</ul>${r.nB&&r.L===0?'<span class="sm">เบอร์ผ่านเกรด A แม้มีคู่เสียบางคู่ เพราะคู่เสียอยู่ตำแหน่งน้ำหนักน้อยหรือถูกชดเชยด้วยดวง</span>':''}</div>`;
+  $('dims').innerHTML=r.dp.map((v,j)=>{const w=Math.min(Math.abs(v),60)/60*50;return `<div class="dim"><span>${DN[j]}</span><div class="bar"><i style="background:${v<0?'var(--bad)':DC[j]};${v<0?'right':'left'}:50%;width:${w}%"></i></div><span><b>${sg(v)}</b> ${lv(v)}</span></div>`}).join('');
+  $('ovr').innerHTML=overall(r);
+  const pre=r.adj.map((v,j)=>`<b>${DN[j]}:</b> ${PT[j][v>=15?0:v<=-5?2:1]} <span class="sm">(ศาสตร์ไทย ${sg(r.dp[j])} → หลังปรับด้วยดวง ${sg(v)} · ${lv(v)})</span>`);
+  const top=r.ps.slice().sort((a,b)=>WT[b.i]*b.v.reduce((s,x)=>s+Math.abs(x),0)-WT[a.i]*a.v.reduce((s,x)=>s+Math.abs(x),0)).slice(0,3);
+  $('pre').innerHTML=pre.map(x=>`<li>${x}</li>`).join('')+`<li><b>คู่ที่ส่งผลแรงที่สุดต่อผู้ใช้:</b><ul>${top.map(x=>`<li><b>คู่ ${x.p} (${POS[x.i]}):</b> ${x.m.d}</li>`).join('')}</ul></li>`;
+  $('pairs').innerHTML=r.ps.map(x=>`<div class="p ${x.m.t}"><b>${POS[x.i]}: ${x.p}</b> <span class="chip" style="background:${TC[x.m.t]}">${TN[x.m.t]}${x.m.t==='B'?' · '+sev(x.n):''}</span><span class="chip" style="background:#5b6677">น้ำหนัก ×${WT[x.i]}</span><span class="chip" style="background:${x.b>=1?'var(--good)':x.b>-1?'#5b6677':'var(--bad)'}">🧬 ${bl(x.b)}</span><span class="chip" style="background:${x.l>=.5?'var(--good)':x.l>-1.5?'#5b6677':'var(--bad)'}">🌙 ${ll(x.l)}</span><br><span class="sm">${x.m.d}${GN[x.k]?' · ⚠️ '+GN[x.k]:''}</span></div>`).join('');
   const o=[];
-  if(new Set(ps.map(x=>x.k)).size<=2)o.push('คู่เลขซ้ำกันมาก พลังจะออกด้านเดียว ควรมีคู่ดีหลายแบบผสมกัน');
-  if(ps.some(x=>x.k==='69'&&x.i===5))o.push('คู่ 69/96 อยู่ท้ายเบอร์ เงินเข้าแรงแต่ไหลออกเร็ว จึงไม่นับเป็นคะแนนการเงิน');
-  if(ps.some(x=>x.m.t==='C'))o.push('คู่ "ต้องพิจารณา" ดีเฉพาะอาชีพ/เพศ/สถานการณ์บางแบบ ไม่นับเป็นเสีย');
-  if(ps.some(x=>x.k[0]==='0'))o.push('คู่ที่มีเลข 0 ถูกจัดเป็นเลขเสียทั้งหมดตามตารางนี้ (เกี่ยวกับสุขภาพ)');
-  if(bz==='s'&&dp[0]<5)o.push('ธาตุหนุนดวง แต่เบอร์ไม่มีคู่ส่งเสริมการเงิน โอกาสอาจไม่กลายเป็นเงิน');
-  if(bz==='x')o.push('ไม่มีข้อมูลทิศทางธาตุ จึงไม่ประเมินธาตุ: ผลสรุปอิงคู่เลขอย่างเดียว');
+  if(new Set(r.ps.map(x=>x.k)).size<=2)o.push('คู่เลขซ้ำกันมาก พลังจะออกด้านเดียว ควรมีคู่ดีหลายแบบผสมกัน');
+  if(r.ps.some(x=>x.k==='69'&&x.i===5))o.push('คู่ 69/96 อยู่ท้ายเบอร์ เงินเข้าแรงแต่ไหลออกเร็ว จึงไม่นับเป็นคะแนนการเงิน');
+  if(r.ps.some(x=>x.m.t==='C'))o.push('คู่ "ต้องพิจารณา" มีทั้งข้อดีข้อเสียปนกัน ขึ้นกับอาชีพ/เพศ/สถานการณ์ ไม่นับเป็นเสีย');
+  const g=r.ps.filter(x=>GN[x.k]).map(x=>x.k+' ('+GN[x.k]+')');if(g.length)o.push('คู่ที่มีข้อจำกัดเรื่องเพศ: '+g.join(', '));
+  if(r.bz!=='c'&&r.dp[0]<5&&r.bz==='s')o.push('ธาตุหนุนดวง แต่เบอร์ไม่มีคู่ส่งเสริมการเงิน โอกาสอาจไม่กลายเป็นเงิน');
+  if(r.bz!==r.lgl&&(r.bz==='c'||r.lgl==='c')&&(r.bz==='s'||r.lgl==='s'))o.push('BaZi และลัคนาให้ผลคนละทิศ: ตัดสินด้วยคู่ท้ายและระดับคำแนะนำ');
   $('obs').innerHTML=o.map(x=>`<li>${x}</li>`).join('')||'<li>ไม่มีข้อสังเกตพิเศษ</li>';
+  last={ph:r.ph,head:[`📞 ผลวิเคราะห์เบอร์ ${r.ph}`,`${D[r.L][2]} ${D[r.L][0]} · เกรด ${grade(r.comp)}`,`🧬 BaZi ${BZT[r.bz]} (${sg(r.fit)}) · 🌙 ลัคนา${SIGN[asc.sign]} ${LGT[r.lgl]} (${sg(r.lg)})`,...(r.fitC!==null?[`🔄 ช่วงโชคปัจจุบัน ${sg(r.fitC)}${r.fitN!==null?' · ถัดไป '+sg(r.fitN):''}`]:[]),'',...r.adj.map((v,j)=>`${DN[j]}: ${sg(v)} ${lv(v)}`),'','🔮 ที่มักเจอ:',...pre.map(x=>'• '+x.replace(/<[^>]+>/g,'')),''],
+    tail:['🔢 รายคู่: '+r.ps.map(x=>`${x.p}(${TN[x.m.t]})`).join(' '),'','⚠️ อิงความเชื่อ ใช้ประกอบการตัดสินใจ']};
+  document.querySelectorAll('#gls input').forEach(c=>c.checked=false);$('ph2').value='';$('cmpout').innerHTML='';showRec();
+  $('res').style.display='block';$('res').scrollIntoView({behavior:'smooth'})}
 
-  $('pairs').innerHTML=ps.map(x=>{const a=ds[x.i],b=ds[x.i+1];
-    return `<div class="p ${x.m.t}"><b>${POS[x.i]}: ${x.p}</b> <span class="chip" style="background:${TC[x.m.t]}">${TN[x.m.t]}${x.m.t==='B'?' · '+sev(x.n):''}</span><span class="chip" style="background:#5b6677">น้ำหนัก ×${WT[x.i]}</span>
-    <span class="chip" style="background:${COL[a.e]}">${EM[a.e]} ${a.e} ${sg(a.s)}</span><span class="chip" style="background:${COL[b.e]}">${EM[b.e]} ${b.e} ${sg(b.s)}</span><br><span class="sm">${x.m.d}</span></div>`}).join('');
+// ===== เปรียบเทียบเบอร์ใหม่ =====
+function compare(){const ph=$('ph2').value.replace(/\D/g,'');
+  if(!/^0\d{9}$/.test(ph)){alert('กรุณากรอกเบอร์ใหม่ 10 หลักที่ขึ้นต้นด้วย 0');return}
+  if(ph===R0.ph){alert('เบอร์ใหม่ต้องไม่ใช่เบอร์เดิม');return}
+  const a=R0,b=evalPhone(ph),d=b.comp-a.comp,gs=goals();
+  let v;if(b.L<a.L||(d>=8&&b.L<=a.L))v=['🌟 เบอร์ใหม่ดีกว่าเดิม','var(--good)'];else if(b.L>a.L||d<=-8)v=['🚨 เบอร์ใหม่แย่กว่าเดิม ไม่แนะนำ','var(--bad)'];else v=['⚖️ เบอร์ใหม่ใกล้เคียงเดิม ไม่คุ้มเปลี่ยน','var(--mid)'];
+  const warn=b.L>=2?'<div class="sm">⚠️ เบอร์ใหม่ยังเข้าข่ายต้องเปลี่ยน ('+D[b.L][0]+')'+(b.L<a.L||d>0?' แม้จะดีกว่าเดิมบ้าง':'')+'</div>':'';
+  const t=(x,y,hi)=>y===x?'➖':(hi?y>x:y<x)?'✅':'🔻',rows=[['ระดับคำแนะนำ',D[a.L][0],D[b.L][0],b.L<a.L?'✅':b.L>a.L?'🔻':'➖'],['ภาระความเสี่ยง (ต่ำดี)',a.R.toFixed(1),b.R.toFixed(1),t(a.R,b.R,false)],['คู่เสีย (คู่)',a.nB,b.nB,t(a.nB,b.nB,false)],['🧬 BaZi',sg(a.fit),sg(b.fit),t(a.fit,b.fit,true)],['🌙 ลัคนา',sg(a.lg),sg(b.lg),t(a.lg,b.lg,true)],...(a.fitC!==null?[['🔄 BaZi ช่วงโชคปัจจุบัน',sg(a.fitC),sg(b.fitC),t(a.fitC,b.fitC,true)]]:[]),...(a.fitN!==null?[['⏭️ BaZi ช่วงโชคถัดไป',sg(a.fitN),sg(b.fitN),t(a.fitN,b.fitN,true)]]:[]),...DN.map((n,j)=>[(gs.includes(j)?'🎯 ':'')+n,sg(a.dp[j]),sg(b.dp[j]),t(a.dp[j],b.dp[j],true)]),['ภาพรวม (เกรด)',sg(a.comp)+' ('+grade(a.comp)+')',sg(b.comp)+' ('+grade(b.comp)+')',t(a.comp,b.comp,true)]];
+  const gl=gs.length?`<div class="sm">🎯 เรื่องที่คุณเลือก: ${gs.map(j=>`${DN[j]} ${sg(a.dp[j])} → <b>${sg(b.dp[j])}</b>`).join(' · ')}</div>`:'<div class="sm">💡 เลือกเรื่องที่ต้องการในส่วนแนะนำด้านบน เพื่อเน้นเทียบเรื่องนั้น</div>';
+  $('cmpout').innerHTML=`<div class="v" style="border-color:${v[1]}">${v[0]} <span class="sm">(คะแนนรวม ${sg(a.comp)} → ${sg(b.comp)} ผลต่าง ${sg(d)})</span></div>${warn}${gl}
+  <div style="overflow-x:auto"><table><tr><th>ตัวชี้วัด</th><th>เดิม ${a.ph.slice(-4)}</th><th>ใหม่ ${b.ph.slice(-4)}</th><th></th></tr>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('')}</table></div>
+  <h3>🔢 คู่เลขของเบอร์ใหม่</h3>${b.ps.map(x=>`<div class="p ${x.m.t}"><b>${POS[x.i]}: ${x.p}</b> <span class="chip" style="background:${TC[x.m.t]}">${TN[x.m.t]}${x.m.t==='B'?' · '+sev(x.n):''}</span><span class="chip" style="background:${x.b>-1?'#5b6677':'var(--bad)'}">🧬 ${bl(x.b)}</span><span class="chip" style="background:${x.l>-1.5?'#5b6677':'var(--bad)'}">🌙 ${ll(x.l)}</span><br><span class="sm">${x.m.d}</span></div>`).join('')}`}
 
-  last={ph,dm,st,L,ps,ds,head:[`📞 ผลวิเคราะห์เบอร์ ${ph}`,`${D[L][2]} ${D[L][0]} · ธาตุ: ${BZT[bz][0]}${fit===null?'':' ('+sg(fit)+')'}`,
-    '',...dp.map((v,j)=>`${DN[j]}: ${sg(v)} ${lv(v)}`),'','🔮 ที่มักเจอ:',...pre.map(x=>'• '+x.replace(/<[^>]+>/g,'')),''],
-    tail:['🔢 รายคู่: '+ps.map(x=>`${x.p}(${TN[x.m.t]})`).join(' '),'','⚠️ อิงความเชื่อเลขศาสตร์ ใช้ประกอบการตัดสินใจ']};
-  document.querySelectorAll('#gls input').forEach(c=>c.checked=false);showRec();
-  $('res').style.display='block';$('res').scrollIntoView({behavior:'smooth'});
-};
-
-
-// ส่วนแนะนำ/หลบเลี่ยงแสดงเฉพาะเมื่อเบอร์ "ควรพิจารณาเปลี่ยน" หรือ "แนะนำให้เปลี่ยน" (L>=2)
+// ===== ตั้งค่า/อินพุต =====
+// 77 จังหวัด (พิกัดตัวเมือง/ที่ตั้งศาลากลาง โดยประมาณ)
+const PROV=`กรุงเทพมหานคร|13.75|100.50
+กระบี่|8.09|98.91
+กาญจนบุรี|14.02|99.53
+กาฬสินธุ์|16.43|103.51
+กำแพงเพชร|16.48|99.52
+ขอนแก่น|16.44|102.83
+จันทบุรี|12.61|102.10
+ฉะเชิงเทรา|13.69|101.07
+ชลบุรี|13.36|100.98
+ชัยนาท|15.19|100.13
+ชัยภูมิ|15.81|102.03
+ชุมพร|10.49|99.18
+เชียงราย|19.91|99.83
+เชียงใหม่|18.79|98.98
+ตรัง|7.56|99.61
+ตราด|12.24|102.52
+ตาก|16.88|99.13
+นครนายก|14.21|101.21
+นครปฐม|13.82|100.06
+นครพนม|17.41|104.78
+นครราชสีมา|14.98|102.10
+นครศรีธรรมราช|8.43|99.96
+นครสวรรค์|15.70|100.14
+นนทบุรี|13.86|100.52
+นราธิวาส|6.43|101.82
+น่าน|18.78|100.78
+บึงกาฬ|18.36|103.65
+บุรีรัมย์|14.99|103.10
+ปทุมธานี|14.02|100.53
+ประจวบคีรีขันธ์|11.81|99.80
+ปราจีนบุรี|14.05|101.37
+ปัตตานี|6.87|101.25
+พระนครศรีอยุธยา|14.35|100.57
+พะเยา|19.17|99.90
+พังงา|8.45|98.53
+พัทลุง|7.62|100.08
+พิจิตร|16.44|100.35
+พิษณุโลก|16.82|100.26
+เพชรบุรี|13.11|99.94
+เพชรบูรณ์|16.42|101.16
+แพร่|18.14|100.14
+ภูเก็ต|7.88|98.39
+มหาสารคาม|16.18|103.30
+มุกดาหาร|16.54|104.72
+แม่ฮ่องสอน|19.30|97.97
+ยโสธร|15.79|104.14
+ยะลา|6.54|101.28
+ร้อยเอ็ด|16.05|103.65
+ระนอง|9.96|98.64
+ระยอง|12.68|101.28
+ราชบุรี|13.53|99.82
+ลพบุรี|14.80|100.65
+ลำปาง|18.29|99.49
+ลำพูน|18.57|99.01
+เลย|17.49|101.72
+ศรีสะเกษ|15.12|104.32
+สกลนคร|17.16|104.15
+สงขลา|7.19|100.60
+สตูล|6.62|100.07
+สมุทรปราการ|13.60|100.60
+สมุทรสงคราม|13.41|100.00
+สมุทรสาคร|13.55|100.27
+สระแก้ว|13.82|102.07
+สระบุรี|14.53|100.91
+สิงห์บุรี|14.89|100.40
+สุโขทัย|17.01|99.82
+สุพรรณบุรี|14.47|100.12
+สุราษฎร์ธานี|9.14|99.33
+สุรินทร์|14.88|103.49
+หนองคาย|17.88|102.74
+หนองบัวลำภู|17.20|102.44
+อ่างทอง|14.59|100.45
+อำนาจเจริญ|15.86|104.63
+อุดรธานี|17.41|102.79
+อุตรดิตถ์|17.63|100.10
+อุทัยธานี|15.38|100.02
+อุบลราชธานี|15.24|104.85`.trim().split('\n').map(r=>{const[n,la,lo]=r.split('|');return{n,lat:+la,lon:+lo}});
+$('bm').innerHTML=TH_MON.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+$('pl').innerHTML=PROV.map((p,i)=>`<option value="${i}">${p.n}</option>`).join('');
 $('gls').innerHTML=DN.map((n,j)=>`<label class="gc"><input type="checkbox" value="${j}"> ${n}</label>`).join('');
-function showRec(){const on=last.L>=2,d=on?'block':'none';$('glbox').style.display=d;$('recbox').style.display=d;$('avbox').style.display=d;if(!on)return;
-  const gs=goals();$('av').innerHTML=avHTML(last.dm,last.st,gs);
-  $('recn').textContent=gs.length?'เลือกจากคู่ที่ไม่เสียและไม่มีด้านลบเลย'+(has(last.st)?' เรียงตามความเข้ากับธาตุเจ้าชะตา และตัดคู่ที่ขัดดวงออก':'')+' · วางคู่ที่ตรงเป้าหมายไว้ท้ายเบอร์ (น้ำหนักสูงสุด) และไม่วาง 69/96 ไว้ท้ายสุด':'';
-  $('rec').innerHTML=recHTML(last.dm,last.st,gs)}
-$('gls').onchange=showRec;
-function txtOf(){const gs=goals();let r=[];
-  if(last.L>=2){r.push('🚫 หลบเลี่ยงในเบอร์ใหม่:','• ศาสตร์ไทย คู่เสีย: '+Object.keys(N).filter(k=>N[k].t==='B').map(k=>rl({k})).join(', '));
-    if(has(last.st)){const bad=[...Array(10).keys()].filter(d=>sc(DE[d],last.dm,last.st)<=-1);r.push('• BaZi เลขขัดดวง: '+(bad.join(', ')||'ไม่มี'))}
-    if(gs.length)r.push('','🔄 คู่เลขแนะนำสำหรับเบอร์ใหม่:',...gs.map(j=>`${DN[j]}: ${rec(last.dm,last.st,j,3).map(rl).join(', ')}`));r.push('')}
-  return [...last.head,...r,...last.tail].join('\n')}
+function readBirth(){let y=+$('by').value;const m=+$('bm').value,d=+$('bd').value,t=$('bt').value,pv=PROV[+$('pl').value],lat=pv.lat,lon=pv.lon;
+  if(y>2400)y-=543;const dt=new Date(y,m-1,d);
+  if(!y||y<1900||y>2100||!(dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d)){alert('วันเดือนปีเกิดไม่ถูกต้อง (รองรับปี 1900-2100)');return null}
+  if(!t){alert('กรุณากรอกเวลาตกฟาก');return null}
+  const[hh,mi]=t.split(':').map(Number),tz=y<1920?6.7:7; /* ก่อน 2463 (1920) ไทยใช้เวลาท้องถิ่นกรุงเทพ UTC+6:42 */return{y,m,d,hh,mi,lat,lon,tz,sex:$('sx').value,prov:pv.n}}
+$('go').onclick=()=>{const b=readBirth();if(!b)return;const ph=$('ph').value.replace(/\D/g,'');if(!/^0\d{9}$/.test(ph)){alert('กรุณากรอกเบอร์ 10 หลักที่ขึ้นต้นด้วย 0');return}
+  const P=getPillars(b.y,b.m,b.d,b.hh,b.mi,b.lon,b.tz),A=analyse(P),asc=ascendant(b.y,b.m,b.d,b.hh,b.mi,b.lat,b.lon,b.tz),ruler=RULER[asc.sign];
+  const LK=luckCycles(b,P,b.sex),esC=LK.cur>=0?elScores(analyse(P,LK.cyc[LK.cur].p)):null,esN=LK.nxt>=0?elScores(analyse(P,LK.cyc[LK.nxt].p)):null;
+  setGender(b.sex);CTX={P,A,asc,ruler,es:elScores(A),esC,esN,LK,lag:LAG[ruler],b,sex:b.sex};R0=evalPhone(ph);render(R0)};
+$('gls').onchange=showRec;$('go2').onclick=compare;
 
-// ---- ส่งออก PDF / LINE: แคปเป็นภาพแล้วตัดหน้าตามขอบบล็อก ไม่ตัดกลางข้อความ ----
+// ===== ส่งออก LINE / PDF =====
+function txtOf(){const gs=goals();let r=[];
+  if(R0.L>=2){r.push('🚫 หลบเลี่ยงในเบอร์ใหม่:','• คู่เสีย: '+Object.keys(N).filter(k=>N[k].t==='B').map(k=>rl({k})).join(', '),'• BaZi เลขขัดดวง: '+([...Array(10).keys()].filter(d=>CTX.es[DE[d]]<=-1).join(', ')||'ไม่มี'),'• เลขขัดลัคนา: '+([...Array(10).keys()].filter(d=>CTX.lag[d]<=-1).join(', ')||'ไม่มี'));
+    if(gs.length)r.push('','🔄 คู่เลขแนะนำสำหรับเบอร์ใหม่:',...gs.map(j=>`${DN[j]}: ${rec(j,3).map(rl).join(', ')}`));r.push('')}
+  return [...last.head,...r,...last.tail].join('\n')}
 const lineURL=()=>'https://line.me/R/msg/text/?'+encodeURIComponent(txtOf());
-const SEL='.v,.b,.dim,.p,p.sm,#obs>li,#pre>li,#recn';
+const SEL='.v,.b,.pil,.dim,.p,tr,p.sm,#obs>li,#pre>li,#recn,#ovr .sm';
 function planCuts(c,total,ph){const s=[...new Set(c.map(Math.round))].sort((a,b)=>a-b),out=[];let st=0;
   while(total-st>ph){let cut=0;for(const x of s){if(x>st+ph)break;if(x>st+ph*.35)cut=x}out.push(cut||st+ph);st=out[out.length-1]}
   out.push(total);return out}
-async function makePDF(){
-  const el=$('report');let cands=[],cw=1;
-  const cv=await html2canvas(el,{scale:2,backgroundColor:'#fff',useCORS:true,windowWidth:900,onclone:(d,c)=>{c.style.width='760px';c.style.maxWidth='760px';const ph=d.getElementById('recph');if(ph)ph.remove();
-    const r0=c.getBoundingClientRect();cw=r0.width;cands=[...c.querySelectorAll(SEL)].map(n=>n.getBoundingClientRect().bottom-r0.top)}});
+async function makePDF(){const el=$('report');let cands=[],cw=1;
+  const cv=await html2canvas(el,{scale:2,backgroundColor:'#fff',useCORS:true,windowWidth:900,onclone:(d,c)=>{c.style.width='760px';c.style.maxWidth='760px';const ph=d.getElementById('recph');if(ph)ph.remove();c.querySelectorAll('.noprint').forEach(n=>n.remove());
+    const r0=c.getBoundingClientRect();cw=r0.width;cands=[...c.querySelectorAll(SEL)].filter(n=>!n.parentElement.closest('.p,.b,.pil')||n.matches('.p,.b,.pil')).map(n=>n.getBoundingClientRect().bottom-r0.top)}});
   const k=cv.width/cw,M=10,W=190,PH=Math.floor(cv.width*(297-2*M-6)/W),ends=planCuts(cands.map(x=>x*k),cv.height,PH),pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
   let y0=0;ends.forEach((e,i)=>{const h=e-y0;if(h<=0)return;const sl=document.createElement('canvas');sl.width=cv.width;sl.height=h;const g=sl.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,sl.width,h);g.drawImage(cv,0,y0,cv.width,h,0,0,cv.width,h);
     if(i)pdf.addPage();pdf.addImage(sl.toDataURL('image/jpeg',.95),'JPEG',M,M,W,h*W/cv.width);pdf.setFontSize(8);pdf.setTextColor(120);pdf.text(`${i+1}/${ends.length}`,105,292,{align:'center'});y0=e});
@@ -265,8 +447,8 @@ async function makePDF(){
 const canPDF=()=>!!(window.html2canvas&&window.jspdf),fname=()=>`number-analysis-${last.ph}.pdf`;
 $('pdf').onclick=async()=>{if(!canPDF()){window.print();return}try{(await makePDF()).save(fname())}catch(e){alert('สร้าง PDF ไม่สำเร็จ จะเปิดหน้าพิมพ์แทน (เลือกบันทึกเป็น PDF)');window.print()}};
 $('ln').onclick=()=>window.open(lineURL(),'_blank');
-$('shr').onclick=async()=>{
-  if(canPDF()){try{const pdf=await makePDF(),f=new File([pdf.output('blob')],fname(),{type:'application/pdf'});
+$('shr').onclick=async()=>{if(canPDF()){try{const pdf=await makePDF(),f=new File([pdf.output('blob')],fname(),{type:'application/pdf'});
     if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:'ผลวิเคราะห์เบอร์ '+last.ph});return}}catch(e){}}
   alert('เครื่องนี้แชร์ไฟล์ตรงเข้า LINE ไม่ได้ จะเปิดการส่งสรุปข้อความแทน (หรือกดดาวน์โหลด PDF แล้วแนบใน LINE)');window.open(lineURL(),'_blank')};
 </script></body></html>
+

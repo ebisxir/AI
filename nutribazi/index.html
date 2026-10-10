@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🀄 BaZi & โภชนาการธาตุ + แอมเวย์ 💊</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--primary:#2c3e50;--secondary:#27ae60;--bg:#f4f7f6;--card:#fff;}
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:#333;margin:0;padding:18px;}
+.container{max-width:960px;margin:0 auto}
+h1{text-align:center;color:var(--primary)}
+h2{color:var(--primary);border-bottom:2px dashed #ddd;padding-bottom:8px}
+.card{background:var(--card);padding:20px;border-radius:14px;box-shadow:0 4px 10px rgba(0,0,0,.06);margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+label{display:block;font-weight:700;margin-bottom:5px;font-size:14px}
+input,select{width:100%;padding:10px;border:1px solid #ccd;border-radius:8px}
+button{background:var(--secondary);color:#fff;border:0;padding:14px;font-size:17px;border-radius:10px;cursor:pointer;width:100%;font-weight:700;margin-top:16px}
+button:hover{background:#219653}
+.check{background:#e8f4fd;border-left:5px solid #3498db;padding:10px 14px;border-radius:6px;margin:14px 0;font-weight:700;color:#2471a3}
+.hide{display:none}
+.pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center}
+.pill{background:#f8fafc;border:1px solid #dde;border-radius:10px;padding:12px 6px}
+.pill .cn{font-size:30px;font-weight:700;line-height:1.2}
+.pill small{color:#777}
+.dmpill{background:#fff8e1;border-color:#f39c12}
+.chartbox{max-width:380px;margin:10px auto}
+.box{padding:15px;border-radius:8px;margin-top:14px;border-left:5px solid var(--secondary);background:#eef9f2}
+.box.warn{background:#fdecea;border-left-color:#e74c3c}
+.box.food{background:#fef5e7;border-left-color:#f39c12}
+.box.supp{background:#eef2ff;border-left-color:#5b6ef5}
+.bar{height:26px;background:linear-gradient(90deg,#3498db,#2ecc71,#f1c40f,#e74c3c);border-radius:13px;position:relative;margin:14px 0}
+.marker{position:absolute;top:-6px;width:4px;height:38px;background:#2c3e50;border-radius:2px}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+th,td{border:1px solid #e3e3e3;padding:8px;text-align:left}
+th{background:#f3f6f9}
+.tag{display:inline-block;padding:4px 10px;border-radius:14px;font-size:13px;font-weight:700;color:#fff}
+ul{margin:8px 0 0 0;padding-left:22px}
+li{margin-bottom:5px}
+.note{font-size:12.5px;color:#888;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🀄 เครื่องคำนวณดวงจีน BaZi & โภชนาการธาตุ 🥗💊</h1>
+
+<div class="card">
+  <h2>👤 1. ข้อมูลส่วนบุคคล</h2>
+  <div class="grid">
+    <div><label>📅 ปีเกิด (ค.ศ. หรือ พ.ศ.)</label><input type="number" id="yy" value="2000" oninput="dow()"></div>
+    <div><label>🗓️ เดือนเกิด</label>
+      <select id="mm" onchange="dow()">
+        <option value="1" selected>1️⃣ มกราคม</option><option value="2">2️⃣ กุมภาพันธ์</option>
+        <option value="3">3️⃣ มีนาคม</option><option value="4">4️⃣ เมษายน</option>
+        <option value="5">5️⃣ พฤษภาคม</option><option value="6">6️⃣ มิถุนายน</option>
+        <option value="7">7️⃣ กรกฎาคม</option><option value="8">8️⃣ สิงหาคม</option>
+        <option value="9">9️⃣ กันยายน</option><option value="10">🔟 ตุลาคม</option>
+        <option value="11">1️⃣1️⃣ พฤศจิกายน</option><option value="12">1️⃣2️⃣ ธันวาคม</option>
+      </select></div>
+    <div><label>📆 วันที่เกิด</label><input type="number" id="dd" value="1" min="1" max="31" oninput="dow()"></div>
+    <div><label>⏰ เวลาเกิด (นาฬิกาท้องถิ่น)</label><input type="time" id="tt" value="12:00"></div>
+    <div><label>⚧️ เพศ</label><select id="sex"><option value="M">👨 ชาย</option><option value="F">👩 หญิง</option></select></div>
+    <div><label>🌏 เขตเวลาที่เกิด</label>
+      <select id="tz">
+        <option value="7" selected>🇹🇭 ไทย / เวียดนาม (UTC+7)</option>
+        <option value="8">🇨🇳 จีน / ไต้หวัน / สิงคโปร์ (UTC+8)</option>
+        <option value="9">🇯🇵 ญี่ปุ่น / เกาหลี (UTC+9)</option>
+        <option value="0">🌐 UTC+0</option>
+        <option value="-5">🇺🇸 สหรัฐฯ ตะวันออก (UTC-5)</option>
+      </select></div>
+    <div><label>📍 ลองจิจูดที่เกิด (กรุงเทพฯ ≈ 100.5)</label><input type="number" id="lon" value="100.5" step="0.01"></div>
+    <div><label>🔧 ตัวเลือกขั้นสูง</label>
+      <select id="adv">
+        <option value="1" selected>✅ ใช้ True Solar Time เต็มรูปแบบ</option>
+        <option value="0">🕒 ใช้เวลานาฬิกาตรง ๆ</option>
+      </select></div>
+  </div>
+  <div class="check" id="dowbox">📅 กำลังตรวจสอบวัน...</div>
+  <button onclick="run()">🔮 คำนวณดวงชะตา & แผนสุขภาพ 🍀</button>
+</div>
+
+<div id="res" class="hide">
+
+  <div class="card">
+    <h2>🀄 เสาชะตาทั้ง 4 (Four Pillars)</h2>
+    <div class="pillars" id="pil"></div>
+    <div class="box" id="meta"></div>
+  </div>
+
+  <div class="card">
+    <h2>🥧 2. สัดส่วนพลัง 10 เทพเจ้า (10 Gods)</h2>
+    <div class="chartbox"><canvas id="pie"></canvas></div>
+    <div id="godtbl"></div>
+    <div class="box" id="godtxt"></div>
+  </div>
+
+  <div class="card">
+    <h2>💪 3. พลังธาตุประจำตัว (Day Master Strength)</h2>
+    <div id="dmout"></div>
+  </div>
+
+  <div class="card">
+    <h2>🥗 4. โภชนาการ & สุขภาพตามสมดุลหยิน–หยาง</h2>
+    <div id="nutri"></div>
+  </div>
+
+  <div class="card">
+    <h2>💊 5. อาหารเสริมแอมเวย์ที่เหมาะกับธาตุของคุณ</h2>
+    <div id="supp"></div>
+    <p class="note">⚠️ ข้อมูลนี้เป็นการจับคู่เชิงสุขภาพองค์รวมตามหลักธาตุ ไม่ใช่คำวินิจฉัยหรือคำแนะนำทางการแพทย์ หากมีโรคประจำตัว ตั้งครรภ์ หรือใช้ยาอยู่ ควรปรึกษาแพทย์/เภสัชกรก่อนเสมอ 🩺</p>
+  </div>
+
+</div>
+</div>
+
+<script>
+/* ---------- ฐานข้อมูลก้านฟ้า–กิ่งดิน ---------- */
+const S=[
+{cn:'甲',py:'Jia',th:'เจี๋ย',el:'wood',yy:'หยาง',img:'🌲 ต้นไม้ใหญ่'},
+{cn:'乙',py:'Yi',th:'อี่',el:'wood',yy:'หยิน',img:'🌿 ไม้เลื้อย/ดอกไม้'},
+{cn:'丙',py:'Bing',th:'ปิ่ง',el:'fire',yy:'หยาง',img:'☀️ ดวงอาทิตย์'},
+{cn:'丁',py:'Ding',th:'ติง',el:'fire',yy:'หยิน',img:'🕯️ เปลวเทียน'},
+{cn:'戊',py:'Wu',th:'อู้',el:'earth',yy:'หยาง',img:'⛰️ ภูเขาหิน'},
+{cn:'己',py:'Ji',th:'จี่',el:'earth',yy:'หยิน',img:'🪴 ดินสวน/ดินโคลน'},
+{cn:'庚',py:'Geng',th:'เกิง',el:'metal',yy:'หยาง',img:'⚔️ โลหะดิบ/ขวาน'},
+{cn:'辛',py:'Xin',th:'ซิน',el:'metal',yy:'หยิน',img:'💍 อัญมณี/เครื่องประดับ'},
+{cn:'壬',py:'Ren',th:'เหริน',el:'water',yy:'หยาง',img:'🌊 มหาสมุทร'},
+{cn:'癸',py:'Gui',th:'กุ่ย',el:'water',yy:'หยิน',img:'💧 น้ำค้าง/สายฝน'}];
+
+const B=[
+{cn:'子',th:'🐭 ชวด',el:'water',h:[[9,100]]},
+{cn:'丑',th:'🐮 ฉลู',el:'earth',h:[[5,60],[9,30],[7,10]]},
+{cn:'寅',th:'🐯 ขาล',el:'wood',h:[[0,60],[2,30],[4,10]]},
+{cn:'卯',th:'🐰 เถาะ',el:'wood',h:[[1,100]]},
+{cn:'辰',th:'🐲 มะโรง',el:'earth',h:[[4,60],[1,30],[9,10]]},
+{cn:'巳',th:'🐍 มะเส็ง',el:'fire',h:[[2,60],[4,30],[6,10]]},
+{cn:'午',th:'🐴 มะเมีย',el:'fire',h:[[3,70],[5,30]]},
+{cn:'未',th:'🐐 มะแม',el:'earth',h:[[5,60],[3,30],[1,10]]},
+{cn:'申',th:'🐵 วอก',el:'metal',h:[[6,60],[8,30],[4,10]]},
+{cn:'酉',th:'🐔 ระกา',el:'metal',h:[[7,100]]},
+{cn:'戌',th:'🐶 จอ',el:'earth',h:[[4,60],[7,30],[3,10]]},
+{cn:'亥',th:'🐷 กุน',el:'water',h:[[8,70],[0,30]]}];
+
+const EL={wood:{th:'ไม้',em:'🌳',c:'#27ae60'},fire:{th:'ไฟ',em:'🔥',c:'#e74c3c'},
+earth:{th:'ดิน',em:'🟤',c:'#b9770e'},metal:{th:'ทอง',em:'⚙️',c:'#95a5a6'},water:{th:'น้ำ',em:'💧',c:'#2980b9'}};
+const GEN={wood:'fire',fire:'earth',earth:'metal',metal:'water',water:'wood'};
+const CTRL={wood:'earth',earth:'water',water:'fire',fire:'metal',metal:'wood'};
+const genBy=e=>Object.keys(GEN).find(k=>GEN[k]===e);
+const ctrlBy=e=>Object.keys(CTRL).find(k=>CTRL[k]===e);
+
+const IMG={
+'wood-wood':'🌲 ป่าไม้หนาทึบ — พลังตนเองสูง ต้องการ "ทอง" มาตัดแต่งให้เป็นรูปเป็นร่าง',
+'wood-fire':'🔥 ไม้ติดไฟ — ความคิดเปล่งประกาย แต่เปลืองพลัง ต้องเติมน้ำและพักผ่อน',
+'wood-earth':'🪴 ไม้หยั่งรากบนดิน — มุ่งสร้างผลงานและทรัพย์สิน ระวังดินแข็งจนรากชอกช้ำ',
+'wood-metal':'⚔️ ไม้ต้องขวาน — มีกฎเกณฑ์กดดัน แต่ถ้าพอดีจะถูกเจียระไนเป็นของมีค่า',
+'wood-water':'💧 ไม้ได้สายฝน — เติบโตงอกงาม เรียนรู้ไว แต่น้ำมากเกินรากจะเน่า',
+'fire-wood':'🌲 ไฟได้ฟืน — มีแรงหนุนไม่ขาด กำลังใจและไอเดียลุกโชนตลอดเวลา',
+'fire-fire':'🔥 ไฟสุมกองใหญ่ — ร้อนแรง ใจเร็ว ต้องการน้ำมาปรับสมดุล',
+'fire-earth':'⛰️ ไฟเผาดินเป็นเครื่องปั้น — ทุ่มเทจนเกิดผลงาน แต่พลังถูกดึงใช้มาก',
+'fire-metal':'🪙 ไฟหลอมทอง — เปลี่ยนแรงกดดันเป็นทรัพย์และผลงานที่มีมูลค่า',
+'fire-water':'🌊 ไฟปะทะน้ำ — ถูกควบคุมสูง ระวังหมดไฟ ต้องมี "ไม้" คั่นกลางเป็นกำลังใจ',
+'earth-wood':'🌱 ดินที่มีไม้ชอนไช — ถูกใช้งานหนัก มีระเบียบวินัยจากภายนอกเข้ามากำกับ',
+'earth-fire':'🔥 ดินที่ไฟลุก — ดินแกร่ง อบอุ่น มีแรงหนุนไม่ขาด แต่แห้งร้อน ต้องการน้ำหล่อเลี้ยง',
+'earth-earth':'⛰️ แผ่นดินกว้างใหญ่ — มั่นคงหนักแน่น ต้องมีไม้เบิกทางและน้ำมาสร้างความชุ่มชื้น',
+'earth-metal':'💎 ดินที่อุ้มแร่ — ระบายพลังออกเป็นผลงานและความคิดที่คมชัด',
+'earth-water':'🏞️ ดินกับสายน้ำ — ทรัพย์ไหลผ่านมาก ต้องสร้างคันดินให้แข็งแรงพอจะกักเก็บ',
+'metal-wood':'🌳 ทองปะทะไม้ — มีงานให้จัดการไม่ขาด ทรัพย์มาพร้อมภาระ',
+'metal-fire':'🔥 ทองในเตาหลอม — ถูกหล่อหลอมด้วยแรงกดดันจนกลายเป็นของมีค่า',
+'metal-earth':'⛰️ ทองฝังในดิน — มีผู้ใหญ่และฐานหนุน แต่ดินมากเกินจะกลบจนไม่เปล่งประกาย',
+'metal-metal':'⚔️ โลหะกระทบโลหะ — เฉียบคม ตรงไปตรงมา ต้องการไฟมาขัดเกลา',
+'metal-water':'💧 ทองชำระด้วยน้ำ — ความคิดไหลลื่น พูดจาคมคาย ระบายพลังได้ดี',
+'water-wood':'🌿 น้ำหล่อเลี้ยงต้นไม้ — พลังไหลออกเป็นผลงานและความเมตตา',
+'water-fire':'🔥 น้ำไล่ตามไฟ — มุ่งหาทรัพย์และความอบอุ่น ต้องคุมอุณหภูมิใจให้พอดี',
+'water-earth':'🏞️ น้ำถูกดินกั้น — มีกรอบและความรับผิดชอบ ถ้าดินมากน้ำจะขุ่นและติดขัด',
+'water-metal':'⚙️ น้ำมีต้นธารจากทอง — ได้ความรู้และผู้สนับสนุนไม่ขาดสาย',
+'water-water':'🌊 มหานทีไหลเชี่ยว — ฉลาด ยืดหยุ่น แต่ต้องมีดินเป็นตลิ่งคอยกำกับ'};
+
+const GODS=[
+{k:'friend',n:'🤝 เพื่อน/คู่แข่ง (比劫)',c:'#3498db',d:'พลังตัวตน ความเป็นอิสระ เพื่อนฝูง พี่น้อง การลงมือทำเอง'},
+{k:'output',n:'🎨 การแสดงออก (食傷)',c:'#2ecc71',d:'ความคิดสร้างสรรค์ การสื่อสาร ผลงาน ลูกหลาน การปล่อยของ'},
+{k:'wealth',n:'💰 ทรัพย์สิน (財)',c:'#f1c40f',d:'เงินทอง การบริหารจัดการ โอกาสทางธุรกิจ ความสุขทางวัตถุ'},
+{k:'power',n:'🏛️ อำนาจ/วินัย (官殺)',c:'#8e44ad',d:'ตำแหน่ง กฎระเบียบ ความรับผิดชอบ แรงกดดัน ชื่อเสียงทางการงาน'},
+{k:'res',n:'📚 ทรัพยากร/ความรู้ (印)',c:'#e67e22',d:'การเรียนรู้ ผู้ใหญ่อุปถัมภ์ ภูมิคุ้มกันใจ ความมั่นคงภายใน'}];
+
+/* ---------- อาหารตามธาตุ ---------- */
+const FOOD={
+wood:{organ:'ตับ–ถุงน้ำดี 🫀 ดวงตา 👁️ เส้นเอ็น',taste:'เปรี้ยวอ่อน ๆ',
+good:'ผักใบเขียวสด 🥬 ยอดอ่อน บรอกโคลี 🥦 ถั่วงอก แอปเปิลเขียว 🍏 มะนาว 🍋 ชาดอกเก๊กฮวย 🌼',
+bad:'แอลกอฮอล์ 🍷 ของทอดมันจัด 🍟 การอดนอนดึกเกิน 23.00 น. 😴'},
+fire:{organ:'หัวใจ ❤️ ลำไส้เล็ก ระบบไหลเวียนเลือด 🩸',taste:'ขมเล็กน้อย',
+good:'มะระ 🥒 ชาเขียว 🍵 มะเขือเทศ 🍅 บีทรูท พริกหวานแดง 🫑 ธัญพืชสีแดง ถั่วแดง',
+bad:'ปิ้งย่างรมควัน 🍖 เผ็ดจัด 🌶️ คาเฟอีนตอนเย็น ☕ เครื่องดื่มชูกำลัง ⚡'},
+earth:{organ:'ม้าม–กระเพาะอาหาร 🍚 ระบบย่อยและกล้ามเนื้อ 💪',taste:'หวานธรรมชาติ',
+good:'ฟักทอง 🎃 มันเทศ 🍠 ข้าวกล้อง 🍚 ข้าวโอ๊ต 🥣 ลูกเดือย ขิงอุ่น ๆ 🫚 ซุปใส 🍲',
+bad:'ของหวานจัด 🍰 ชานมไข่มุก 🧋 ของเย็นจัด 🧊 กินมื้อดึกแล้วนอนทันที 🌙'},
+metal:{organ:'ปอด 🫁 ลำไส้ใหญ่ ผิวหนัง ✨ ระบบภูมิคุ้มกัน 🛡️',taste:'เผ็ดอุ่นอ่อน ๆ',
+good:'หัวไชเท้า 🥬 หอมหัวใหญ่ 🧅 กระเทียม 🧄 ลูกแพร์ 🍐 เห็ดขาว 🍄 อัลมอนด์ 🌰 น้ำผึ้ง 🍯',
+bad:'ของดิบเย็นจัด 🥶 นมและชีสปริมาณมาก 🧀 ควันบุหรี่/ฝุ่น PM2.5 😷'},
+water:{organ:'ไต–กระเพาะปัสสาวะ 💧 กระดูก 🦴 ฮอร์โมน หู 👂',taste:'เค็มธรรมชาติ',
+good:'สาหร่าย 🌊 ปลาทะเล 🐟 ถั่วดำ งาดำ วอลนัท 🥜 เห็ดหูหนูดำ ซุปกระดูกตุ๋น 🍜',
+bad:'เค็มจัด/โซเดียมสูง 🧂 น้ำแข็ง 🧊 นอนดึกเรื้อรัง 🌃 ดื่มน้ำน้อยเกินไป'}};
+
+/* ---------- แอมเวย์ ---------- */
+const SUP=[
+{n:'ดับเบิ้ลเอ็กซ์',e:'🌈',t:['base'],w:'วิตามิน–เกลือแร่–ไฟโตนิวเทรียนท์ครบถ้วน เป็น "ฐานราก" ปรับสมดุลทั้ง 5 ธาตุ ทุกดวงชะตาทานได้'},
+{n:'ลิวิท็อกซ์',e:'🍃',t:['wood','wood-low'],w:'ดูแลตับ–ถุงน้ำดี (ธาตุไม้) ช่วยกระบวนการล้างพิษ เหมาะเมื่อธาตุไม้พร่องหรือตับรับภาระหนัก'},
+{n:'บีกิน',e:'⚡',t:['wood','fire','wood-low'],w:'วิตามินบีรวม ดูแลระบบประสาทและการสร้างพลังงาน เหมาะกับคนเครียดง่าย อ่อนเพลีย ธาตุไม้/ไฟพร่อง'},
+{n:'เลซิตินอี',e:'🧠',t:['wood','water'],w:'เลซิติน + วิตามินอี ดูแลไขมันในตับ บำรุงสมองและสมดุลฮอร์โมน เชื่อมธาตุไม้–น้ำ'},
+{n:'โคเอนไซม์คิวเท็น',e:'❤️',t:['fire','fire-low'],w:'บำรุงหัวใจและพลังงานระดับเซลล์ เหมาะเมื่อธาตุไฟพร่อง เหนื่อยง่าย หัวใจทำงานหนัก'},
+{n:'ทริปเปิ้ลโอเมก้า',e:'🐟',t:['fire','water'],w:'โอเมก้า 3-6-9 ลดการอักเสบ บำรุงหัวใจ สมอง ข้อต่อ และหนุนพลังไต (ธาตุน้ำ)'},
+{n:'กระเทียม',e:'🧄',t:['metal','fire','metal-low'],w:'ดูแลปอดและภูมิคุ้มกัน (ธาตุทอง) พร้อมช่วยการไหลเวียนเลือด เหมาะกับคนเป็นหวัดง่าย ภูมิแพ้'},
+{n:'เห็ดหลินจือพลัส',e:'🍄',t:['metal','water','metal-low'],w:'เสริมภูมิคุ้มกันและช่วยให้ร่างกายปรับตัวกับความเครียด หนุนธาตุทองและพลังสำรองของไต'},
+{n:'โพรไบโอติก',e:'🦠',t:['earth','earth-low'],w:'จุลินทรีย์ดี ดูแลม้าม–กระเพาะ (ธาตุดิน) ปรับสมดุลลำไส้ ลดท้องอืดแน่น'},
+{n:'โพสต์บี',e:'🛡️',t:['earth','metal'],w:'โพสต์ไบโอติก เสริมเกราะผนังลำไส้และภูมิคุ้มกัน เชื่อมธาตุดิน–ทองให้ทำงานประสานกัน'},
+{n:'ไฟเบอร์พลัส',e:'🌾',t:['earth-high','metal','metal-low'],w:'ใยอาหาร ช่วยระบายของเสียและคุมน้ำตาล เหมาะเมื่อธาตุดินมากเกิน (สะสม/อืด) หรือลำไส้ใหญ่ทำงานไม่คล่อง'},
+{n:'กรีนทีพลัส',e:'🍵',t:['fire-high','earth-high'],w:'ชาเขียวสกัด ระบายความร้อนส่วนเกินและกระตุ้นการเผาผลาญ เหมาะเมื่อธาตุไฟ/ดินมากเกินจนร้อนในหรืออ้วนง่าย'},
+{n:'แคลแมกดี',e:'🦴',t:['water','water-low'],w:'แคลเซียม–แมกนีเซียม–วิตามินดี บำรุงกระดูกและฟัน ซึ่งเป็นอาณาเขตของธาตุน้ำ (ไต) โดยตรง'},
+{n:'จูจูบีไนท์',e:'🌙',t:['fire-high','water-low'],w:'พุทราจีนช่วยสงบจิตใจและการนอนหลับ เหมาะเมื่อธาตุไฟมากเกินจนใจร้อน หลับยาก หรือธาตุน้ำพร่อง'}];
+
+/* ---------- ดาราศาสตร์ ---------- */
+function jd(y,m,d,h){if(m<=2){y-=1;m+=12;}const a=Math.floor(y/100),b=2-a+Math.floor(a/4);
+return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+b-1524.5+h/24;}
+function sunLon(j){const T=(j-2451545)/36525;
+let L=280.46646+36000.76983*T+0.0003032*T*T;const M=(357.52911+35999.05029*T-0.0001537*T*T)*Math.PI/180;
+const C=(1.914602-0.004817*T)*Math.sin(M)+(0.019993-0.000101*T)*Math.sin(2*M)+0.000289*Math.sin(3*M);
+let ap=L+C-0.00569-0.00478*Math.sin((125.04-1934.136*T)*Math.PI/180);return((ap%360)+360)%360;}
+function eot(doy){const B=2*Math.PI*(doy-81)/364;return 9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B);}
+const mod=(a,n)=>((a%n)+n)%n;
+
+function dow(){
+ let y=+document.getElementById('yy').value;if(y>2400)y-=543;
+ const m=+document.getElementById('mm').value,d=+document.getElementById('dd').value;
+ const el=document.getElementById('dowbox');
+ if(!y||!m||!d){el.innerHTML='📅 กรอกวันเดือนปีให้ครบ';return;}
+ const o=new Date(y,m-1,d);
+ if(o.getFullYear()!==y||o.getMonth()!==m-1||o.getDate()!==d){
+  el.innerHTML='⚠️ วันที่นี้ไม่มีอยู่จริงในปฏิทิน กรุณาตรวจสอบอีกครั้ง';el.style.background='#fdecea';el.style.color='#c0392b';return;}
+ const D=['🔴 วันอาทิตย์','🟡 วันจันทร์','🩷 วันอังคาร','🟢 วันพุธ','🟠 วันพฤหัสบดี','🔵 วันศุกร์','🟣 วันเสาร์'];
+ el.style.background='#e8f4fd';el.style.color='#2471a3';
+ el.innerHTML='📅 ดับเบิ้ลเช็ค: วันที่ '+d+'/'+m+'/'+y+' (พ.ศ. '+(y+543)+') ตรงกับ <b>'+D[o.getDay()]+'</b> ✅';
+}
+window.onload=dow;
+
+let chart=null;
+function run(){
+ let Y=+document.getElementById('yy').value;if(Y>2400)Y-=543;
+ const M=+document.getElementById('mm').value,D=+document.getElementById('dd').value;
+ const[hh,mi]=document.getElementById('tt').value.split(':').map(Number);
+ const TZ=+document.getElementById('tz').value,LON=+document.getElementById('lon').value;
+ const ADV=document.getElementById('adv').value==='1',SEX=document.getElementById('sex').value;
+
+ // True Solar Time
+ const local=new Date(Y,M-1,D,hh,mi);
+ const doy=Math.floor((local-new Date(Y,0,0))/86400000);
+ const corr=ADV?(4*(LON-TZ*15)+eot(doy)):0;
+ const sol=new Date(local.getTime()+corr*60000);
+ const sy=sol.getFullYear(),sm=sol.getMonth()+1,sd=sol.getDate(),sh=sol.getHours()+sol.getMinutes()/60;
+
+ // เสาเดือน/ปี จากองศาสุริยะจริง
+ const lam=sunLon(jd(Y,M,D,hh+mi/60-TZ));
+ const k=Math.floor(mod(lam-315,360)/30);          // 0 = เดือนขาล(寅)
+ const mB=mod(k+2,12);
+ let bzY=Y; if(M<=2&&k>=10)bzY--;                  // ก่อนลี่ชุน = ปีก่อน
+ const yS=mod(bzY-4,10),yB=mod(bzY-4,12);
+ const mS=mod((yS%5)*2+2+k,10);
+
+ // เสาวัน จาก JDN  (อ้างอิง 1 ม.ค. 2000 = 戊午)
+ let di=mod(Math.floor(jd(sy,sm,sd,12)+0.5)+49,60);
+ if(sh>=23)di=mod(di+1,60);                        // ข้ามวันที่ยาม 子 (23:00)
+ const dS=di%10,dB=di%12;
+
+ // เสาเวลา
+ const hB=Math.floor(mod(sh+1,24)/2),hS=mod((dS%5)*2+hB,10);
+
+ const P=[[yS,yB,'🧓 เสาปี','รากเหง้า/บรรพบุรุษ (0-16 ปี)'],
+          [mS,mB,'👨‍👩‍👧 เสาเดือน','พ่อแม่/หน้าที่การงาน (17-32 ปี)'],
+          [dS,dB,'⭐ เสาวัน (ดิถี)','ตัวเรา/คู่ครอง (33-48 ปี)'],
+          [hS,hB,'🧒 เสาเวลา','ลูกหลาน/บั้นปลาย (49+ ปี)']];
+
+ document.getElementById('pil').innerHTML=P.map((p,i)=>{
+  const st=S[p[0]],br=B[p[1]];
+  return '<div class="pill'+(i===2?' dmpill':'')+'"><small>'+p[2]+'</small><div class="cn" style="color:'+EL[st.el].c+'">'+st.cn+'</div><div style="font-size:13px">'+st.py+' '+EL[st.el].em+EL[st.el].th+st.yy+'</div><div class="cn" style="color:'+EL[br.el].c+'">'+br.cn+'</div><div style="font-size:13px">'+br.th+'</div><small>'+p[3]+'</small></div>';}).join('');
+
+ // ให้คะแนนธาตุ
+ const sc={wood:0,fire:0,earth:0,metal:0,water:0};
+ const sw=[1,1,1,1],bw=[1.0,1.5,1.2,1.0];
+ P.forEach((p,i)=>{sc[S[p[0]].el]+=100*sw[i];B[p[1]].h.forEach(x=>sc[S[x[0]].el]+=x[1]*bw[i]);});
+ const dmEl=S[dS].el,tot=Object.values(sc).reduce((a,b)=>a+b,0);
+ const cat={friend:sc[dmEl],output:sc[GEN[dmEl]],wealth:sc[CTRL[dmEl]],power:sc[ctrlBy(dmEl)],res:sc[genBy(dmEl)]};
+ const pc=o=>Math.round(o/tot*1000)/10;
+ const sup=cat.friend+cat.res,ratio=pc(sup);
+ const monthSupport=[dmEl,genBy(dmEl)].includes(B[mB].el);
+
+ let lvl,col,txt;
+ if(ratio<35){lvl='ดิถีอ่อนมาก 🍃';col='#2980b9';txt='พลังตัวตนน้อยกว่าภาระรอบตัวมาก ร่างกายฟื้นช้า ควรเน้น "เติม" มากกว่า "เผา"';}
+ else if(ratio<45){lvl='ดิถีค่อนข้างอ่อน 🌱';col='#16a085';txt='ปรับตัวเก่ง อ่อนโยน ไวต่อความรู้สึก แต่ต้องการแรงหนุนและการพักฟื้นสม่ำเสมอ';}
+ else if(ratio<=55){lvl='ดิถีสมดุล ⚖️';col='#27ae60';txt='พลังตัวตนกับสิ่งแวดล้อมใกล้เคียงกัน ยืดหยุ่นสูง ปรับได้ทั้งรุกและรับ';}
+ else if(ratio<=70){lvl='ดิถีแกร่ง 💪';col='#e67e22';txt='พลังตัวตนหนาแน่น มั่นใจ ตัดสินใจเด็ดขาด ลุยงานหนักได้ ควรหา "ทางระบาย" พลังส่วนเกิน';}
+ else{lvl='ดิถีแกร่งมาก 🔥';col='#c0392b';txt='พลังล้นเกิน ดื้อรั้น ใจร้อน ต้องระบายออกเป็นผลงาน การออกกำลังกาย และอาหารที่ช่วยถ่ายเท';}
+
+ const strong=ratio>55;
+ const others=Object.entries(sc).filter(([e])=>e!==dmEl).sort((a,b)=>b[1]-a[1]);
+ const topOther=others[0][0];
+ const hot=['巳','午','未'].includes(B[mB].cn),cold=['亥','子','丑'].includes(B[mB].cn);
+
+ let fav=strong?[GEN[dmEl],CTRL[dmEl],ctrlBy(dmEl)]:[genBy(dmEl),dmEl];
+ if(hot&&!fav.includes('water'))fav.unshift('water');
+ if(cold&&!fav.includes('fire'))fav.unshift('fire');
+ fav=[...new Set(fav)];
+ const low=Object.entries(sc).filter(([,v])=>pc(v)<10).map(([e])=>e);
+ const high=Object.entries(sc).filter(([,v])=>pc(v)>32).map(([e])=>e);
+
+ document.getElementById('meta').innerHTML=
+  '⏱️ <b>เวลาสุริยะจริง (True Solar Time):</b> '+String(sol.getHours()).padStart(2,'0')+':'+String(sol.getMinutes()).padStart(2,'0')+
+  ' (ปรับจากนาฬิกา '+(corr>=0?'+':'')+corr.toFixed(1)+' นาที)<br>'+
+  '☀️ <b>องศาสุริยะขณะเกิด:</b> '+lam.toFixed(2)+'° → เดือนจีน '+B[mB].cn+' ('+B[mB].th+')<br>'+
+  '🀄 <b>ดวงชะตาเต็ม:</b> '+S[yS].cn+B[yB].cn+' / '+S[mS].cn+B[mB].cn+' / '+S[dS].cn+B[dB].cn+' / '+S[hS].cn+B[hB].cn+'<br>'+
+  '🧭 <b>ทิศทางวัยจร ('+(SEX==='M'?'👨 ชาย':'👩 หญิง')+'):</b> '+
+  (((yS%2===0)&&SEX==='M')||((yS%2===1)&&SEX==='F')?'เดินหน้า ➡️ (順運)':'ถอยหลัง ⬅️ (逆運)')+
+  '<br>🌡️ <b>ภูมิอากาศดวง:</b> '+(hot?'ร้อนแห้ง 🔥 ต้องการน้ำมาคลาย':cold?'หนาวเย็น ❄️ ต้องการไฟมาอุ่น':'อากาศกลาง ๆ 🌤️ สมดุลดี');
+
+ document.getElementById('res').classList.remove('hide');
+
+ // กราฟวงกลม
+ const data=GODS.map(g=>pc(cat[g.k]));
+ if(chart)chart.destroy();
+ chart=new Chart(document.getElementById('pie'),{type:'pie',
+  data:{labels:GODS.map(g=>g.n),datasets:[{data:data,backgroundColor:GODS.map(g=>g.c),borderWidth:2,borderColor:'#fff'}]},
+  options:{plugins:{legend:{position:'bottom',labels:{boxWidth:14,font:{size:11}}},
+   tooltip:{callbacks:{label:c=>' '+c.label+': '+c.parsed+'%'}}}}});
+
+ document.getElementById('godtbl').innerHTML='<table><tr><th>หมวด</th><th>%</th><th>ความหมาย</th></tr>'+
+  GODS.map((g,i)=>'<tr><td>'+g.n+'</td><td><b>'+data[i]+'%</b></td><td>'+g.d+'</td></tr>').join('')+'</table>';
+
+ const mx=data.indexOf(Math.max(...data)),mn=data.indexOf(Math.min(...data));
+ document.getElementById('godtxt').innerHTML=
+  '🔍 <b>จุดเด่นที่สุด:</b> '+GODS[mx].n+' ('+data[mx]+'%) — '+GODS[mx].d+
+  '<br>🕳️ <b>จุดพร่องที่สุด:</b> '+GODS[mn].n+' ('+data[mn]+'%) — เป็นด้านที่ควรฝึกฝนเสริม เพราะดวงให้มาน้อย'+
+  '<br>🧩 <b>สรุปบุคลิก:</b> '+(cat.friend+cat.res>cat.output+cat.wealth+cat.power?
+   'เป็นคนยึดหลักการของตนเอง มีภูมิคุ้มกันใจสูง ชอบสะสมความรู้และพลังไว้ในตัว 📚':
+   'เป็นคนทำงานกับโลกภายนอกเก่ง ขยันผลิตผลงานและคว้าโอกาส แต่ต้องระวังพลังกายถูกใช้จนหมด 🏃');
+
+ document.getElementById('dmout').innerHTML=
+  '<p>⭐ <b>ดิถีประจำตัว:</b> '+S[dS].cn+' '+S[dS].py+' — '+EL[dmEl].em+' ธาตุ'+EL[dmEl].th+S[dS].yy+' ('+S[dS].img+')</p>'+
+  '<p>📊 <b>คะแนนพลังหนุน:</b> '+ratio+'% &nbsp; <span class="tag" style="background:'+col+'">'+lvl+'</span></p>'+
+  '<div class="bar"><div class="marker" style="left:'+Math.min(98,Math.max(0,ratio))+'%"></div></div>'+
+  '<p style="font-size:12px;color:#888">⬅️ อ่อน 0% ....... สมดุล 50% ....... แกร่ง 100% ➡️</p>'+
+  '<div class="box">🖼️ <b>ภาพลักษณ์ดวงชะตา:</b> '+(IMG[dmEl+'-'+topOther]||'')+
+  '<br>📖 <b>คำอธิบาย:</b> '+txt+
+  '<br>🗓️ <b>ได้ฤดูกาลหรือไม่:</b> '+(monthSupport?'ได้ฤดู (得令) ✅ เดือนเกิดหนุนธาตุตัวเอง พลังพื้นฐานหนา':'ไม่ได้ฤดู (失令) ⚠️ เดือนเกิดไม่หนุนธาตุตัวเอง ต้องพึ่งรากและผู้สนับสนุน')+
+  '<br>🍀 <b>ธาตุอุปถัมภ์ (用神):</b> '+fav.map(e=>EL[e].em+' '+EL[e].th).join(' , ')+
+  '<br>⚠️ <b>ธาตุที่มากเกินควรระบาย:</b> '+(high.length?high.map(e=>EL[e].em+' '+EL[e].th).join(' , '):'ไม่มีธาตุใดล้นเกินชัดเจน')+
+  '<br>🕳️ <b>ธาตุที่พร่อง:</b> '+(low.length?low.map(e=>EL[e].em+' '+EL[e].th).join(' , '):'ครบทั้ง 5 ธาตุ ไม่มีช่องโหว่ 🎉')+'</div>';
+
+ // โภชนาการ
+ let nut='<div class="box">🧬 <b>ธาตุพื้นฐานของร่างกายคุณ:</b> '+EL[dmEl].em+' ธาตุ'+EL[dmEl].th+S[dS].yy+
+  ' → อวัยวะหลักที่ต้องดูแล: '+FOOD[dmEl].organ+
+  '<br>'+(S[dS].yy==='หยิน'?'🌙 ดิถีหยิน: ระบบร่างกายละเอียดอ่อน ดูดซึมช้าแต่สะสมเก่ง ควรเน้นอาหาร <b>ปรุงสุก อุ่น ย่อยง่าย</b> ทีละน้อยแต่สม่ำเสมอ':'☀️ ดิถีหยาง: ระบบเผาผลาญแรง ย่อยไว ควรเน้นอาหาร <b>กากใยสูงและโปรตีนคุณภาพ</b> พร้อมดื่มน้ำให้พอ')+'</div>';
+
+ nut+='<div class="box food">✅ <b>ควรเน้น (เติมธาตุอุปถัมภ์)</b><ul>'+
+  fav.map(e=>'<li>'+EL[e].em+' <b>ธาตุ'+EL[e].th+'</b> (รส'+FOOD[e].taste+') — '+FOOD[e].good+'<br><small>🫀 ดูแล: '+FOOD[e].organ+'</small></li>').join('')+'</ul></div>';
+
+ const avoid=high.length?high:[dmEl];
+ nut+='<div class="box warn">🚫 <b>ควรลด/ระวัง (ธาตุที่ล้นเกิน)</b><ul>'+
+  avoid.map(e=>'<li>'+EL[e].em+' <b>ธาตุ'+EL[e].th+'ล้น</b> — '+FOOD[e].bad+'<br><small>⚠️ เสี่ยง: '+FOOD[e].organ+' ทำงานหนักเกินไป</small></li>').join('')+'</ul>'+
+  (low.length?'<p>🕳️ ส่วนธาตุที่พร่อง ('+low.map(e=>EL[e].em+EL[e].th).join(', ')+') ควรเสริมเป็นพิเศษ เพราะมักเป็นจุดอ่อนด้านสุขภาพประจำตัว</p>':'')+'</div>';
+
+ nut+='<div class="box">🕰️ <b>นาฬิกาชีวภาพที่เหมาะกับคุณ:</b> '+
+  (hot?'☀️ ดวงร้อน — ควรดื่มน้ำ 8-10 แก้ว/วัน 💦 เลี่ยงออกกำลังกลางแดดจัด เน้นช่วงเช้าหรือเย็น 🌅':
+   cold?'❄️ ดวงเย็น — ควรรักษาความอบอุ่น 🧣 ดื่มน้ำอุ่น ออกกำลังให้เหงื่อออกสม่ำเสมอ 🏃':
+   '🌤️ ดวงสมดุล — รักษาจังหวะชีวิตให้คงที่ นอน 22.00-23.00 น. คือทุนสุขภาพที่ดีที่สุด 😴')+'</div>';
+ document.getElementById('nutri').innerHTML=nut;
+
+ // จับคู่แอมเวย์
+ const need=new Set(['base']);
+ fav.forEach(e=>need.add(e));
+ low.forEach(e=>{need.add(e);need.add(e+'-low');});
+ high.forEach(e=>need.add(e+'-high'));
+ if(!strong){need.add(genBy(dmEl));need.add(dmEl);}
+ const picked=SUP.map(s=>({s,m:s.t.filter(t=>need.has(t)).length})).filter(x=>x.m>0).sort((a,b)=>b.m-a.m);
+
+ let out='<p>🧭 เกณฑ์การจับคู่: ธาตุอุปถัมภ์ ('+fav.map(e=>EL[e].em+EL[e].th).join(', ')+')'+
+  (low.length?' + ธาตุพร่อง ('+low.map(e=>EL[e].em+EL[e].th).join(', ')+')':'')+
+  (high.length?' + ธาตุล้นที่ต้องระบาย ('+high.map(e=>EL[e].em+EL[e].th).join(', ')+')':'')+'</p>';
+ out+='<div class="box supp"><b>⭐ แนะนำสำหรับคุณโดยเฉพาะ</b><ul>'+
+  picked.slice(0,6).map(x=>'<li>'+x.s.e+' <b>'+x.s.n+'</b> — '+x.s.w+'</li>').join('')+'</ul></div>';
+ if(picked.length>6)
+  out+='<div class="box"><b>➕ ทานเสริมได้ตามความเหมาะสม</b><ul>'+
+   picked.slice(6).map(x=>'<li>'+x.s.e+' <b>'+x.s.n+'</b> — '+x.s.w+'</li>').join('')+'</ul></div>';
+ const rest=SUP.filter(s=>!picked.find(p=>p.s.n===s.n));
+ if(rest.length)
+  out+='<div class="box warn"><b>⏸️ ยังไม่จำเป็นในช่วงนี้ (ธาตุที่เกี่ยวข้องมีมากพอแล้ว)</b><ul>'+
+   rest.map(s=>'<li>'+s.e+' '+s.n+'</li>').join('')+'</ul></div>';
+ document.getElementById('supp').innerHTML=out;
+}
+</script>
+</body>
+</html>

@@ -43,19 +43,6 @@ input:focus,select:focus{outline:2px solid #e3c9a0;border-color:var(--gold)}
 button{background:var(--primary);color:#fff;font-weight:600;cursor:pointer;border:none;transition:.15s}
 button:active{transform:scale(.97)}button:hover{background:var(--secondary)}
 button.ghost{background:#efe9df;color:#5a4634}button.wide{width:100%}button.mini{padding:7px 12px;font-size:12.5px;border-radius:9px}
-.span-all{grid-column:1/-1}
-.trow{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
-.trow select{flex:1 1 220px;min-width:0;max-width:100%}
-.solarbox{flex:2 1 300px;min-width:0;background:#fffdf7;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-.solarbox:empty{display:none}
-.sb-flow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);gap:4px;align-items:stretch;text-align:center}
-.sb-t{background:#fff;border:1px solid #eadfc9;border-radius:10px;padding:6px 4px;min-width:0}
-.sb-t.main{background:linear-gradient(135deg,#fff8e7,#fdf1e0);border-color:var(--gold)}
-.sb-t small{display:block;font-size:11px;color:var(--muted);line-height:1.4}
-.sb-t b{display:block;font-size:17px;line-height:1.35;white-space:nowrap}
-.sb-ar{align-self:center;color:var(--muted);font-size:13px}
-.sb-note{margin-top:8px;font-size:12.5px;line-height:1.65;color:var(--muted)}
-.sb-note .tag{display:inline-block;background:#fdf1e0;border:1px solid var(--gold);border-radius:999px;padding:0 8px;margin:0 2px;color:#5a4634;font-weight:600;white-space:nowrap}
 .confirm{margin-top:14px;background:linear-gradient(135deg,#fff8e7,#fdf1e0);border:1px dashed var(--gold);border-radius:12px;padding:12px 14px;font-size:14.5px;line-height:1.75}
 .savebar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;align-items:center}
 .profilebar{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed var(--gold)}
@@ -119,6 +106,28 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
 .lhl{font-weight:600;margin:8px 0 4px;line-height:1.7}
 .lcard p{margin:8px 0;font-size:14px;line-height:1.85}
 .lcard .tip,.lcard .fix{margin-top:8px}
+
+/* ===== ฟอร์มตั้งค่าดวงกำเนิด: กริด 6 คอลัมน์ (เดสก์ท็อป) / 2 คอลัมน์ (มือถือ) ===== */
+.fg{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px 10px;align-items:end}
+.fg>.fld{min-width:0}
+.fg>.d1{grid-column:span 1}.fg>.d2{grid-column:span 2}.fg>.d3{grid-column:span 3}.fg>.d6{grid-column:1/-1}
+.fg .fld input,.fg .fld select{width:100%;min-width:0}
+.fg .fld label{line-height:1.35}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:10px 12px;background:#fff;color:#5a4634;border:1.5px solid #d6cdbd;border-radius:12px;line-height:1.35;font-weight:400}
+.seg button:hover{background:#faf6ee}
+.seg button b{font-size:14px;font-weight:700}
+.seg button span{font-size:11.5px;color:var(--muted)}
+.seg button.on{background:#eef3ea;border-color:var(--primary);box-shadow:0 0 0 2px rgba(120,140,110,.22);color:#3f5336}
+.seg button.on span{color:#5d7352}
+.tmnote{margin-top:7px;font-size:12px;line-height:1.6;color:var(--muted);background:#faf7f0;border-radius:8px;padding:6px 10px}
+.tmnote:empty{display:none}
+.confirm .tmline{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(160,130,80,.35);font-size:13.5px}
+@media(max-width:620px){
+  .fg{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 9px}
+  .fg>.m1{grid-column:span 1}.fg>.m2{grid-column:1/-1}
+  .seg button{padding:9px 10px}.seg button b{font-size:13.5px}
+}
 </style>
 </head>
 <body oncontextmenu="return false" ondragstart="return false">
@@ -185,18 +194,25 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
       <input type="file" id="impFile" accept="application/json,.json" style="display:none" onchange="importProfiles(this)">
     </div>
 
-    <div class="form-grid">
-      <div class="fld" style="grid-column:span 2"><label>🌏 จังหวัดเกิด</label><select id="province" onchange="applyProvince();updateConfirm()"></select></div>
-      <div class="fld"><label>📆 วันที่</label><input type="number" id="bd" value="1" min="1" max="31" oninput="updateConfirm()"></div>
-      <div class="fld"><label>📅 เดือน</label><input type="number" id="bm" value="1" min="1" max="12" oninput="updateConfirm()"></div>
-      <div class="fld"><label>🗓️ ปี ค.ศ.</label><input type="number" id="by" value="2000" oninput="updateConfirm()"></div>
-      <div class="fld"><label>⏰ เวลาตกฟาก (24 ชม.)</label><input type="text" id="bt" value="09:00" inputmode="numeric" maxlength="5" placeholder="ชม:นาที เช่น 14:30" autocomplete="off" oninput="fmtTimeInput(this);updateConfirm()" onblur="normTimeInput(this);updateConfirm()"></div>
-      <div class="fld"><label>🚻 เพศกำเนิด</label><select id="gender" onchange="updateConfirm()"><option value="M">ชาย</option><option value="F">หญิง</option></select></div>
-      <div class="fld"><label>📍 ละติจูด</label><input type="text" id="lat" readonly></div>
-      <div class="fld"><label>📍 ลองจิจูด</label><input type="text" id="lon" readonly></div>
-      <div class="fld"><label>🕰️ Time Zone</label><input type="text" id="tz" value="+7 (ประเทศไทย)" readonly></div>
-      <div class="fld span-all"><label>🧮 การคำนวณเวลา</label><div class="trow"><select id="tmode" onchange="updateConfirm()"><option value="solar">☀️ เวลาสุริยะจริง</option><option value="clock">🕐 เวลานาฬิกาตรง ๆ (+7)</option></select><div class="solarbox" id="solarBox" aria-live="polite"></div></div></div>
-      <div class="fld" style="grid-column:span 2"><button class="wide" onclick="calculateBazi()">🔮 วิเคราะห์ดวงชะตา</button></div>
+    <div class="fg">
+      <div class="fld d2 m2"><label>🌏 จังหวัดเกิด</label><select id="province" onchange="applyProvince();updateConfirm()"></select></div>
+      <div class="fld d1 m1"><label>📆 วันที่</label><input type="number" id="bd" value="1" min="1" max="31" oninput="updateConfirm()"></div>
+      <div class="fld d1 m1"><label>📅 เดือน</label><input type="number" id="bm" value="1" min="1" max="12" oninput="updateConfirm()"></div>
+      <div class="fld d1 m1"><label>🗓️ ปี ค.ศ.</label><input type="number" id="by" value="2000" oninput="updateConfirm()"></div>
+      <div class="fld d1 m1"><label>⏰ เวลาตกฟาก (24 ชม.)</label><input type="text" id="bt" value="09:00" inputmode="numeric" maxlength="5" placeholder="ชม:นาที เช่น 14:30" autocomplete="off" oninput="fmtTimeInput(this);updateConfirm()" onblur="normTimeInput(this);updateConfirm()"></div>
+      <div class="fld d1 m2"><label>🚻 เพศกำเนิด</label><select id="gender" onchange="updateConfirm()"><option value="M">ชาย</option><option value="F">หญิง</option></select></div>
+      <div class="fld d1 m1"><label>📍 ละติจูด</label><input type="text" id="lat" readonly></div>
+      <div class="fld d1 m1"><label>📍 ลองจิจูด</label><input type="text" id="lon" readonly></div>
+      <div class="fld d3 m2"><label>🕰️ Time Zone</label><input type="text" id="tz" value="+7 (ประเทศไทย)" readonly></div>
+      <div class="fld d6 m2"><label>🧮 การคำนวณเวลา</label>
+        <select id="tmode" style="display:none" onchange="updateConfirm()"><option value="solar">☀️ เวลาสุริยะจริงเต็มรูปแบบ (ลองจิจูด + EoT)</option><option value="clock">🕐 เวลานาฬิกาตรง ๆ (+7)</option></select>
+        <div class="seg" id="tmodeSeg" role="group" aria-label="การคำนวณเวลา">
+          <button type="button" data-v="solar" onclick="setTmode('solar')"><b>☀️ เวลาสุริยะจริง</b><span>ลองจิจูด + EoT (แนะนำ)</span></button>
+          <button type="button" data-v="clock" onclick="setTmode('clock')"><b>🕐 เวลานาฬิกา</b><span>ตรง ๆ (+7)</span></button>
+        </div>
+        <div class="tmnote" id="tmodeHint"></div>
+      </div>
+      <div class="fld d6 m2"><button class="wide" onclick="calculateBazi()">🔮 วิเคราะห์ดวงชะตา</button></div>
     </div>
     <div class="confirm" id="confirmLine">📋 …</div>
     <div class="savebar">
@@ -1032,6 +1048,8 @@ function eotMin(doy){const B=2*Math.PI*(doy-81)/364;return 9.87*Math.sin(2*B)-7.
 const sIdx=ch=>STEMS.indexOf(ch);
 
 function getTimeMode(){const e=document.getElementById('tmode');return e&&e.value==='clock'?'clock':'solar';}
+function setTmode(v){const e=document.getElementById('tmode');if(e){e.value=v==='clock'?'clock':'solar';}updateConfirm();}
+function syncTmodeUI(){const m=getTimeMode();document.querySelectorAll('#tmodeSeg button').forEach(b=>{const on=b.dataset.v===m;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');});}
 /* ชั่วโมงที่ต้องบวกเพิ่มจากเวลานาฬิกา เพื่อให้เป็นเวลาสุริยะจริง = ผลต่างลองจิจูดจากเส้นเมริเดียนของไทม์โซน (4 นาที/องศา) + Equation of Time
    โหมด 'clock' = ใช้เวลานาฬิกาตรง ๆ ไม่ปรับ */
 function timeCorr(y,mo,d,clock,lon,tz,mode){
@@ -1232,12 +1250,12 @@ function normTimeInput(el){ /* เมื่อพิมพ์เสร็จ: 9:
   if(t)el.value=String(t.h).padStart(2,'0')+':'+String(t.m).padStart(2,'0');
 }
 function updateConfirm(){
+  syncTmodeUI();
   const g=id=>+document.getElementById(id).value;
   const d=g('bd'), m=g('bm'), y=g('by');
   const tm=parseTimeStr(document.getElementById('bt').value);
   const h=tm?tm.h:0, mi=tm?tm.m:0;
   const el=document.getElementById('confirmLine');
-  const sb0=document.getElementById('solarBox');if(sb0)sb0.innerHTML='';
   const cur=activeProfile();
   const who=cur?`👥 <b>${esc(cur.name)}</b> · `:'';
   if(!y||m<1||m>12||d<1||d>31){el.innerHTML=who+'⚠️ กรุณากรอกวันเดือนปีให้ถูกต้อง';return;}
@@ -1248,28 +1266,21 @@ function updateConfirm(){
   const loc=currentLatLon();
   const genderTxt=document.getElementById('gender').value==='M'?'ชาย':'หญิง';
   const tmode=getTimeMode(), cl=h+mi/60, cr=timeCorr(y,m,d,cl,loc.lon,TZ_FIXED,tmode);
-  const hh=v=>String(Math.floor(v/60)).padStart(2,'0')+':'+String(v%60).padStart(2,'0');
-  const sgn=v=>(v>=0?'+':'−')+Math.abs(v);
-  const used=cl+cr;                                   /* เวลาที่ใช้จริงในการคำนวณเสาเวลา/เสาวัน (ชม.) */
-  const usedMin=Math.round(mod(used,24)*60)%1440;
-  const dayTag=used<0?'<span class="tag">วันก่อนหน้า</span>':used>=24?'<span class="tag">วันถัดไป</span>':'';
-  const pShift=Math.floor((used+1)/24);               /* ตรงกับ dayShift ใน getPillars (เปลี่ยนเสาวันที่ 23:00) */
-  const pNote=pShift>0?'เลย 23:00 → เสาวันนับเป็น<span class="tag">วันถัดไป</span>':pShift<0?'ก่อน 23:00 ของวันก่อน → เสาวันนับเป็น<span class="tag">วันก่อนหน้า</span>':'';
-  let sbHTML;
+  let tmTxt, tmHint;
   if(tmode==='clock'){
-    sbHTML='<div class="sb-note" style="margin-top:0">🕐 ใช้เวลานาฬิกา +7 ตรง ๆ <b>'+hh(usedMin)+' น.</b> · ไม่ปรับลองจิจูด/EoT'+(pNote?'<br>'+pNote:'')+'</div>';
+    tmTxt='🕐 ใช้<b>เวลานาฬิกาตรง ๆ</b> (ไม่ปรับลองจิจูด/EoT)';
+    tmHint='ใช้เวลานาฬิกา +7 ตรง ๆ ไม่ปรับลองจิจูด/EoT · กระทบเสาวัน/เสาเวลา';
   }else{
-    const dm=Math.round(cr*60), lonM=Math.round((loc.lon-TZ_FIXED*15)*4), eotM=dm-lonM;
-    sbHTML='<div class="sb-flow">'+
-      '<div class="sb-t"><small>🕐 นาฬิกา</small><b>'+hh(Math.round(cl*60))+'</b></div><div class="sb-ar">→</div>'+
-      '<div class="sb-t"><small>ปรับ (นาที)</small><b>'+sgn(dm)+'</b></div><div class="sb-ar">→</div>'+
-      '<div class="sb-t main"><small>☀️ สุริยะจริง</small><b>'+hh(usedMin)+'</b></div></div>'+
-      '<div class="sb-note">ลองจิจูด '+sgn(lonM)+' นาที · Equation of Time '+sgn(eotM)+' นาที'+(dayTag?'<br>เวลาสุริยะตกเป็น'+dayTag:'')+(pNote?'<br>'+pNote:'')+'</div>';
+    const sm=Math.round(mod(cl+cr,24)*60)%1440, dd=(cl+cr)<0?' (ของวันก่อนหน้า)':(cl+cr)>=24?' (ของวันถัดไป)':'';
+    const dm=Math.round(cr*60);
+    tmTxt='☀️ เวลาสุริยะจริง <b>'+String(Math.floor(sm/60)).padStart(2,'0')+':'+String(sm%60).padStart(2,'0')+' น.</b>'+dd+' · ปรับ '+(dm>=0?'+':'−')+Math.abs(dm)+' นาที';
+    tmHint='ปรับตามลองจิจูดจังหวัด + Equation of Time · กระทบเสาวัน/เสาเวลา · ลัคนาใช้พิกัดจริงเสมอ';
   }
-  const sbEl=document.getElementById('solarBox');if(sbEl)sbEl.innerHTML=sbHTML;
+  const hintEl=document.getElementById('tmodeHint');if(hintEl)hintEl.textContent=tmHint;
   el.innerHTML=who+`📋 <b>ยืนยันข้อมูล:</b> เพศ<b>${genderTxt}</b> เกิด<b>วัน${TH_DOW[dt.getDay()]}</b> ที่ <b>${d} ${TH_MON[m-1]} ค.ศ. ${y}</b> `+
    `เวลาตกฟาก <b>${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')} น.</b> `+
-   `ณ <b>จังหวัด${loc.name}</b> · ละติจูด <b>${loc.lat.toFixed(4)}°</b> · ลองจิจูด <b>${loc.lon.toFixed(4)}°</b> · ไทม์โซน <b>+7 (ประเทศไทย)</b>`;
+   `ณ <b>จังหวัด${loc.name}</b> · ละติจูด <b>${loc.lat.toFixed(4)}°</b> · ลองจิจูด <b>${loc.lon.toFixed(4)}°</b> · ไทม์โซน <b>+7 (ประเทศไทย)</b>`+
+   `<div class="tmline">${tmTxt}</div>`;
 }
 function pillarHTML(i,P,dmIdx,isDay){
   document.getElementById('p'+i).textContent=P.stem+P.branch;

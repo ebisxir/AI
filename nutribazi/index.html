@@ -4,11 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🀄 BaZi & โภชนาการธาตุ + แอมเวย์ 💊</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root{--primary:#2c3e50;--secondary:#27ae60;--bg:#f4f7f6;--card:#fff;}
 *{box-sizing:border-box}
-body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:#333;margin:0;padding:18px;}
+body{font-family:'Sarabun','Segoe UI',Tahoma,sans-serif;background:var(--bg);color:#333;margin:0;padding:18px;}
 .container{max-width:960px;margin:0 auto}
 h1{text-align:center;color:var(--primary)}
 h2{color:var(--primary);border-bottom:2px dashed #ddd;padding-bottom:8px}
@@ -39,42 +40,40 @@ th{background:#f3f6f9}
 ul{margin:8px 0 0 0;padding-left:22px}
 li{margin-bottom:5px}
 .note{font-size:12.5px;color:#888;margin-top:12px}
+input,select,button{font-family:inherit;font-size:16px}
+.dmy{display:grid;grid-template-columns:1fr 1.7fr 1.3fr;gap:8px}
+.full{grid-column:1/-1}
+.geo{font-size:13.5px;color:#2471a3;margin-top:6px}
+.acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.acts button{margin-top:0}
+.b2{background:#06c755}.b2:hover{background:#05a647}.b3{background:#2c3e50}
+@media(max-width:600px){body{padding:10px}.card{padding:14px}h1{font-size:21px}h2{font-size:18px}.pillars{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr 1fr}table{display:block;overflow-x:auto}}
+@media print{body{background:#fff;padding:0}.noprint,#inp{display:none!important}.card{box-shadow:none;break-inside:avoid;border:1px solid #ddd}}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>🀄 เครื่องคำนวณดวงจีน BaZi & โภชนาการธาตุ 🥗💊</h1>
 
-<div class="card">
+<div class="card" id="inp">
   <h2>👤 1. ข้อมูลส่วนบุคคล</h2>
   <div class="grid">
-    <div><label>📅 ปีเกิด (ค.ศ. หรือ พ.ศ.)</label><input type="number" id="yy" value="2000" oninput="dow()"></div>
-    <div><label>🗓️ เดือนเกิด</label>
-      <select id="mm" onchange="dow()">
-        <option value="1" selected>1️⃣ มกราคม</option><option value="2">2️⃣ กุมภาพันธ์</option>
-        <option value="3">3️⃣ มีนาคม</option><option value="4">4️⃣ เมษายน</option>
-        <option value="5">5️⃣ พฤษภาคม</option><option value="6">6️⃣ มิถุนายน</option>
-        <option value="7">7️⃣ กรกฎาคม</option><option value="8">8️⃣ สิงหาคม</option>
-        <option value="9">9️⃣ กันยายน</option><option value="10">🔟 ตุลาคม</option>
-        <option value="11">1️⃣1️⃣ พฤศจิกายน</option><option value="12">1️⃣2️⃣ ธันวาคม</option>
-      </select></div>
-    <div><label>📆 วันที่เกิด</label><input type="number" id="dd" value="1" min="1" max="31" oninput="dow()"></div>
+    <div class="full"><label>📅 วัน / เดือน / ปีเกิด (ปี พ.ศ. หรือ ค.ศ. ก็ได้)</label>
+      <div class="dmy"><input type="number" id="dd" value="1" min="1" max="31" placeholder="วัน" oninput="dow()"><select id="mm" onchange="dow()">
+        <option value="1" selected>มกราคม</option><option value="2">กุมภาพันธ์</option>
+        <option value="3">มีนาคม</option><option value="4">เมษายน</option>
+        <option value="5">พฤษภาคม</option><option value="6">มิถุนายน</option>
+        <option value="7">กรกฎาคม</option><option value="8">สิงหาคม</option>
+        <option value="9">กันยายน</option><option value="10">ตุลาคม</option>
+        <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+      </select><input type="number" id="yy" value="2000" placeholder="ปี" oninput="dow()"></div></div>
     <div><label>⏰ เวลาเกิด (นาฬิกาท้องถิ่น)</label><input type="time" id="tt" value="12:00"></div>
     <div><label>⚧️ เพศ</label><select id="sex"><option value="M">👨 ชาย</option><option value="F">👩 หญิง</option></select></div>
-    <div><label>🌏 เขตเวลาที่เกิด</label>
-      <select id="tz">
-        <option value="7" selected>🇹🇭 ไทย / เวียดนาม (UTC+7)</option>
-        <option value="8">🇨🇳 จีน / ไต้หวัน / สิงคโปร์ (UTC+8)</option>
-        <option value="9">🇯🇵 ญี่ปุ่น / เกาหลี (UTC+9)</option>
-        <option value="0">🌐 UTC+0</option>
-        <option value="-5">🇺🇸 สหรัฐฯ ตะวันออก (UTC-5)</option>
-      </select></div>
-    <div><label>📍 ลองจิจูดที่เกิด (กรุงเทพฯ ≈ 100.5)</label><input type="number" id="lon" value="100.5" step="0.01"></div>
-    <div><label>🔧 ตัวเลือกขั้นสูง</label>
-      <select id="adv">
-        <option value="1" selected>✅ ใช้ True Solar Time เต็มรูปแบบ</option>
-        <option value="0">🕒 ใช้เวลานาฬิกาตรง ๆ</option>
-      </select></div>
+    <div class="full"><label>🗺️ จังหวัดที่เกิด (ครบ 77 จังหวัด)</label><select id="prov" onchange="geo()"></select>
+      <div class="geo" id="geobox"></div></div>
+    <div class="full"><label>🔧 การคำนวณเวลา</label>
+      <select id="adv"><option value="1" selected>✅ ใช้ True Solar Time เต็มรูปแบบ</option><option value="0">🕒 ใช้เวลานาฬิกาตรง ๆ</option></select>
+      <div class="geo">🌟 ระบบคำนวณ <b>ลัคนา (ศาสตร์ไทย)</b> จากเวลาเกิดและพิกัดจังหวัดให้อัตโนมัติ</div></div>
   </div>
   <div class="check" id="dowbox">📅 กำลังตรวจสอบวัน...</div>
   <button onclick="run()">🔮 คำนวณดวงชะตา & แผนสุขภาพ 🍀</button>
@@ -108,8 +107,13 @@ li{margin-bottom:5px}
   <div class="card">
     <h2>💊 5. อาหารเสริมแอมเวย์ที่เหมาะกับธาตุของคุณ</h2>
     <div id="supp"></div>
-    <p class="note">⚠️ ข้อมูลนี้เป็นการจับคู่เชิงสุขภาพองค์รวมตามหลักธาตุ ไม่ใช่คำวินิจฉัยหรือคำแนะนำทางการแพทย์ หากมีโรคประจำตัว ตั้งครรภ์ หรือใช้ยาอยู่ ควรปรึกษาแพทย์/เภสัชกรก่อนเสมอ 🩺</p>
+    <p class="note">⚠️ ข้อมูลนี้เป็นการจับคู่เชิงสุขภาพองค์รวมตามหลักธาตุ ไม่ใช่คำวินิจฉัยหรือคำแนะนำทางการแพทย์ หากมีโรคประจำตัว ตั้งครรภ์ หรือใช้ยาอยู่ ควรปรึกษาแพทย์/เภสัชกรก่อนเสมอ 🩺<br>✅ = ส่วนประกอบตรงกับหน้าสินค้า/ข้อมูลทางการของแอมเวย์ที่ตรวจพบ · ℹ️ = ข้อมูลทั่วไปของสูตรนี้ ควรเทียบกับฉลากบนผลิตภัณฑ์จริงอีกครั้ง</p>
   </div>
+  <div class="card noprint"><h2>📤 ส่งออก</h2><div class="acts">
+    <button class="b3" onclick="pdf()">📄 บันทึกเป็น PDF</button>
+    <button class="b2" onclick="cp()">💬 คัดลอกเพื่อส่ง LINE</button>
+    <button onclick="ln()">📲 เปิด LINE แชร์ข้อความ</button></div>
+    <div class="geo" id="cpmsg"></div></div>
 
 </div>
 </div>
@@ -203,20 +207,35 @@ bad:'เค็มจัด/โซเดียมสูง 🧂 น้ำแข�
 
 /* ---------- แอมเวย์ ---------- */
 const SUP=[
-{n:'ดับเบิ้ลเอ็กซ์',e:'🌈',t:['base'],w:'วิตามิน–เกลือแร่–ไฟโตนิวเทรียนท์ครบถ้วน เป็น "ฐานราก" ปรับสมดุลทั้ง 5 ธาตุ ทุกดวงชะตาทานได้'},
-{n:'ลิวิท็อกซ์',e:'🍃',t:['wood','wood-low'],w:'ดูแลตับ–ถุงน้ำดี (ธาตุไม้) ช่วยกระบวนการล้างพิษ เหมาะเมื่อธาตุไม้พร่องหรือตับรับภาระหนัก'},
-{n:'บีกิน',e:'⚡',t:['wood','fire','wood-low'],w:'วิตามินบีรวม ดูแลระบบประสาทและการสร้างพลังงาน เหมาะกับคนเครียดง่าย อ่อนเพลีย ธาตุไม้/ไฟพร่อง'},
-{n:'เลซิตินอี',e:'🧠',t:['wood','water'],w:'เลซิติน + วิตามินอี ดูแลไขมันในตับ บำรุงสมองและสมดุลฮอร์โมน เชื่อมธาตุไม้–น้ำ'},
-{n:'โคเอนไซม์คิวเท็น',e:'❤️',t:['fire','fire-low'],w:'บำรุงหัวใจและพลังงานระดับเซลล์ เหมาะเมื่อธาตุไฟพร่อง เหนื่อยง่าย หัวใจทำงานหนัก'},
-{n:'ทริปเปิ้ลโอเมก้า',e:'🐟',t:['fire','water'],w:'โอเมก้า 3-6-9 ลดการอักเสบ บำรุงหัวใจ สมอง ข้อต่อ และหนุนพลังไต (ธาตุน้ำ)'},
-{n:'กระเทียม',e:'🧄',t:['metal','fire','metal-low'],w:'ดูแลปอดและภูมิคุ้มกัน (ธาตุทอง) พร้อมช่วยการไหลเวียนเลือด เหมาะกับคนเป็นหวัดง่าย ภูมิแพ้'},
-{n:'เห็ดหลินจือพลัส',e:'🍄',t:['metal','water','metal-low'],w:'เสริมภูมิคุ้มกันและช่วยให้ร่างกายปรับตัวกับความเครียด หนุนธาตุทองและพลังสำรองของไต'},
-{n:'โพรไบโอติก',e:'🦠',t:['earth','earth-low'],w:'จุลินทรีย์ดี ดูแลม้าม–กระเพาะ (ธาตุดิน) ปรับสมดุลลำไส้ ลดท้องอืดแน่น'},
-{n:'โพสต์บี',e:'🛡️',t:['earth','metal'],w:'โพสต์ไบโอติก เสริมเกราะผนังลำไส้และภูมิคุ้มกัน เชื่อมธาตุดิน–ทองให้ทำงานประสานกัน'},
-{n:'ไฟเบอร์พลัส',e:'🌾',t:['earth-high','metal','metal-low'],w:'ใยอาหาร ช่วยระบายของเสียและคุมน้ำตาล เหมาะเมื่อธาตุดินมากเกิน (สะสม/อืด) หรือลำไส้ใหญ่ทำงานไม่คล่อง'},
-{n:'กรีนทีพลัส',e:'🍵',t:['fire-high','earth-high'],w:'ชาเขียวสกัด ระบายความร้อนส่วนเกินและกระตุ้นการเผาผลาญ เหมาะเมื่อธาตุไฟ/ดินมากเกินจนร้อนในหรืออ้วนง่าย'},
-{n:'แคลแมกดี',e:'🦴',t:['water','water-low'],w:'แคลเซียม–แมกนีเซียม–วิตามินดี บำรุงกระดูกและฟัน ซึ่งเป็นอาณาเขตของธาตุน้ำ (ไต) โดยตรง'},
-{n:'จูจูบีไนท์',e:'🌙',t:['fire-high','water-low'],w:'พุทราจีนช่วยสงบจิตใจและการนอนหลับ เหมาะเมื่อธาตุไฟมากเกินจนใจร้อน หลับยาก หรือธาตุน้ำพร่อง'}];
+['ดับเบิ้ลเอ็กซ์','🌈',['base'],'วิตามิน–แร่ธาตุรวมพร้อมไฟโตนิวเทรียนท์ เป็น "ฐานราก" ปรับสมดุลทั้ง 5 ธาตุ ทุกดวงชะตาทานได้','วิตามินและแร่ธาตุรวม · ไฟโตนิวเทรียนท์เข้มข้นจากผัก ผลไม้ สมุนไพร · อะเซโรลาเชอร์รี่',0],
+['ลิวิท็อกซ์','🍃',['wood','wood-low'],'ดูแลตับ–ถุงน้ำดี (ธาตุไม้) ช่วยกระบวนการล้างพิษ เหมาะเมื่อธาตุไม้พร่องหรือตับรับภาระหนัก','สารสกัดสมุนไพรบำรุงตับ (กลุ่มมิลค์ทิสเซิล/ซิลิมาริน)',0],
+['กรีนทีพลัส','🍵',['fire-high','earth-high'],'ชาเขียวสกัดช่วยการเผาผลาญ ระบายความร้อนส่วนเกิน เหมาะเมื่อธาตุไฟ/ดินมากเกินจนร้อนในหรืออ้วนง่าย','สารสกัดชาเขียว (ปราศจากคาเฟอีน) · สารสกัดสาหร่ายสีน้ำตาล',1],
+['กระเทียม','🧄',['metal','fire','metal-low'],'ดูแลปอดและภูมิคุ้มกัน (ธาตุทอง) ช่วยการไหลเวียนเลือด เหมาะกับคนเป็นหวัดง่าย ภูมิแพ้','กระเทียมสกัดชนิดเคลือบเอนเทอริก (ลดกลิ่น) · สารออกฤทธิ์จากกระเทียม · เปปเปอร์มินต์',1],
+['แคลแมกดี','🦴',['water','water-low'],'บำรุงกระดูกและฟัน อาณาเขตของธาตุน้ำ (ไต) โดยตรง','แคลเซียม · แมกนีเซียม · วิตามินดี',1,'F'],
+['โพรไบโอติก','🦠',['earth','earth-low'],'จุลินทรีย์ดี ดูแลม้าม–กระเพาะ (ธาตุดิน) ปรับสมดุลลำไส้ ลดท้องอืดแน่น','จุลินทรีย์โพรไบโอติกสายพันธุ์ดี · ใยอาหารพรีไบโอติก',0],
+['ไฟเบอร์พลัส','🌾',['earth-high','metal','metal-low'],'ใยอาหาร ช่วยระบายของเสียและคุมน้ำตาล เหมาะเมื่อธาตุดินมากเกิน (อืด/สะสม) หรือลำไส้ใหญ่ไม่คล่อง','ใยอาหารละลายน้ำ · ใยอาหารจากพืช',0],
+['บีกิน','⚡',['wood','fire','wood-low'],'วิตามินบีรวม ดูแลระบบประสาทและพลังงาน เหมาะกับคนเครียดง่าย อ่อนเพลีย ธาตุไม้/ไฟพร่อง','วิตามินบีรวม (B1 B2 B6 B12 ไนอาซิน โฟเลต)',0],
+['เลซิตินอี','🧠',['wood','water'],'ดูแลไขมันในตับ บำรุงสมองและสมดุลฮอร์โมน เชื่อมธาตุไม้–น้ำ','เลซิติน (ฟอสฟาทิดิลโคลีน) · วิตามินอี',1],
+['โคเอนไซม์คิวเท็น','❤️',['fire','fire-low'],'บำรุงหัวใจและพลังงานระดับเซลล์ เหมาะเมื่อธาตุไฟพร่อง เหนื่อยง่าย','โคเอนไซม์คิวเท็น (CoQ10)',0,'M'],
+['ทริปเปิ้ลโอเมก้า','🐟',['fire','water'],'โอเมก้า 3-6-9 ลดการอักเสบ บำรุงหัวใจ สมอง ข้อต่อ หนุนพลังไต (ธาตุน้ำ)','น้ำมันปลา (EPA/DHA) · โอเมก้า 3-6-9',0,'M'],
+['โพสต์บี','🛡️',['earth','metal'],'โพสต์ไบโอติก เสริมเกราะผนังลำไส้และภูมิคุ้มกัน เชื่อมธาตุดิน–ทอง','โพสต์ไบโอติก (สารที่ได้จากการหมักของจุลินทรีย์ดี)',0],
+['เห็ดหลินจือพลัส','🍄',['metal','water','metal-low'],'เสริมภูมิคุ้มกันและการปรับตัวต่อความเครียด หนุนธาตุทองและพลังสำรองของไต','สารสกัดเห็ดหลินจือ (Ganoderma) · สารกลุ่มเบต้ากลูแคน',0],
+['จูจูบีไนท์','🌙',['fire-high','water-low'],'พุทราจีนช่วยสงบจิตใจและการนอนหลับ เหมาะเมื่อธาตุไฟมากเกินจนหลับยาก หรือธาตุน้ำพร่อง','สารสกัดเมล็ดพุทราจีน (Jujube seed) · กาบา (GABA)',1],
+['กิงโกะพลัส','🧩',['fire','water','fire-low'],'หนุนการไหลเวียนเลือดสู่สมอง ความจำและสมาธิ เชื่อมธาตุไฟ (หัวใจ/เลือด)–น้ำ (สมอง/ไต)','สารสกัดใบแป๊ะก๊วย (Ginkgo biloba)',0],
+['โสมไซบีเรียและกิงโกะ','🌿',['earth','metal','earth-low'],'เสริมพลังงานและความทนทานต่อความเครียด บำรุงลมปราณม้าม–ปอด และสมาธิ','สารสกัดโสมไซบีเรีย · สารสกัดใบแป๊ะก๊วย · อะเซโรลา',1],
+['ไอเบลนด์พลัส','👁️',['wood','wood-low'],'ดูแลดวงตา ซึ่งเชื่อมกับตับ (ธาตุไม้) เหมาะกับคนใช้สายตาหนัก หน้าจอนาน','สารสกัดบำรุงสายตา (กลุ่มลูทีน/บิลเบอร์รี่)',0],
+['ผักและผลไม้รวมเข้มข้น','🥦',['base','wood','fire'],'ผักผลไม้เข้มข้นเติมไฟโตนิวเทรียนท์ในวันที่กินผักไม่พอ ช่วยสมดุลธาตุไม้–ไฟ','ไลโคปีน · เฮสเพอริดิน · กรดเอลลาจิก (ตามสูตรสากล)',0,'M'],
+['พริมโรสพลัส','🌼',['wood','water','water-low'],'บำรุงสมดุลฮอร์โมนและผิวพรรณสตรี เชื่อมตับ (ไม้)–ไต (น้ำ) เหมาะกับผู้หญิงเป็นหลัก','น้ำมันอีฟนิงพริมโรส (กรดแกมมาลิโนเลนิก/GLA) · วิตามินอี',0,'F','F'],
+['คอลลาเจนพลัส','✨',['metal','water','metal-low'],'บำรุงผิวและข้อต่อ ผิวหนังเป็นอาณาเขตธาตุทอง (ปอด) และข้อ/กระดูกเกี่ยวกับน้ำ','คอลลาเจนเปปไทด์ · วิตามินซี',0,'F']
+].map(a=>({n:a[0],e:a[1],t:a[2],w:a[3],k:a[4],v:a[5],sx:a[6],only:a[7]}));
+const kk=x=>'<br><small>🔬 <b>ส่วนประกอบเด่น:</b> '+x.k+' '+(x.v?'✅':'ℹ️')+'</small>';
+const PV=('กรุงเทพมหานคร,13.76,100.50;กระบี่,8.09,98.91;กาญจนบุรี,14.02,99.53;กาฬสินธุ์,16.43,103.51;กำแพงเพชร,16.48,99.52;ขอนแก่น,16.44,102.84;จันทบุรี,12.61,102.10;ฉะเชิงเทรา,13.69,101.07;ชลบุรี,13.36,100.98;ชัยนาท,15.19,100.13;ชัยภูมิ,15.81,102.03;ชุมพร,10.50,99.18;เชียงราย,19.91,99.83;เชียงใหม่,18.79,98.98;ตรัง,7.56,99.61;ตราด,12.24,102.52;ตาก,16.88,99.13;นครนายก,14.21,101.21;นครปฐม,13.82,100.06;นครพนม,17.41,104.78;นครราชสีมา,14.97,102.10;นครศรีธรรมราช,8.43,99.96;นครสวรรค์,15.70,100.14;นนทบุรี,13.86,100.51;นราธิวาส,6.43,101.82;น่าน,18.78,100.78;บึงกาฬ,18.36,103.65;บุรีรัมย์,14.99,103.10;ปทุมธานี,14.02,100.53;ประจวบคีรีขันธ์,11.81,99.80;ปราจีนบุรี,14.05,101.37;ปัตตานี,6.87,101.25;พระนครศรีอยุธยา,14.35,100.57;พะเยา,19.17,99.90;พังงา,8.45,98.53;พัทลุง,7.62,100.08;พิจิตร,16.44,100.35;พิษณุโลก,16.82,100.26;เพชรบุรี,13.11,99.94;เพชรบูรณ์,16.42,101.16;แพร่,18.14,100.14;ภูเก็ต,7.88,98.39;มหาสารคาม,16.18,103.30;มุกดาหาร,16.54,104.72;แม่ฮ่องสอน,19.30,97.97;ยโสธร,15.79,104.15;ยะลา,6.54,101.28;ร้อยเอ็ด,16.05,103.65;ระนอง,9.96,98.64;ระยอง,12.68,101.28;ราชบุรี,13.53,99.82;ลพบุรี,14.80,100.65;ลำปาง,18.29,99.49;ลำพูน,18.58,99.01;เลย,17.49,101.72;ศรีสะเกษ,15.12,104.32;สกลนคร,17.16,104.15;สงขลา,7.20,100.60;สตูล,6.62,100.07;สมุทรปราการ,13.60,100.60;สมุทรสงคราม,13.41,100.00;สมุทรสาคร,13.55,100.27;สระแก้ว,13.82,102.07;สระบุรี,14.53,100.91;สิงห์บุรี,14.89,100.40;สุโขทัย,17.01,99.82;สุพรรณบุรี,14.47,100.12;สุราษฎร์ธานี,9.14,99.33;สุรินทร์,14.88,103.49;หนองคาย,17.88,102.74;หนองบัวลำภู,17.20,102.44;อ่างทอง,14.59,100.46;อำนาจเจริญ,15.86,104.63;อุดรธานี,17.41,102.79;อุตรดิตถ์,17.63,100.10;อุทัยธานี,15.38,100.02;อุบลราชธานี,15.24,104.85').split(';').map(x=>{const a=x.split(',');return[a[0],+a[1],+a[2]]});
+PV.sort((a,b)=>a[0].localeCompare(b[0],'th'));
+const RASI=[['เมษ','ไฟ','อังคาร'],['พฤษภ','ดิน','ศุกร์'],['เมถุน','ลม','พุธ'],['กรกฎ','น้ำ','จันทร์'],['สิงห์','ไฟ','อาทิตย์'],['กันย์','ดิน','พุธ'],['ตุล','ลม','ศุกร์'],['พิจิก','น้ำ','อังคาร'],['ธนู','ไฟ','พฤหัสบดี'],['มังกร','ดิน','เสาร์'],['กุมภ์','ลม','เสาร์'],['มีน','น้ำ','พฤหัสบดี']];
+const LGEL={'ไฟ':'fire','ดิน':'earth','ลม':'wood','น้ำ':'water'};
+function geo(){const p=PV[+document.getElementById('prov').value];
+ document.getElementById('geobox').innerHTML='📌 ละติจูด <b>'+p[1].toFixed(2)+'°N</b> · ลองจิจูด <b>'+p[2].toFixed(2)+'°E</b> (พิกัดตัวเมืองจังหวัด)';}
+(function(){const el=document.getElementById('prov');el.innerHTML=PV.map((p,i)=>'<option value="'+i+'"'+(p[0]==='กรุงเทพมหานคร'?' selected':'')+'>'+p[0]+'</option>').join('');geo();})();
 
 /* ---------- ดาราศาสตร์ ---------- */
 function jd(y,m,d,h){if(m<=2){y-=1;m+=12;}const a=Math.floor(y/100),b=2-a+Math.floor(a/4);
@@ -238,16 +257,21 @@ function dow(){
   el.innerHTML='⚠️ วันที่นี้ไม่มีอยู่จริงในปฏิทิน กรุณาตรวจสอบอีกครั้ง';el.style.background='#fdecea';el.style.color='#c0392b';return;}
  const D=['🔴 วันอาทิตย์','🟡 วันจันทร์','🩷 วันอังคาร','🟢 วันพุธ','🟠 วันพฤหัสบดี','🔵 วันศุกร์','🟣 วันเสาร์'];
  el.style.background='#e8f4fd';el.style.color='#2471a3';
- el.innerHTML='📅 ดับเบิ้ลเช็ค: วันที่ '+d+'/'+m+'/'+y+' (พ.ศ. '+(y+543)+') ตรงกับ <b>'+D[o.getDay()]+'</b> ✅';
+ el.innerHTML='📅 วันที่ '+d+'/'+m+'/'+y+' (พ.ศ. '+(y+543)+') ตรงกับ <b>'+D[o.getDay()]+'</b> ✅';
 }
 window.onload=dow;
+function pdf(){const t=document.title;document.title='BaZi_'+(new Date().toISOString().slice(0,10));window.print();document.title=t;}
+function cp(){const m=document.getElementById('cpmsg'),t=window.TXT||'';
+ const fb=()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}a.remove();m.textContent=ok?'✅ คัดลอกแล้ว นำไปวางในแชท LINE ได้เลย':'⚠️ คัดลอกไม่สำเร็จ กรุณากดค้างที่ข้อความแล้วคัดลอกเอง';};
+ if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(()=>m.textContent='✅ คัดลอกแล้ว นำไปวางในแชท LINE ได้เลย',fb);else fb();}
+function ln(){window.open('https://line.me/R/msg/text/?'+encodeURIComponent((window.TXT||'').slice(0,1800)),'_blank');}
 
 let chart=null;
 function run(){
  let Y=+document.getElementById('yy').value;if(Y>2400)Y-=543;
  const M=+document.getElementById('mm').value,D=+document.getElementById('dd').value;
  const[hh,mi]=document.getElementById('tt').value.split(':').map(Number);
- const TZ=+document.getElementById('tz').value,LON=+document.getElementById('lon').value;
+ const TZ=7,pv=PV[+document.getElementById('prov').value],LON=pv[2],LAT=pv[1];
  const ADV=document.getElementById('adv').value==='1',SEX=document.getElementById('sex').value;
 
  // True Solar Time
@@ -259,6 +283,10 @@ function run(){
 
  // เสาเดือน/ปี จากองศาสุริยะจริง
  const lam=sunLon(jd(Y,M,D,hh+mi/60-TZ));
+ const jdu=jd(Y,M,D,hh+mi/60-TZ),eps=(23.4393-0.013*(jdu-2451545)/36525)*Math.PI/180,la=LAT*Math.PI/180;
+ const ramc=mod(280.46061837+360.98564736629*(jdu-2451545)+LON,360)*Math.PI/180;
+ const ascT=mod(Math.atan2(Math.cos(ramc),-(Math.sin(ramc)*Math.cos(eps)+Math.tan(la)*Math.sin(eps)))*180/Math.PI,360);
+ const ascS=mod(ascT-(23.853+0.013969*(jdu-2451545)/365.25),360),LG=RASI[Math.floor(ascS/30)],lgE=LGEL[LG[1]];
  const k=Math.floor(mod(lam-315,360)/30);          // 0 = เดือนขาล(寅)
  const mB=mod(k+2,12);
  let bzY=Y; if(M<=2&&k>=10)bzY--;                  // ก่อนลี่ชุน = ปีก่อน
@@ -286,6 +314,7 @@ function run(){
  const sc={wood:0,fire:0,earth:0,metal:0,water:0};
  const sw=[1,1,1,1],bw=[1.0,1.5,1.2,1.0];
  P.forEach((p,i)=>{sc[S[p[0]].el]+=100*sw[i];B[p[1]].h.forEach(x=>sc[S[x[0]].el]+=x[1]*bw[i]);});
+ sc[lgE]+=60; // ลัคนาร่วมคำนวณ (ลม≈ไม้)
  const dmEl=S[dS].el,tot=Object.values(sc).reduce((a,b)=>a+b,0);
  const cat={friend:sc[dmEl],output:sc[GEN[dmEl]],wealth:sc[CTRL[dmEl]],power:sc[ctrlBy(dmEl)],res:sc[genBy(dmEl)]};
  const pc=o=>Math.round(o/tot*1000)/10;
@@ -309,13 +338,13 @@ function run(){
  if(cold&&!fav.includes('fire'))fav.unshift('fire');
  fav=[...new Set(fav)];
  const low=Object.entries(sc).filter(([,v])=>pc(v)<10).map(([e])=>e);
- const high=Object.entries(sc).filter(([,v])=>pc(v)>32).map(([e])=>e);
+ const high=Object.entries(sc).filter(([,v])=>pc(v)>32).map(([e])=>e).filter(e=>!fav.includes(e));
 
  document.getElementById('meta').innerHTML=
-  '⏱️ <b>เวลาสุริยะจริง (True Solar Time):</b> '+String(sol.getHours()).padStart(2,'0')+':'+String(sol.getMinutes()).padStart(2,'0')+
+  '📍 <b>จังหวัดเกิด:</b> '+pv[0]+' (ละติจูด '+LAT.toFixed(2)+'°N, ลองจิจูด '+LON.toFixed(2)+'°E)<br>⏱️ <b>เวลาสุริยะจริง (True Solar Time):</b> '+String(sol.getHours()).padStart(2,'0')+':'+String(sol.getMinutes()).padStart(2,'0')+
   ' (ปรับจากนาฬิกา '+(corr>=0?'+':'')+corr.toFixed(1)+' นาที)<br>'+
   '☀️ <b>องศาสุริยะขณะเกิด:</b> '+lam.toFixed(2)+'° → เดือนจีน '+B[mB].cn+' ('+B[mB].th+')<br>'+
-  '🀄 <b>ดวงชะตาเต็ม:</b> '+S[yS].cn+B[yB].cn+' / '+S[mS].cn+B[mB].cn+' / '+S[dS].cn+B[dB].cn+' / '+S[hS].cn+B[hB].cn+'<br>'+
+  '🌟 <b>ลัคนา (ศาสตร์ไทย):</b> ราศี'+LG[0]+' · ธาตุ'+LG[1]+' (ร่วมคำนวณ → '+EL[lgE].em+EL[lgE].th+') · เจ้าเรือนพระ'+LG[2]+' · องศานิรายนะ '+(ascS%30).toFixed(1)+'° ในราศี<br>'+'🀄 <b>ดวงชะตาเต็ม:</b> '+S[yS].cn+B[yB].cn+' / '+S[mS].cn+B[mB].cn+' / '+S[dS].cn+B[dB].cn+' / '+S[hS].cn+B[hB].cn+'<br>'+
   '🧭 <b>ทิศทางวัยจร ('+(SEX==='M'?'👨 ชาย':'👩 หญิง')+'):</b> '+
   (((yS%2===0)&&SEX==='M')||((yS%2===1)&&SEX==='F')?'เดินหน้า ➡️ (順運)':'ถอยหลัง ⬅️ (逆運)')+
   '<br>🌡️ <b>ภูมิอากาศดวง:</b> '+(hot?'ร้อนแห้ง 🔥 ต้องการน้ำมาคลาย':cold?'หนาวเย็น ❄️ ต้องการไฟมาอุ่น':'อากาศกลาง ๆ 🌤️ สมดุลดี');
@@ -361,7 +390,7 @@ function run(){
  nut+='<div class="box food">✅ <b>ควรเน้น (เติมธาตุอุปถัมภ์)</b><ul>'+
   fav.map(e=>'<li>'+EL[e].em+' <b>ธาตุ'+EL[e].th+'</b> (รส'+FOOD[e].taste+') — '+FOOD[e].good+'<br><small>🫀 ดูแล: '+FOOD[e].organ+'</small></li>').join('')+'</ul></div>';
 
- const avoid=high.length?high:[dmEl];
+ const avoid=high.length?high:(strong?[dmEl]:[ctrlBy(dmEl)]);
  nut+='<div class="box warn">🚫 <b>ควรลด/ระวัง (ธาตุที่ล้นเกิน)</b><ul>'+
   avoid.map(e=>'<li>'+EL[e].em+' <b>ธาตุ'+EL[e].th+'ล้น</b> — '+FOOD[e].bad+'<br><small>⚠️ เสี่ยง: '+FOOD[e].organ+' ทำงานหนักเกินไป</small></li>').join('')+'</ul>'+
   (low.length?'<p>🕳️ ส่วนธาตุที่พร่อง ('+low.map(e=>EL[e].em+EL[e].th).join(', ')+') ควรเสริมเป็นพิเศษ เพราะมักเป็นจุดอ่อนด้านสุขภาพประจำตัว</p>':'')+'</div>';
@@ -370,6 +399,7 @@ function run(){
   (hot?'☀️ ดวงร้อน — ควรดื่มน้ำ 8-10 แก้ว/วัน 💦 เลี่ยงออกกำลังกลางแดดจัด เน้นช่วงเช้าหรือเย็น 🌅':
    cold?'❄️ ดวงเย็น — ควรรักษาความอบอุ่น 🧣 ดื่มน้ำอุ่น ออกกำลังให้เหงื่อออกสม่ำเสมอ 🏃':
    '🌤️ ดวงสมดุล — รักษาจังหวะชีวิตให้คงที่ นอน 22.00-23.00 น. คือทุนสุขภาพที่ดีที่สุด 😴')+'</div>';
+ nut+='<div class="box">'+(SEX==='F'?'👩 <b>มุมมองเพศหญิง:</b> เลือด–ตับ (ไม้) และไต (น้ำ) เกี่ยวข้องกับฮอร์โมน รอบเดือน และมวลกระดูก ควรใส่ใจธาตุเหล็ก โปรตีน แคลเซียม และอาหารบำรุงเลือด เช่น ถั่วดำ เห็ดหูหนูดำ งาดำ ผักใบเขียวเข้ม':'👨 <b>มุมมองเพศชาย:</b> ไต (น้ำ) เกี่ยวข้องกับฮอร์โมนเพศ ต่อมลูกหมาก และสมรรถภาพ ส่วนหัวใจ–หลอดเลือด (ไฟ) มักรับภาระสูง ควรเน้นโอเมก้า 3 ซิงค์ (หอยนางรม เมล็ดฟักทอง) มะเขือเทศ และลดแอลกอฮอล์')+((low.includes('wood')||low.includes('water'))?'<br>🕳️ ธาตุไม้/น้ำของคุณพร่อง จึงควรให้ความสำคัญด้านนี้เป็นพิเศษ':'')+'</div>';
  document.getElementById('nutri').innerHTML=nut;
 
  // จับคู่แอมเวย์
@@ -378,21 +408,27 @@ function run(){
  low.forEach(e=>{need.add(e);need.add(e+'-low');});
  high.forEach(e=>need.add(e+'-high'));
  if(!strong){need.add(genBy(dmEl));need.add(dmEl);}
- const picked=SUP.map(s=>({s,m:s.t.filter(t=>need.has(t)).length})).filter(x=>x.m>0).sort((a,b)=>b.m-a.m);
+ const picked=SUP.filter(s=>!s.only||s.only===SEX).map(s=>({s,m:s.t.filter(t=>need.has(t)).length+(s.sx===SEX?1:0)})).filter(x=>x.m>0).sort((a,b)=>b.m-a.m);
 
  let out='<p>🧭 เกณฑ์การจับคู่: ธาตุอุปถัมภ์ ('+fav.map(e=>EL[e].em+EL[e].th).join(', ')+')'+
   (low.length?' + ธาตุพร่อง ('+low.map(e=>EL[e].em+EL[e].th).join(', ')+')':'')+
   (high.length?' + ธาตุล้นที่ต้องระบาย ('+high.map(e=>EL[e].em+EL[e].th).join(', ')+')':'')+'</p>';
  out+='<div class="box supp"><b>⭐ แนะนำสำหรับคุณโดยเฉพาะ</b><ul>'+
-  picked.slice(0,6).map(x=>'<li>'+x.s.e+' <b>'+x.s.n+'</b> — '+x.s.w+'</li>').join('')+'</ul></div>';
+  picked.slice(0,6).map(x=>'<li>'+x.s.e+' <b>'+x.s.n+'</b> — '+x.s.w+kk(x.s)+'</li>').join('')+'</ul></div>';
  if(picked.length>6)
   out+='<div class="box"><b>➕ ทานเสริมได้ตามความเหมาะสม</b><ul>'+
-   picked.slice(6).map(x=>'<li>'+x.s.e+' <b>'+x.s.n+'</b> — '+x.s.w+'</li>').join('')+'</ul></div>';
+   picked.slice(6).map(x=>'<li>'+x.s.e+' <b>'+x.s.n+'</b> — '+x.s.w+kk(x.s)+'</li>').join('')+'</ul></div>';
  const rest=SUP.filter(s=>!picked.find(p=>p.s.n===s.n));
  if(rest.length)
   out+='<div class="box warn"><b>⏸️ ยังไม่จำเป็นในช่วงนี้ (ธาตุที่เกี่ยวข้องมีมากพอแล้ว)</b><ul>'+
    rest.map(s=>'<li>'+s.e+' '+s.n+'</li>').join('')+'</ul></div>';
  document.getElementById('supp').innerHTML=out;
+ const nm=e=>EL[e].em+EL[e].th,top=picked.slice(0,6);
+ window.TXT=['🀄 BaZi & โภชนาการธาตุ','📍 '+pv[0]+' | เกิด '+D+'/'+M+'/'+(Y+543)+' เวลา '+document.getElementById('tt').value+' น. ('+(SEX==='M'?'ชาย':'หญิง')+')',
+  '🌟 ลัคนา: ราศี'+LG[0]+' ธาตุ'+LG[1],'🀄 ดวง: '+S[yS].cn+B[yB].cn+' / '+S[mS].cn+B[mB].cn+' / '+S[dS].cn+B[dB].cn+' / '+S[hS].cn+B[hB].cn,
+  '⭐ ดิถี '+S[dS].cn+' '+nm(dmEl)+' — '+lvl+' ('+ratio+'%)','🍀 ธาตุอุปถัมภ์: '+fav.map(nm).join(', '),
+  '⚠️ ธาตุล้น: '+(high.length?high.map(nm).join(', '):'-')+' | 🕳️ ธาตุพร่อง: '+(low.length?low.map(nm).join(', '):'-'),'',
+  '🥗 อาหารเน้น:'].concat(fav.map(e=>'• '+nm(e)+': '+FOOD[e].good),['','💊 อาหารเสริมแนะนำ:'],top.map(x=>'• '+x.s.n+' ('+x.s.k+')'),['','⚠️ ข้อมูลเชิงสุขภาพองค์รวม ไม่ใช่คำวินิจฉัยทางการแพทย์ หากมีโรคประจำตัว/ตั้งครรภ์/ใช้ยา ควรปรึกษาแพทย์ก่อน']).join('\n');
 }
 </script>
 </body>

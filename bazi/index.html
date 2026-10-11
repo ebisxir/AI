@@ -182,6 +182,7 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
       <div class="fld"><label>📍 ละติจูด</label><input type="text" id="lat" readonly></div>
       <div class="fld"><label>📍 ลองจิจูด</label><input type="text" id="lon" readonly></div>
       <div class="fld"><label>🕰️ Time Zone</label><input type="text" id="tz" value="+7 (ประเทศไทย)" readonly></div>
+      <div class="fld" style="grid-column:span 2"><label>🧮 การคำนวณเวลา</label><select id="tmode" onchange="updateConfirm()"><option value="solar">☀️ เวลาสุริยะจริงเต็มรูปแบบ (ลองจิจูด + EoT)</option><option value="clock">🕐 เวลานาฬิกาตรง ๆ (+7)</option></select><div class="small" id="tmodeHint" style="margin-top:4px"></div></div>
       <div class="fld" style="grid-column:span 2"><button class="wide" onclick="calculateBazi()">🔮 วิเคราะห์ดวงชะตา</button></div>
     </div>
     <div class="confirm" id="confirmLine">📋 …</div>
@@ -647,7 +648,7 @@ async function exportKeys(){
 /* ============================================================
    SECTION 0.5 : MULTI-PROFILE (เก็บบนคลาวด์ผ่านแคชในหน่วยความจำ + คิวซิงก์)
    ============================================================ */
-const BF=['bd','bm','by','bt','province','gender'];
+const BF=['bd','bm','by','bt','province','gender','tmode'];
 let PROF=[], ACTIVE='';
 function getProfiles(){return PROF;}
 function setProfiles(a){PROF=a;queueSync();}
@@ -662,7 +663,7 @@ function migrateTime(o){/* ดวงเก่าที่บันทึกแ�
   return o;}
 function pickFields(src){src=migrateTime(src);const o={};BF.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!==''&&src[k]!==null)o[k]=String(src[k]).slice(0,40);});return o;}
 function applyFields(o){o=migrateTime(o);BF.forEach(id=>{if(o&&o[id]!==undefined&&o[id]!=='')document.getElementById(id).value=o[id];});applyProvince();}
-const DEFAULT_FIELDS={bd:'1',bm:'1',by:'1990',bt:'12:00',province:'0',gender:'M'};
+const DEFAULT_FIELDS={bd:'1',bm:'1',by:'1990',bt:'12:00',province:'0',gender:'M',tmode:'solar'};
 
 /* ---------- ข้อมูลเก่าที่ค้างในเครื่อง (localStorage รุ่นก่อน) นำขึ้นคลาวด์ครั้งเดียว ---------- */
 const legacyUser=()=>(ROLE==='admin'?'administrator':(CURRENT_USER||'guest')).trim().toLowerCase();
@@ -1003,24 +1004,38 @@ function jdn(y,m,d,h){
   const A=Math.floor(y/100),B=2-A+Math.floor(A/4);
   return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5+h/24;
 }
+/* ตำแหน่งดวงอาทิตย์ (ลองจิจูดสุริยวิถีปรากฏ, องศา) — Meeus "Astronomical Algorithms" บท 25 + แก้ aberration/nutation
+   แม่นระดับ ~0.005° (~10 นาทีของเวลา) ใช้หาจุดเปลี่ยนเสาเดือน/เสาปี (節氣) และอายุเริ่มดวงโคจร 10 ปี
+   เดิมใช้สูตร Schlyter แต่นับวันจาก J2000 (JD 2451545.0) แทนที่จะเป็น 0 ม.ค. 2000 (JD 2451543.5) ทำให้เวลา節氣ทุกจุดเลื่อนช้าไป 1.5 วัน */
 function sunLon(j){
-  const d=j-2451545.0;
-  const w=282.9404+4.70935e-5*d, M=mod(356.0470+0.9856002585*d,360), e=0.016709-1.151e-9*d;
-  const E=M+(180/Math.PI)*e*Math.sin(M*Math.PI/180);
-  const xv=Math.cos(E*Math.PI/180)-e, yv=Math.sin(E*Math.PI/180)*Math.sqrt(1-e*e);
-  return mod(Math.atan2(yv,xv)*180/Math.PI+w,360);
+  const T=(j+66/86400-2451545.0)/36525;      /* +66 วินาที ≈ ΔT (UT→TT) */
+  const L0=mod(280.46646+36000.76983*T+0.0003032*T*T,360);
+  const M=mod(357.52911+35999.05029*T-0.0001537*T*T,360)*Math.PI/180;
+  const C=(1.914602-0.004817*T-0.000014*T*T)*Math.sin(M)+(0.019993-0.000101*T)*Math.sin(2*M)+0.000289*Math.sin(3*M);
+  const om=(125.04-1934.136*T)*Math.PI/180;
+  return mod(L0+C-0.00569-0.00478*Math.sin(om),360);
 }
 function eotMin(doy){const B=2*Math.PI*(doy-81)/364;return 9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B);}
 const sIdx=ch=>STEMS.indexOf(ch);
 
-function getPillars(y,mo,d,hr,mi,lon,tz){
-  const clock=hr+mi/60;
+function getTimeMode(){const e=document.getElementById('tmode');return e&&e.value==='clock'?'clock':'solar';}
+/* ชั่วโมงที่ต้องบวกเพิ่มจากเวลานาฬิกา เพื่อให้เป็นเวลาสุริยะจริง = ผลต่างลองจิจูดจากเส้นเมริเดียนของไทม์โซน (4 นาที/องศา) + Equation of Time
+   โหมด 'clock' = ใช้เวลานาฬิกาตรง ๆ ไม่ปรับ */
+function timeCorr(y,mo,d,clock,lon,tz,mode){
+  if(mode==='clock')return 0;
   const jUT=jdn(y,mo,d,clock-tz);
   const doy=Math.floor(jUT-jdn(y,1,0,-tz));
-  const corr=(lon-tz*15)*4/60+eotMin(doy)/60;
+  return (lon-tz*15)*4/60+eotMin(doy)/60;
+}
+function getPillars(y,mo,d,hr,mi,lon,tz,mode){
+  mode=mode||getTimeMode();
+  const clock=hr+mi/60;
+  const jUT=jdn(y,mo,d,clock-tz);          /* ช่วงเวลาจริงสากล (UT) — เสาปี/เสาเดือนอิงตำแหน่งดวงอาทิตย์ ณ ขณะนี้ ไม่ขึ้นกับโหมดเวลา */
+  const corr=timeCorr(y,mo,d,clock,lon,tz,mode);
   const solarH=clock+corr;
-  let dayShift=0;
-  if(solarH>=23)dayShift=1; else if(solarH<0)dayShift=-1;
+  /* เสาวัน: เปลี่ยนวันที่ 23:00 (子初換日) → เลื่อนวันตามจำนวนวันเต็มของ (เวลาที่ใช้ + 1 ชม.)
+     เดิมเขียน solarH<0 → -1 ซึ่งผิดสำหรับช่วง 23:00–24:00 ของวันก่อนหน้า (ยังเป็นเสาวันของวันนี้) */
+  const dayShift=Math.floor((solarH+1)/24);
   const di=mod(Math.floor(jdn(y,mo,d,12)+0.5)+49+dayShift,60);
   const dS=di%10, dB=di%12;
   const sl=sunLon(jUT);
@@ -1218,8 +1233,20 @@ function updateConfirm(){
   if(!tm){el.innerHTML=who+'⚠️ กรุณากรอกเวลาตกฟากให้ถูกต้อง (ชม:นาที แบบ 24 ชม. เช่น 14:30)';return;}
   const loc=currentLatLon();
   const genderTxt=document.getElementById('gender').value==='M'?'ชาย':'หญิง';
+  const tmode=getTimeMode(), cl=h+mi/60, cr=timeCorr(y,m,d,cl,loc.lon,TZ_FIXED,tmode);
+  let tmTxt, tmHint;
+  if(tmode==='clock'){
+    tmTxt=' (ใช้เวลานาฬิกาตรง ๆ)';
+    tmHint='ใช้เวลานาฬิกา +7 ตรง ๆ ไม่ปรับลองจิจูด/EoT · กระทบเสาวัน/เสาเวลา';
+  }else{
+    const sm=Math.round(mod(cl+cr,24)*60)%1440, dd=(cl+cr)<0?' (ของวันก่อนหน้า)':(cl+cr)>=24?' (ของวันถัดไป)':'';
+    const dm=Math.round(cr*60);
+    tmTxt=' (เวลาสุริยะจริง <b>'+String(Math.floor(sm/60)).padStart(2,'0')+':'+String(sm%60).padStart(2,'0')+' น.</b>'+dd+' · '+(dm>=0?'+':'−')+Math.abs(dm)+' นาที)';
+    tmHint='ปรับตามลองจิจูดจังหวัด + Equation of Time · กระทบเสาวัน/เสาเวลา · ลัคนาใช้พิกัดจริงเสมอ';
+  }
+  const hintEl=document.getElementById('tmodeHint');if(hintEl)hintEl.textContent=tmHint;
   el.innerHTML=who+`📋 <b>ยืนยันข้อมูล:</b> เพศ<b>${genderTxt}</b> เกิด<b>วัน${TH_DOW[dt.getDay()]}</b> ที่ <b>${d} ${TH_MON[m-1]} ค.ศ. ${y}</b> `+
-   `เวลาตกฟาก <b>${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')} น.</b> `+
+   `เวลาตกฟาก <b>${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')} น.</b>${tmTxt} `+
    `ณ <b>จังหวัด${loc.name}</b> · ละติจูด <b>${loc.lat.toFixed(4)}°</b> · ลองจิจูด <b>${loc.lon.toFixed(4)}°</b> · ไทม์โซน <b>+7 (ประเทศไทย)</b>`;
 }
 function pillarHTML(i,P,dmIdx,isDay){
@@ -1469,9 +1496,20 @@ function lfLagna(LK){
 function lfLk(L,houses,pb,eb,qb){
   const raw=X=>{let hs=0;houses.forEach(x=>{hs+=x[1]*lfRel(X.lordL,X.lord(x[0]));});
     return 7*hs+(pb[X.lordL]||0)+(eb[X.sign.el]||0)+(qb[X.sign.q]||0);};
-  /* ปรับสมดุลให้ค่าเฉลี่ยของทั้ง 12 ลัคนา = 52 เพื่อไม่ให้หัวข้อใดได้คะแนนสูงหรือต่ำเกินจริงเพราะตารางถ่วงน้ำหนัก */
-  let mean=0;for(let i=0;i<12;i++)mean+=raw(lfLagna({idx:i}));mean/=12;
-  return lfCl(raw(L)-mean+52,8,92);
+  /* จัดอันดับลัคนานี้เทียบกับทั้ง 12 ลัคนา (z-score) — เดิมบวกลบแค่ค่าเฉลี่ยทำให้ช่วงคะแนนแคบ (35–71) ไม่มีฝั่งดีมาก/แย่จริง
+     ตอนนี้ค่าเฉลี่ย 12 ลัคนา = 50 และส่วนเบี่ยงเบนมาตรฐาน = 16 ทุกหัวข้อ */
+  const v=[];for(let i=0;i<12;i++)v.push(raw(lfLagna({idx:i})));
+  const mean=v.reduce((a,b)=>a+b,0)/12, sd=Math.sqrt(v.reduce((a,b)=>a+(b-mean)*(b-mean),0)/12)||1;
+  return lfCl(50+(raw(L)-mean)/sd*16,5,95);
+}
+/* ความสอดคล้องกับธาตุให้คุณ/ให้โทษ (喜用神/忌神): หมวดสิบเทพที่เป็นแกนของเรื่องนั้น ถ้าตรงกับธาตุที่ดวงต้องการ = เป็นคุณ ถ้าตรงธาตุให้โทษ = เป็นภาระ
+   (ตำราตัดสินคุณภาพด้วยทั้ง "มีมากน้อย" และ "เป็นคุณหรือโทษ") น้ำหนักเพิ่มตามความเด่นของหมวดนั้นในดวง */
+function lfYong(Z,cats){
+  const A=Z.A,M={เพื่อน:[A.dm,Z.fr],แสดงออก:[A.out,Z.out],ทรัพย์:[A.wea,Z.wea],อำนาจ:[A.pow,Z.pow],ทรัพยากร:[A.res,Z.res]};
+  let s=0;
+  cats.forEach(c=>{const e=M[c][0],w=Math.max(.5,Math.min(1.6,M[c][1]/18)),fi=A.fav.indexOf(e);
+    if(fi>=0)s+=(fi===0?7:5)*w;else if(A.unfav.includes(e))s-=6*w;});
+  return s/Math.sqrt(cats.length);
 }
 function lfHouseEv(L,hs){
   return hs.map(h=>'ภพ'+h+' '+LF_HOUSE[h]+' ราศี'+L.sg(h).n+' ('+L.lord(h)+') '+LF_RELTXT[lfRel(L.lordL,L.lord(h))]).join(' · ');
@@ -1519,12 +1557,22 @@ function lfBlend(b,l,tx){
   if(!hb&&hl)return h+'BaZi ยังไม่หนุน แต่ลัคนาช่วยเสริม — '+tx[2];
   return h+'ทั้งสองศาสตร์ยังไม่ชี้ว่าเป็นจุดแข็ง — '+tx[3];
 }
-function lfLevel(t){return t>=72?0:t>=58?1:t>=43?2:t>=28?3:4;}
+function lfLevel(t){return t>=8?0:t>=6.5?1:t>=4.5?2:t>=3?3:4;}  /* เกณฑ์บนสเกลเต็ม 10 */
 const LF_LV=[['โดดเด่น','#15803d'],['ค่อนข้างดี','#16a34a'],['ปานกลาง','#ca8a04'],['ต้องใส่ใจ','#ea580c'],['ต้องวางระบบ','#b91c1c']];
+/* ---------- แปลงเป็นสเกลเต็ม 10 ----------
+   คะแนนดิบของแต่ละหัวข้อมีค่าเฉลี่ย/การกระจายต่างกัน และการเฉลี่ย BaZi 60% + ลัคนา 40% ทำให้ทุกดวงยุบเข้าหาค่ากลาง
+   จึงแปลงเป็น z-score เทียบกับดวงทั่วไป (จำลอง 20,000 ดวง) แล้วขยายเป็น 5.5 ± 1.9 ต่อ 1 SD → กระจายจริง ดี/กลาง/ควรระวัง
+   LF_CAL: bm,bs = ค่าเฉลี่ย/SD ของคะแนน BaZi ดิบ · tm,ts = ค่าเฉลี่ย/SD ของคะแนนรวมดิบ (0.6·BaZi + 0.4·ลัคนา)
+   (ถ้าแก้สูตรคะแนนของหัวข้อใด ต้องจำลองและปรับค่าชุดนี้ใหม่) */
+const LF_CAL={"fin":{"bm":47.49,"bs":14.85,"tm":48.32,"ts":10.95},"job":{"bm":52.41,"bs":11.8,"tm":51.23,"ts":9.57},"aut":{"bm":53.94,"bs":14.11,"tm":52.11,"ts":10.63},"fri":{"bm":45.89,"bs":14.36,"tm":47.84,"ts":10.71},"luck":{"bm":51.76,"bs":21.32,"tm":51.02,"ts":14.21},"vas":{"bm":53.3,"bs":11.99,"tm":52.08,"ts":9.63},"wis":{"bm":46.58,"bs":9.24,"tm":48.1,"ts":8.56},"emo":{"bm":52.13,"bs":10.62,"tm":51.39,"ts":9.04},"pat":{"bm":50.78,"bs":13.4,"tm":50.51,"ts":10.21}};
+const LF_S10=z=>Math.round(Math.max(1,Math.min(10,5.5+1.9*z))*10)/10;
 function lfMake(id,icon,title,sname,b,l,heads,points,ev,tip,tl){
-  const total=Math.round(b*0.6+l*0.4),lv=lfLevel(total),dd=Math.abs(b-l);
-  return {id,icon,title,sname,b,l,total,label:LF_LV[lv][0],color:LF_LV[lv][1],
-    agree:dd<=12?'🔗 สอดคล้องกัน':dd<=25?'↔️ ต่างกันเล็กน้อย':'⚡ ต่างกันมาก',
+  const C=LF_CAL[id]||{bm:50,bs:15,tm:50,ts:12};
+  const raw=b*0.6+l*0.4;
+  const b10=LF_S10((b-C.bm)/C.bs), l10=LF_S10((l-50)/16), total=LF_S10((raw-C.tm)/C.ts);
+  const lv=lfLevel(total),dd=Math.abs(b10-l10);
+  return {id,icon,title,sname,b:b10,l:l10,total,braw:b,lraw:l,raw,label:LF_LV[lv][0],color:LF_LV[lv][1],
+    agree:dd<=1.5?'🔗 สอดคล้องกัน':dd<=3?'↔️ ต่างกันเล็กน้อย':'⚡ ต่างกันมาก',
     headline:heads[lv],points,ev,tip,tl:tl||''};
 }
 function lfLuckNote(Z,cats){
@@ -1544,7 +1592,7 @@ function lfFinance(Z){
   let b=50+(wea-20)*1.1;
   if(fl.ssc)b+=7;if(st==='strong'&&wea>=15)b+=8;if(fl.cd)b-=10;if(st==='strong'&&wea<12&&out<14)b-=5;
   if(fl.bj)b-=9;if(g['劫財']>=12)b-=4;if(Z.stars.lu.length)b+=3;if(Z.dayMain==='ทรัพย์')b+=3;
-  b=lfCl(b);
+  b=lfCl(b+lfYong(Z,['ทรัพย์']));
   const l=lfLk(L,[[2,1],[11,.8],[5,.3]],{ศุกร์:8,พฤหัสบดี:8,พุธ:5,จันทร์:3,เสาร์:2,อังคาร:-2},{ดิน:5,ลม:2,น้ำ:1,ไฟ:-2},{สถิร:6,อุภัย:0,จร:-2});
   let inc;
   if(wea<10)inc='ธาตุทรัพย์ในดวงบางมาก รายได้ของคุณมักมาจาก "ทักษะ ความรู้ และความสัมพันธ์" มากกว่าการสะสมทรัพย์โดยตรง ควรมีระบบออมอัตโนมัติช่วย';
@@ -1607,7 +1655,7 @@ function lfCareer(Z){
   if(fl.gy)b+=8;if((st==='strong'&&pow>=15)||(st==='weak'&&res+fr>=45&&pow>=18))b+=6;
   if(st==='weak'&&pow>=32)b-=10;if(out>=18&&wea>=14)b+=5;if(Z.stars.ty.length)b+=3;
   if(['อำนาจ','ทรัพยากร','ทรัพย์'].includes(Z.monthCat))b+=3;if(Z.monthClash)b-=6;if(fl.sg)b-=6;
-  b=lfCl(b);
+  b=lfCl(b+lfYong(Z,['อำนาจ','ทรัพย์']));
   const l=lfLk(L,[[10,1],[6,.6],[2,.3]],{เสาร์:8,อาทิตย์:6,อังคาร:6,พฤหัสบดี:4,พุธ:4,ศุกร์:1,จันทร์:1},{ดิน:3,ไฟ:3,ลม:1,น้ำ:0},{จร:6,สถิร:4,อุภัย:0});
   const rk=lfFieldRank(Z),good=rk.slice(0,4),bad=rk.filter(x=>x.bz<0).sort((a,c)=>a.t-c.t).slice(0,3);
   if(bad.length<3)rk.slice().reverse().forEach(x=>{if(bad.length<3&&!bad.includes(x)&&x.t<0)bad.push(x);});
@@ -1639,7 +1687,7 @@ function lfAuthority(Z){
   if(fl.gy)b+=10;if(st==='strong'&&pow>=18)b+=8;if(st==='weak'&&pow>=30)b-=12;
   if(stars.jx.length)b+=6;if(stars.yr.length&&st!=='weak')b+=4;if(stars.ty.length)b+=4;if(stars.md.length||stars.td.length)b+=3;if(stars.hg.length)b+=2;
   if(out>pow+8&&!fl.gy)b-=4;if(['อำนาจ','ทรัพยากร'].includes(Z.monthCat))b+=3;
-  b=lfCl(b);
+  b=lfCl(b+lfYong(Z,['อำนาจ','ทรัพยากร']));
   const l=lfLk(L,[[10,.9],[9,.7],[5,.3]],LF_AUTH_PL,{ไฟ:5,ดิน:2,ลม:0,น้ำ:-1},{สถิร:5,จร:4,อุภัย:-2});
   if(L.sign.n==='สิงห์'){/* ราศีราชา */}
   const sc={
@@ -1679,7 +1727,7 @@ function lfFriends(Z){
   let b=50;
   b+=st==='weak'?(fr-20)*1.0:-(fr-20)*0.8;
   if(stars.ty.length)b+=5;if(Z.dayCombine)b+=4;if(Z.dayClash)b-=5;if(g['劫財']>=12&&st!=='weak')b-=4;if(res>=18)b+=2;
-  b=lfCl(b);
+  b=lfCl(b+lfYong(Z,['เพื่อน']));
   const l=lfLk(L,[[11,1],[3,.6],[7,.6]],{จันทร์:8,ศุกร์:8,พุธ:6,พฤหัสบดี:6,อาทิตย์:2,อังคาร:-3,เสาร์:-4},{ลม:6,น้ำ:3,ไฟ:2,ดิน:-1},{อุภัย:5,จร:3,สถิร:-1});
   const fav=[...new Set(A.fav)].slice(0,2),unf=[...new Set(A.unfav)].slice(0,2);
   const yb=P.year.bi,combo=BR_EMO[BRANCH.indexOf(COMBINE[P.year.branch])]+' '+BR_TH[BRANCH.indexOf(COMBINE[P.year.branch])];
@@ -1713,7 +1761,7 @@ function lfLuck(Z){
   let b=45+(g['偏財']-6)*2.2;
   if(out>=14&&wea>=14)b+=5;if(stars.ym.length)b+=3;if(sup>=44&&sup<=62)b+=4;if(st==='strong'&&g['偏財']>=8)b+=5;
   if(fl.bj)b-=10;if(fl.cd)b-=8;if(g['劫財']>=12)b-=3;
-  b=lfCl(b);
+  b=lfCl(b+lfYong(Z,['ทรัพย์','แสดงออก']));
   const l=lfLk(L,[[5,.9],[9,.7],[11,.7],[8,.4]],{พฤหัสบดี:10,ศุกร์:6,จันทร์:4,พุธ:2,อาทิตย์:2,อังคาร:0,เสาร์:-5},{ไฟ:4,น้ำ:3,ลม:2,ดิน:-2},{จร:3,อุภัย:2,สถิร:-1});
   let type;
   if(fl.bj||fl.cd)type='D';
@@ -1748,7 +1796,7 @@ function lfVasana(Z){
   const found=kinds.filter(k=>stars[k].length);
   let b=45+found.length*7+(stars.ty.length>1?4:0)+(res-20)*0.4+fam*3+(fl.gy?4:0);
   if(Z.ymClash)b-=5;
-  b=lfCl(b);
+  b=lfCl(b+lfYong(Z,['ทรัพยากร','อำนาจ']));
   const benefic={'พฤหัสบดี':10,'จันทร์':6,'ศุกร์':6,'อาทิตย์':5,'พุธ':2,'อังคาร':-2,'เสาร์':-3};
   const l=lfLk(L,[[9,1],[5,.8],[4,.3]],benefic,{ไฟ:2,น้ำ:2,ลม:1,ดิน:1},{});
   const sTxt=found.length?found.map(k=>'• <b>'+LF_STAR[k][0]+'</b> (พบที่'+lfWhere(stars[k])+') — '+LF_STAR[k][1]).join('<br>'):'• ไม่พบดาวคุ้มครองเด่นในดวง — วาสนาของคุณเป็นแบบ "สร้างเอง" และผลที่ได้จะเป็นของคุณเต็มที่';
@@ -1775,7 +1823,7 @@ function lfWisdom(Z){
   const {g,fr,out,wea,pow,res,st,L,stars,A}=Z;
   let b=45+(res-20)*0.6+(out-20)*0.5+(Z.water-20)*0.3;
   if(stars.wc.length)b+=6;if(stars.hg.length)b+=3;if(Z.fl.xs)b-=3;
-  b=lfCl(b);
+  b=lfCl(b+lfYong(Z,['ทรัพยากร','แสดงออก']));
   const l=lfLk(L,[[5,1],[3,.6],[9,.5],[4,.2]],{พุธ:12,พฤหัสบดี:10,เสาร์:4,จันทร์:3,อาทิตย์:4,ศุกร์:2,อังคาร:-1},{ลม:6,น้ำ:5,ไฟ:3,ดิน:1},{อุภัย:6,สถิร:2,จร:1});
   const sc={zy:g['正印'],py:g['偏印'],ss:g['食神'],sg:g['傷官'],pr:(wea+pow)*0.5};
   const TY={zy:['นักเรียนรู้เชิงระบบ','เรียนเป็นลำดับ เข้าใจเหตุผลลึก ชอบความรู้ที่มีที่มาที่ไป จำแม่น'],
@@ -1811,7 +1859,7 @@ function lfEmotion(Z){
   if(fire>=28)b-=(fire-26)*0.9;if(water>=30)b-=(water-28)*0.7;
   if(g['傷官']>=11)b-=5;if(pow>=28&&st==='weak')b-=8;if(res>=14&&res<=30)b+=4;if(g['食神']>=10)b+=4;
   if(fl.gy)b+=5;if(Z.dayClash)b-=6;if(Z.dayCombine)b+=3;if(st==='bal')b+=3;if(st==='weak'&&res<12)b-=4;
-  b=lfCl(b);
+  b=lfCl(b+lfYong(Z,['ทรัพยากร','แสดงออก']));
   const l=lfLk(L,[[4,1],[5,.4]],{เสาร์:6,พฤหัสบดี:6,ศุกร์:4,พุธ:1,อาทิตย์:2,อังคาร:-8,จันทร์:-3},{ดิน:8,ลม:1,น้ำ:-4,ไฟ:-5},{สถิร:4,อุภัย:-2,จร:-4});
   const DE={'ไม้':'อึดอัดเมื่อถูกบีบหรือขัดใจ ถ้ากดนานจะระเบิดตรง ๆ','ไฟ':'ร้อนเร็ว หายเร็ว แสดงออกชัด ชอบความตื่นเต้น','ดิน':'เก็บนาน นิ่งภายนอก แต่กังวลสะสมอยู่ข้างใน','ทอง':'ควบคุมตัวเองแน่น ใช้เหตุผลกดความรู้สึก แล้วตัดขาดเมื่อสุดทน','น้ำ':'ไหลลึก ไวต่อความรู้สึกคนรอบข้าง คิดซ้ำและเปลี่ยนอารมณ์ตามบรรยากาศ'};
   const fw=fire>=28&&water>=28?'ไฟและน้ำแรงทั้งคู่ ('+fire+'% / '+water+'%) — อารมณ์ปะทุแล้วคิดซ้ำ ใจร้อนแต่เก็บมาคิดต่อ':
@@ -1846,7 +1894,7 @@ function lfPatron(Z){
   let b=45+(res-20)*0.9;
   if(stars.ty.length)b+=6;if(stars.md.length||stars.td.length)b+=4;if(fl.gy)b+=6;if(st==='weak'&&res>=18)b+=6;
   if(st==='strong'&&res>=30)b-=4;if(fl.xs)b-=6;if(fl.sg)b-=5;if(['ทรัพยากร','อำนาจ'].includes(Z.monthCat))b+=3;b+=fam*1.5;
-  b=lfCl(b);
+  b=lfCl(b+lfYong(Z,['ทรัพยากร']));
   const l=lfLk(L,[[9,1],[4,.8],[10,.6]],{พฤหัสบดี:10,จันทร์:8,อาทิตย์:5,ศุกร์:5,พุธ:3,เสาร์:1,อังคาร:-2},{น้ำ:3,ดิน:3,ไฟ:2,ลม:0},{อุภัย:2});
   const who=[];
   if(g['正印']>=g['偏印']&&g['正印']>=6)who.push('ผู้ใหญ่แบบแม่/ครู ที่ให้ความเมตตาอย่างเปิดเผยและห่วงใยตรง ๆ (正印)');
@@ -1882,10 +1930,10 @@ function buildLife(P,A,LK,LP,y,m,d){
   const topics=[lfFinance(Z),lfCareer(Z),lfAuthority(Z),lfFriends(Z),lfLuck(Z),lfVasana(Z),lfWisdom(Z),lfEmotion(Z),lfPatron(Z)];
   return {topics,L:Z.L,Z};
 }
-function lfBar(t){return '<div class="bar"><i style="width:'+t.total+'%;background:'+t.color+'"></i></div>';}
+function lfBar(t){return '<div class="bar"><i style="width:'+(t.total*10)+'%;background:'+t.color+'"></i></div>';}
 function lifeCardHTML(t){
-  let h='<div class="lcard"><div class="lhead"><span>'+t.icon+' '+t.title+'</span><span class="badge" style="background:'+t.color+'">'+t.label+' · '+t.total+'</span></div>'+
-    '<div class="small">'+t.sname+' — BaZi <b>'+t.b+'</b> · ลัคนา <b>'+t.l+'</b> · รวม <b>'+t.total+'</b> · '+t.agree+'</div>'+lfBar(t)+
+  let h='<div class="lcard"><div class="lhead"><span>'+t.icon+' '+t.title+'</span><span class="badge" style="background:'+t.color+'">'+t.label+' · '+t.total.toFixed(1)+'/10</span></div>'+
+    '<div class="small">'+t.sname+' — BaZi <b>'+t.b.toFixed(1)+'</b> · ลัคนา <b>'+t.l.toFixed(1)+'</b> · รวม <b>'+t.total.toFixed(1)+'</b> /10 · '+t.agree+'</div>'+lfBar(t)+
     '<div class="lhl">'+t.headline+'</div>';
   t.points.forEach(p=>{h+='<p>'+(p.h?'<b>'+p.h+'</b><br>':'')+p.t+'</p>';});
   if(t.tl)h+='<p>'+t.tl+'</p>';
@@ -1895,9 +1943,9 @@ function lifeCardHTML(t){
 function lifeOverviewHTML(L){
   const s=L.sign;
   let h='<div class="box lover"><div class="small" style="margin-bottom:6px">นำ <b>BaZi</b> (สิบเทพละเอียด 10 ตัว · โครงสร้างดวง · ดาวคุ้มครอง · ปฏิสัมพันธ์ระหว่างเสา) มากรองร่วมกับ <b>ลัคนาราศี'+s.n+'</b> '+
-    '(เจ้าเรือน'+s.r+' · ธาตุ'+s.el+' · ลักษณะ'+s.q+' · ความเป็นมิตรของเจ้าเรือนแต่ละภพ) — คะแนนรวม = BaZi 60% + ลัคนา 40% '+
+    '(เจ้าเรือน'+s.r+' · ธาตุ'+s.el+' · ลักษณะ'+s.q+' · ความเป็นมิตรของเจ้าเรือนแต่ละภพ) — คะแนนเต็ม 10 เทียบกับดวงทั่วไปในเรื่องเดียวกัน (5.5 = ระดับกลาง) · รวม = BaZi 60% + ลัคนา 40% '+
     'ลัคนาในที่นี้ใช้เฉพาะราศีลัคนาและเจ้าเรือนภพ ไม่รวมตำแหน่งดาวเคราะห์ ผลทั้งหมดเป็นแนวโน้มสำหรับวางแผนชีวิต ไม่ใช่คำทำนายตายตัว</div>';
-  LIFE.topics.forEach(t=>{h+='<div class="erow"><div class="ename"><span>'+t.icon+' <b>'+t.title.split(' · ')[0]+'</b> <span class="small">'+t.sname+'</span></span><b style="color:'+t.color+'">'+t.label+' · '+t.total+'</b></div>'+lfBar(t)+'</div>';});
+  LIFE.topics.forEach(t=>{h+='<div class="erow"><div class="ename"><span>'+t.icon+' <b>'+t.title.split(' · ')[0]+'</b> <span class="small">'+t.sname+'</span></span><b style="color:'+t.color+'">'+t.label+' · '+t.total.toFixed(1)+'/10</b></div>'+lfBar(t)+'</div>';});
   return h+'</div>';
 }
 function renderLifeReading(P,A,LK,LP,y,m,d){
@@ -1912,9 +1960,9 @@ function renderLifeReading(P,A,LK,LP,y,m,d){
 function lifeLineText(){
   if(!LIFE)return [];
   const h2t=s=>String(s).replace(/<br\s*\/?>/gi,'\n').replace(/<\/?[a-zA-Z][^>]*>/g,'').replace(/&amp;/g,'&');
-  const S=['🧭 วิเคราะห์ชีวิต 9 มิติ (BaZi × ลัคนาราศี'+LIFE.L.sign.n+')\n'+LIFE.topics.map(t=>t.icon+' '+t.title.split(' · ')[0]+': '+t.label+' '+t.total+'/100').join('\n')+'\n(คะแนนรวม = BaZi 60% + ลัคนา 40% · เป็นแนวโน้ม ไม่ใช่คำทำนายตายตัว)'];
+  const S=['🧭 วิเคราะห์ชีวิต 9 มิติ (BaZi × ลัคนาราศี'+LIFE.L.sign.n+')\n'+LIFE.topics.map(t=>t.icon+' '+t.title.split(' · ')[0]+': '+t.label+' '+t.total.toFixed(1)+'/10').join('\n')+'\n(เต็ม 10 · 5.5 = ระดับกลางของคนทั่วไป · รวม = BaZi 60% + ลัคนา 40% · เป็นแนวโน้ม ไม่ใช่คำทำนายตายตัว)'];
   LIFE.topics.forEach(t=>{
-    let s=t.icon+' '+t.title+'\n'+t.sname+': '+t.label+' '+t.total+'/100 (BaZi '+t.b+' · ลัคนา '+t.l+')\n'+h2t(t.headline);
+    let s=t.icon+' '+t.title+'\n'+t.sname+': '+t.label+' '+t.total.toFixed(1)+'/10 (BaZi '+t.b.toFixed(1)+' · ลัคนา '+t.l.toFixed(1)+')\n'+h2t(t.headline);
     t.points.forEach(p=>{s+='\n\n'+(p.h?h2t(p.h)+'\n':'')+h2t(p.t);});
     if(t.tl)s+='\n\n'+h2t(t.tl);
     s+='\n\n🔎 ที่มา: '+t.ev.map(h2t).join(' | ')+'\n💡 แนวทาง: '+h2t(t.tip);

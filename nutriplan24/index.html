@@ -115,6 +115,7 @@ td:first-child,th:first-child{text-align:left}
 .modal .inner{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;
  width:100%;max-width:620px}
 .modal textarea{height:320px;font-size:12.5px;line-height:1.6;white-space:pre;overflow:auto}
+.sdel[disabled],button[disabled]{opacity:.55;cursor:wait}
 .adminonly{display:none!important}
 body.isadmin .adminonly{display:block!important}
 .hide{display:none}
@@ -198,6 +199,7 @@ body.isadmin .adminonly{display:block!important}
   <h1>🥗 NutriPlan <span>24</span></h1>
   <p>วางแผนชนิด จำนวน และปริมาณอาหารให้สอดคล้องกับเป้าหมายรายวันและรายมื้อ ตลอดโปรแกรม 24 สัปดาห์</p>
   <div id="whoami" class="note" style="text-align:center"></div>
+  <div id="syncst" class="note noprint" style="text-align:center"></div>
   <div class="rolebar noprint">
     <span class="pill p-blue" id="rolepill">—</span>
     <button class="btn2" onclick="logout()">ออกจากระบบ</button>
@@ -354,7 +356,7 @@ body.isadmin .adminonly{display:block!important}
 
   <div class="card adminonly">
     <h2><i></i>4. 🔑 คอนโซลผู้ดูแลระบบ — ออกรหัสผู้ใช้งาน</h2>
-    <div class="note" style="margin-top:0">พิมพ์ชื่อผู้ใช้แล้วกดสร้าง ระบบจะคำนวณรหัส 4 หลักประจำชื่อนั้นทันที ใช้ได้กับไฟล์เดียวกันทุกเครื่องโดยไม่ต้องแก้โค้ดหรืออัปโหลดใหม่</div>
+    <div class="note" style="margin-top:0">พิมพ์ชื่อผู้ใช้แล้วกดสร้าง ระบบจะสุ่มรหัส 4 หลักบนเซิร์ฟเวอร์ (Supabase) และแสดงให้เห็นเพียงครั้งเดียว ใช้ได้ทันทีทุกเครื่องโดยไม่ต้องแก้โค้ดหรืออัปโหลดไฟล์ใหม่</div>
     <div class="sec">
       <div class="st">ออกรหัสใหม่</div>
       <input type="text" id="gname" maxlength="80" placeholder="ชื่อผู้ใช้ เช่น somchai" style="margin-top:8px" onkeydown="if(event.key==='Enter')genKey()">
@@ -365,7 +367,7 @@ body.isadmin .adminonly{display:block!important}
     <div class="sec">
       <div class="st">รายชื่อที่ออกรหัสไปแล้ว</div>
       <div id="klist"></div>
-      <div class="note">รายการนี้เก็บในเครื่องผู้ดูแลระบบเพื่อใช้อ้างอิงเท่านั้น การลบไม่ได้ตัดสิทธิ์ผู้ใช้ หากต้องการยกเลิกรหัสทั้งระบบ ให้เปลี่ยนเลข <b>KEY_VERSION</b> ในไฟล์ แล้วออกรหัสชุดใหม่</div>
+      <div class="note">🔑 รีเซ็ตรหัสใหม่ (รหัสเดิมและเซสชันที่ค้างอยู่ใช้ไม่ได้ทันที) · ⏸ ระงับ/▶ เปิดใช้บัญชี · ✕ ลบบัญชีและข้อมูลถาวร · ระบบล็อกชั่วคราว 15 นาทีเมื่อกรอกรหัสผิดครบ 5 ครั้ง</div>
     </div>
   </div>
 </div>
@@ -391,18 +393,23 @@ body.isadmin .adminonly{display:block!important}
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
 <script>
 /* ============================================================
    NutriPlan 24 — Prototype (HTML ไฟล์เดียว)
    ============================================================ */
-const ADMIN_PASS  = '6395';
-const KEY_SALT    = 'NutriPlan24-KeySalt-2569';
-const KEY_VERSION = 1;
-const SCHEMA      = 3;
+/* ---------- ตั้งค่า Supabase ----------
+   ใส่ Project URL และ anon public key (Project Settings → API) เท่านั้น
+   ห้ามใส่ service_role key ลงในไฟล์นี้เด็ดขาด
+   ข้อมูลทั้งหมดอยู่ในฐานข้อมูล และเข้าถึงผ่านฟังก์ชัน RPC ที่ตรวจสิทธิ์ฝั่งเซิร์ฟเวอร์เท่านั้น (ดู supabase_setup.sql)
+   รหัสผู้ดูแลระบบและรหัสผู้ใช้ไม่ได้อยู่ในไฟล์นี้อีกต่อไป */
+const SUPABASE_URL      = 'https://rbliqyhgyuycdoposkev.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_b5dknuuezDQb3AcMgNhUpg_5Ajr0dK9';
+const SCHEMA            = 3;
+const TOKEN_KEY         = 'nutri_token';
 
-/* ---------- Safe storage ---------- */
+/* ---------- localStorage: ใช้เฉพาะโทเคนเข้าสู่ระบบ และอ่านข้อมูลเก่าเพื่อนำเข้าขึ้นคลาวด์ครั้งเดียว ---------- */
 function sGet(k,fb){ try{ const v=localStorage.getItem(k); return v===null?fb:JSON.parse(v); }catch(e){ console.warn('อ่านข้อมูลไม่ได้',k,e); return fb; } }
-function sSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(e){ console.warn('บันทึกไม่ได้',k,e); return false; } }
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
@@ -410,24 +417,106 @@ function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
 /* ---------- ป้องกัน HTML injection ---------- */
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=s=>String(s??'').replace(/[<>]/g,'').trim().slice(0,80);
-
-function cyrb53(str,seed=0){
-  let h1=0xdeadbeef^seed, h2=0x41c6ce57^seed;
-  for(let i=0,ch;i<str.length;i++){ch=str.charCodeAt(i);
-    h1=Math.imul(h1^ch,2654435761); h2=Math.imul(h2^ch,1597334677);}
-  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
-  h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
-  return 4294967296*(2097151&h2)+(h1>>>0);
-}
 const normName=s=>(s||'').trim().toLowerCase().replace(/\s+/g,'');
-function makeKey(u){
-  const n=normName(u); if(!n) return '';
-  return String(cyrb53(KEY_SALT+'|v'+KEY_VERSION+'|'+n,77)%10000).padStart(4,'0');
-}
-const authSig=(role,user)=>cyrb53(KEY_SALT+'|auth|'+role+'|'+normName(user),11).toString(36);
 
 let ROLE=null, CFG=null, DAYS=[], BOOTING=false, INVITE=null;
+let TOKEN=null, UNAME='', LOGGING=false, UNAUTH_SHOWN=false;
 
+/* ================= Supabase client ================= */
+const CFG_OK=/^https:\/\//.test(SUPABASE_URL)&&!/YOUR-/.test(SUPABASE_URL+SUPABASE_ANON_KEY);
+let sb=null;
+try{
+  if(CFG_OK&&window.supabase&&window.supabase.createClient){
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{
+      /* ไม่ใช้ Supabase Auth ในเบราว์เซอร์ จึงไม่ให้เก็บ session ลง localStorage */
+      auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},
+      /* keepalive ช่วยให้คำสั่งบันทึกที่ค้างอยู่ส่งออกได้แม้ปิดแท็บ (เฉพาะ body เล็ก) */
+      global:{fetch:(u,o)=>fetch(u,Object.assign({},o,{keepalive:!!(o&&typeof o.body==='string'&&o.body.length<60000)}))}
+    });
+  }
+}catch(e){ console.warn('สร้าง Supabase client ไม่สำเร็จ',e); sb=null; }
+
+async function rpc(fn,args){
+  if(!sb) throw new Error(!CFG_OK?'ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_ANON_KEY ในไฟล์':'โหลดไลบรารี Supabase ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต');
+  const {data,error}=await sb.rpc(fn,args);
+  if(error){
+    const m=String(error.message||'');
+    if(m.includes('NP_UNAUTH')){ onUnauth(); throw new Error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'); }
+    if(m.includes('NP_TOO_BIG')) throw new Error('ข้อมูลของผู้รับแผนคนนี้ใหญ่เกินกำหนด');
+    if(m.includes('NP_LIMIT')) throw new Error('จำนวนผู้รับแผนครบเพดานแล้ว');
+    throw new Error(m||'เรียกใช้งานเซิร์ฟเวอร์ไม่สำเร็จ');
+  }
+  return data;
+}
+function onUnauth(){
+  if(UNAUTH_SHOWN) return; UNAUTH_SHOWN=true;
+  lsDel(TOKEN_KEY);
+  alert('เซสชันหมดอายุหรือถูกยกเลิกโดยผู้ดูแลระบบ กรุณาเข้าสู่ระบบใหม่');
+  location.reload();
+}
+
+/* ================= ซิงก์ขึ้นคลาวด์ =================
+   อ่านจากแคชในหน่วยความจำ (โหลดครั้งเดียวตอนเข้าสู่ระบบ) · เขียนผ่านคิวที่เรียงลำดับและหน่วงเวลาเล็กน้อย */
+const DIRTY=new Set(), FAILED=new Map();
+let DTIMER=null, CHAIN=Promise.resolve(), PENDING=0, SYNCERR='';
+
+function stable(v){
+  if(Array.isArray(v)) return '['+v.map(stable).join(',')+']';
+  if(v&&typeof v==='object') return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+stable(v[k])).join(',')+'}';
+  return JSON.stringify(v);
+}
+function showSync(){
+  const el=document.getElementById('syncst'); if(!el) return;
+  if(SYNCERR) el.innerHTML=`<span style="color:var(--dan)">⚠️ บันทึกขึ้นคลาวด์ไม่สำเร็จ: ${esc(SYNCERR)}</span> <button type="button" class="mbtn" onclick="retrySync()">ลองอีกครั้ง</button>`;
+  else if(PENDING>0||DIRTY.size) el.innerHTML='<span style="color:var(--warn)">☁️ กำลังบันทึก…</span>';
+  else el.innerHTML='<span style="color:var(--acc)">☁️ บันทึกขึ้นคลาวด์แล้ว</span>';
+}
+function enqueue(key,fn){
+  PENDING++; showSync();
+  CHAIN=CHAIN.then(fn)
+    .then(()=>{ FAILED.delete(key); },
+          e=>{ FAILED.set(key,fn); SYNCERR=(e&&e.message)||'เกิดข้อผิดพลาด'; console.warn(key,e); })
+    .then(()=>{ if(!FAILED.size) SYNCERR=''; PENDING--; showSync(); });
+  return CHAIN;
+}
+function profBody(pid){
+  const p=PROF.find(x=>x.id===pid);
+  if(!p||!(pid in DATA)) return null;
+  return {p_token:TOKEN,p_id:pid,p_name:p.name,p_data:DATA[pid]||null,p_sort:PROF.indexOf(p)};
+}
+function pushProfile(pid){
+  enqueue('save:'+pid,()=>{ const b=profBody(pid); return b?rpc('np_save_profile',b):null; });
+}
+function markDirty(pid){
+  if(!pid) return;
+  DIRTY.add(pid); clearTimeout(DTIMER); DTIMER=setTimeout(flushDirty,700); showSync();
+}
+function flushDirty(){
+  clearTimeout(DTIMER); DTIMER=null;
+  const l=[...DIRTY]; DIRTY.clear();
+  l.forEach(pushProfile); showSync();
+}
+function setActive(id){
+  PID=id;
+  enqueue('active',()=>rpc('np_set_active',{p_token:TOKEN,p_id:PID}));
+}
+function retrySync(){
+  const l=[...FAILED.entries()]; FAILED.clear(); SYNCERR='';
+  l.forEach(([k,f])=>enqueue(k,f));
+  if(PID){ try{ save(); }catch(e){} pushProfile(PID); }
+  showSync();
+}
+/* ส่งงานที่ค้างทันทีเมื่อซ่อนแท็บ/ปิดหน้า */
+function flushNow(){
+  if(!ROLE||!PID) return;
+  try{ save(); }catch(e){}
+  flushDirty();
+}
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') flushNow(); });
+window.addEventListener('pagehide',flushNow);
+window.addEventListener('beforeunload',e=>{ if(FAILED.size){ e.preventDefault(); e.returnValue=''; } });
+
+/* ================= เข้าสู่ระบบ ================= */
 function loginTab(w){
   const u=w==='user';
   document.getElementById('ltu').classList.toggle('on',u);
@@ -436,61 +525,127 @@ function loginTab(w){
   document.getElementById('paneAdmin').classList.toggle('hide',u);
   document.getElementById('pwerr').innerText='';
 }
-function userLogin(){
+const LOGIN_MSG={
+  bad:'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
+  suspended:'บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ',
+  noadmin:'ยังไม่ได้ตั้งรหัสผู้ดูแลระบบในฐานข้อมูล (ดูขั้นตอนสุดท้ายในไฟล์ supabase_setup.sql)'
+};
+function loginMsg(r){
+  if(r&&r.code==='locked') return `ลองผิดหลายครั้ง ระบบล็อกชั่วคราว กรุณารออีกประมาณ ${r.minutes||15} นาที`;
+  return LOGIN_MSG[(r&&r.code)||'bad']||LOGIN_MSG.bad;
+}
+function setLoginBusy(b){
+  document.querySelectorAll('#pwgate button').forEach(x=>{x.disabled=b;});
+  if(b) pwerr.innerText='กำลังเชื่อมต่อเซิร์ฟเวอร์…';
+}
+async function userLogin(){
+  if(LOGGING) return;
   const u=clean(document.getElementById('inUser').value);
   const k=(document.getElementById('inKey').value||'').trim();
   if(!normName(u)){ pwerr.innerText='กรุณากรอกชื่อผู้ใช้งาน'; return; }
   if(!/^\d{4}$/.test(k)){ pwerr.innerText='รหัสผ่านต้องเป็นตัวเลข 4 หลัก'; return; }
-  if(makeKey(u)!==k){ pwerr.innerText='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'; return; }
-  lsSet('nutri_user',u);
-  enterApp('user');
+  LOGGING=true; setLoginBusy(true);
+  try{
+    const r=await rpc('np_login',{p_user:u,p_pin:k});
+    if(!r||!r.ok){ pwerr.innerText=loginMsg(r); return; }
+    TOKEN=r.token; lsSet(TOKEN_KEY,TOKEN);
+    document.getElementById('inKey').value='';
+    pwerr.innerText='';
+    await enterApp(r.role,r.name);
+  }catch(e){
+    pwerr.innerText='เข้าสู่ระบบไม่สำเร็จ: '+e.message;
+    abortLogin();
+  }finally{ LOGGING=false; setLoginBusy(false); }
 }
-function adminLogin(){
+async function adminLogin(){
+  if(LOGGING) return;
   const v=(document.getElementById('inAdmin').value||'').trim();
-  if(v!==ADMIN_PASS){ pwerr.innerText='รหัสผู้ดูแลระบบไม่ถูกต้อง'; return; }
-  lsSet('nutri_user','ผู้ดูแลระบบ');
-  enterApp('admin');
+  if(!v){ pwerr.innerText='กรุณากรอกรหัสผู้ดูแลระบบ'; return; }
+  LOGGING=true; setLoginBusy(true);
+  try{
+    const r=await rpc('np_admin_login',{p_pass:v});
+    if(!r||!r.ok){ pwerr.innerText=loginMsg(r); return; }
+    TOKEN=r.token; lsSet(TOKEN_KEY,TOKEN);
+    document.getElementById('inAdmin').value='';
+    pwerr.innerText='';
+    await enterApp('admin',r.name);
+  }catch(e){
+    pwerr.innerText='เข้าสู่ระบบไม่สำเร็จ: '+e.message;
+    abortLogin();
+  }finally{ LOGGING=false; setLoginBusy(false); }
 }
-function enterApp(role){
-  ROLE=role;
-  const nm=lsGet('nutri_user')||'';
-  lsSet('nutri_role',role);
-  lsSet('nutri_sig',authSig(role,nm));
+/* ล้างสถานะเมื่อเข้าแอปไม่สำเร็จ (เช่น โหลดข้อมูลไม่ได้) */
+function abortLogin(){
+  const t=TOKEN;
+  TOKEN=null; ROLE=null; PID=null; PROF=[]; DATA={};
+  document.body.classList.remove('isadmin');
+  lsDel(TOKEN_KEY);
+  if(t&&sb) sb.rpc('np_logout',{p_token:t}).then(()=>{},()=>{});
+}
+async function enterApp(role,name){
+  ROLE=role; UNAME=name||'';
   document.body.classList.toggle('isadmin',role==='admin');
+  const rp=document.getElementById('rolepill');
+  rp.textContent=role==='admin'?'🔑 ผู้ดูแลระบบ':'👤 บัญชี: '+UNAME;
+  rp.className='pill '+(role==='admin'?'p-warn':'p-blue');
+  await bootData();
   document.getElementById('pwgate').style.display='none';
   document.getElementById('appwrap').style.opacity='1';
-  const rp=document.getElementById('rolepill');
-  rp.textContent=role==='admin'?'🔑 ผู้ดูแลระบบ':'👤 บัญชี: '+nm;
-  rp.className='pill '+(role==='admin'?'p-warn':'p-blue');
+  showSync();
   if(role==='admin') renderKeyList();
-  bootData();
 }
-function logout(){
-  if(PID) save();
-  lsDel('nutri_role'); lsDel('nutri_user'); lsDel('nutri_sig');
+async function logout(){
+  try{ if(PID) save(); flushDirty(); await CHAIN; }catch(e){ console.warn(e); }
+  if(FAILED.size&&!confirm('ยังบันทึกข้อมูลล่าสุดขึ้นคลาวด์ไม่สำเร็จ ถ้าออกจากระบบตอนนี้ ข้อมูลที่ยังไม่ได้บันทึกจะหายไป ต้องการออกจากระบบต่อหรือไม่?')) return;
+  try{ if(TOKEN) await rpc('np_logout',{p_token:TOKEN}); }catch(e){}
+  lsDel(TOKEN_KEY);
   location.reload();
 }
+async function restoreSession(){
+  /* ล้างข้อมูลเข้าสู่ระบบและรายชื่อรหัสแบบเก่าที่ค้างในเครื่อง (ยกเลิกรหัสชุดเดิมทั้งหมด) */
+  ['nutri_keys','nutri_role','nutri_user','nutri_sig'].forEach(lsDel);
+  if(!CFG_OK){ pwerr.innerText='⚠️ ยังไม่ได้ตั้งค่า SUPABASE_URL และ SUPABASE_ANON_KEY ในไฟล์ index.html'; return; }
+  if(!sb){ pwerr.innerText='⚠️ โหลดไลบรารี Supabase ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรชหน้า'; return; }
+  const t=lsGet(TOKEN_KEY); if(!t) return;
+  TOKEN=t; LOGGING=true; setLoginBusy(true);
+  try{
+    const r=await rpc('np_whoami',{p_token:t});
+    if(r&&r.ok){ pwerr.innerText=''; await enterApp(r.role,r.name); }
+    else{ TOKEN=null; lsDel(TOKEN_KEY); pwerr.innerText=''; }
+  }catch(e){
+    pwerr.innerText='เชื่อมต่อเซิร์ฟเวอร์ไม่ได้: '+e.message;
+    TOKEN=null; ROLE=null; document.body.classList.remove('isadmin');   /* เก็บโทเคนไว้ ลองใหม่ได้เมื่อรีเฟรช */
+  }finally{ LOGGING=false; setLoginBusy(false); }
+}
 
-/* ---------- คอนโซลออกรหัส ---------- */
-const getKeys=()=>{ const a=sGet('nutri_keys',[]); return Array.isArray(a)?a:[]; };
-const setKeys=a=>sSet('nutri_keys',a);
-function genKey(){
-  const u=clean(document.getElementById('gname').value);
-  if(!normName(u)){ gerr.innerHTML='<span style="color:var(--dan)">กรุณากรอกชื่อผู้ใช้</span>'; return; }
-  const k=makeKey(u);
-  const list=getKeys();
-  if(!list.some(x=>normName(x.u)===normName(u))){
-    list.push({u,k,t:todayStr()}); setKeys(list);
-  }
+/* ---------- คอนโซลผู้ดูแลระบบ: ออกรหัส / รีเซ็ต / ระงับ / ลบ (ทำงานบนเซิร์ฟเวอร์) ---------- */
+let KLIST=[];
+const ADMIN_MSG={
+  exists:'มีชื่อผู้ใช้นี้อยู่แล้ว ถ้าผู้ใช้ลืมรหัส ให้กดปุ่ม 🔑 รีเซ็ตรหัสในรายการด้านล่าง',
+  badname:'ชื่อผู้ใช้ไม่ถูกต้อง (ห้ามว่างและห้ามขึ้นต้นด้วย __)',
+  notfound:'ไม่พบชื่อผู้ใช้นี้'
+};
+const adminMsg=r=>ADMIN_MSG[(r&&r.code)||'']||'ทำรายการไม่สำเร็จ';
+function showKey(u,k){
   INVITE={u,k};
   document.getElementById('gout').innerHTML=
     `<div class="keybox">รหัสผ่าน <b>${esc(k)}</b>
-      <div class="note" style="margin:4px 0 0">ชื่อผู้ใช้: <b>${esc(u)}</b> · รหัสนี้คงที่ตลอด ใช้ได้ทุกเครื่องที่เปิดไฟล์รุ่นเดียวกัน</div>
+      <div class="note" style="margin:4px 0 0">ชื่อผู้ใช้: <b>${esc(u)}</b> · รหัสนี้แสดงครั้งเดียว กรุณาคัดลอกส่งให้ผู้ใช้ทันที (หากลืมให้กดรีเซ็ตรหัส)</div>
       <button class="btn2" onclick="copyInvite()">📋 คัดลอกข้อความสำหรับส่งให้ผู้ใช้</button>
     </div>`;
-  gerr.innerHTML='<span style="color:var(--acc)">ออกรหัสเรียบร้อยแล้ว</span>';
-  document.getElementById('gname').value='';
-  renderKeyList();
+}
+async function genKey(){
+  const u=clean(document.getElementById('gname').value);
+  if(!normName(u)){ gerr.innerHTML='<span style="color:var(--dan)">กรุณากรอกชื่อผู้ใช้</span>'; return; }
+  gerr.innerHTML='<span style="color:var(--mut)">กำลังสร้างรหัส…</span>';
+  try{
+    const r=await rpc('np_admin_issue',{p_token:TOKEN,p_user:u});
+    if(!r||!r.ok){ gerr.innerHTML=`<span style="color:var(--dan)">${esc(adminMsg(r))}</span>`; return; }
+    showKey(r.name,r.pin);
+    gerr.innerHTML='<span style="color:var(--acc)">ออกรหัสเรียบร้อยแล้ว</span>';
+    document.getElementById('gname').value='';
+    await renderKeyList();
+  }catch(e){ gerr.innerHTML=`<span style="color:var(--dan)">${esc(e.message)}</span>`; }
 }
 function copyInvite(){
   if(!INVITE) return;
@@ -499,27 +654,57 @@ function copyInvite(){
     ()=>{gerr.innerHTML='<span style="color:var(--acc)">คัดลอกข้อความเรียบร้อยแล้ว</span>';},
     ()=>{gerr.innerHTML='<span style="color:var(--warn)">คัดลอกไม่สำเร็จ ให้จดรหัสเอง</span>';});
 }
-function renderKeyList(){
+async function renderKeyList(){
   const el=document.getElementById('klist'); if(!el) return;
-  const list=getKeys();
-  el.innerHTML=list.length?list.map((x,i)=>
-    `<div class="urow"><div class="uc"><b>${esc(x.k)}</b> — ${esc(x.u)}<small>ออกเมื่อ ${esc(x.t)}</small></div>
-      <button class="sdel" onclick="delKey(${i})">✕</button></div>`).join('')
+  try{
+    const l=await rpc('np_admin_list',{p_token:TOKEN});
+    KLIST=Array.isArray(l)?l:[];
+  }catch(e){ el.innerHTML=`<div class="note" style="color:var(--dan)">โหลดรายชื่อไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
+  el.innerHTML=KLIST.length?KLIST.map((x,i)=>
+    `<div class="urow"><div class="uc"><b>${esc(x.name)}</b>
+        ${x.active?'':' <span class="pill p-warn">ระงับ</span>'}${x.locked?' <span class="pill p-dan">ล็อกชั่วคราว</span>':''}
+        <small>ออกเมื่อ ${esc(String(x.created||'').slice(0,10))}</small></div>
+      <button type="button" class="sdel" style="background:var(--card2);color:var(--txt);border-color:var(--line)" title="รีเซ็ตรหัสใหม่" onclick="resetKey(${i})">🔑</button>
+      <button type="button" class="sdel" style="background:var(--card2);color:var(--txt);border-color:var(--line)" title="${x.active?'ระงับบัญชี':'เปิดใช้บัญชี'}" onclick="toggleUser(${i})">${x.active?'⏸':'▶'}</button>
+      <button type="button" class="sdel" title="ลบถาวร" onclick="delUser(${i})">✕</button></div>`).join('')
     :'<div class="note">ยังไม่มีรายชื่อที่ออกรหัส</div>';
 }
-function delKey(i){ const l=getKeys(); l.splice(i,1); setKeys(l); renderKeyList(); }
+async function resetKey(i){
+  const x=KLIST[i]; if(!x) return;
+  if(!confirm('รีเซ็ตรหัสของ "'+x.name+'"? รหัสเดิมและการเข้าสู่ระบบค้างอยู่จะใช้ไม่ได้ทันที')) return;
+  try{
+    const r=await rpc('np_admin_reset',{p_token:TOKEN,p_user:x.name});
+    if(!r||!r.ok){ gerr.innerHTML=`<span style="color:var(--dan)">${esc(adminMsg(r))}</span>`; return; }
+    showKey(r.name,r.pin);
+    gerr.innerHTML='<span style="color:var(--acc)">รีเซ็ตรหัสเรียบร้อยแล้ว</span>';
+    await renderKeyList();
+  }catch(e){ gerr.innerHTML=`<span style="color:var(--dan)">${esc(e.message)}</span>`; }
+}
+async function toggleUser(i){
+  const x=KLIST[i]; if(!x) return;
+  try{
+    const r=await rpc('np_admin_set_active',{p_token:TOKEN,p_user:x.name,p_active:!x.active});
+    if(!r||!r.ok){ gerr.innerHTML=`<span style="color:var(--dan)">${esc(adminMsg(r))}</span>`; return; }
+    gerr.innerHTML=`<span style="color:var(--acc)">${x.active?'ระงับ':'เปิดใช้'}บัญชี "${esc(x.name)}" แล้ว</span>`;
+    await renderKeyList();
+  }catch(e){ gerr.innerHTML=`<span style="color:var(--dan)">${esc(e.message)}</span>`; }
+}
+async function delUser(i){
+  const x=KLIST[i]; if(!x) return;
+  if(!confirm('ลบบัญชี "'+x.name+'" ถาวร พร้อมข้อมูลผู้รับแผนทั้งหมดของบัญชีนี้? ย้อนกลับไม่ได้')) return;
+  try{
+    const r=await rpc('np_admin_delete_user',{p_token:TOKEN,p_user:x.name});
+    if(!r||!r.ok){ gerr.innerHTML=`<span style="color:var(--dan)">${esc(adminMsg(r))}</span>`; return; }
+    gerr.innerHTML=`<span style="color:var(--acc)">ลบบัญชี "${esc(x.name)}" แล้ว</span>`;
+    await renderKeyList();
+  }catch(e){ gerr.innerHTML=`<span style="color:var(--dan)">${esc(e.message)}</span>`; }
+}
 
 /* ================= โปรไฟล์ผู้รับแผน ================= */
-let PROF=[], PID=null;
-const ns=()=>'np_'+normName(lsGet('nutri_user')||'guest')+'_';
-const dkey=id=>ns()+'d_'+id;
+let PROF=[], PID=null, DATA={};
 const newId=()=>'p'+Date.now()+Math.random().toString(36).slice(2,6);
-function loadProfs(){
-  const a=sGet(ns()+'profiles',[]);
-  PROF=Array.isArray(a)?a.filter(p=>p&&typeof p.id==='string').map(p=>({id:p.id,name:clean(p.name)||'ผู้รับแผน'})):[];
-}
-function saveProfs(){ sSet(ns()+'profiles',PROF); }
-const curData=()=>migrate(sGet(dkey(PID),null));
+/* แคลอ่านแบบคัดลอกลึก กันออบเจ็กต์ซ้อนในแคชถูกแก้โดยไม่ตั้งใจ */
+const curData=()=>{ const raw=DATA[PID]; return migrate(raw&&typeof raw==='object'?JSON.parse(JSON.stringify(raw)):null); };
 const profName=()=>{const p=PROF.find(x=>x.id===PID);return p?p.name:'';};
 
 /* ---------- Data schema + migration ---------- */
@@ -551,28 +736,57 @@ function migrate(d){
   return o;
 }
 
-function bootData(){
-  loadProfs();
-  if(!PROF.length){
-    const id=newId();
-    PROF=[{id,name:clean(lsGet('nutri_user'))||'ผู้รับแผนคนที่ 1'}];
-    saveProfs();
-    const old=sGet('nutriplan24',null);
-    if(old&&typeof old==='object'){
-      const d=Object.assign({},old);
-      d.supps=sGet('nutri_supps',null);
-      d.locks=sGet('nutri_item_locks',null);
-      d.bazi =sGet('nutri_bazi',null);
-      sSet(dkey(id),migrate(d));
-    }
-    PID=id;
-  }else{
-    PID=lsGet(ns()+'active');
-    if(!PROF.some(p=>p.id===PID)) PID=PROF[0].id;
+/* อ่านข้อมูลเก่าที่ค้างในเครื่อง (localStorage รุ่นก่อน) เพื่อนำขึ้นคลาวด์ครั้งเดียว เฉพาะเมื่อบัญชีนี้ยังไม่มีข้อมูลบนคลาวด์ */
+const lns=()=>'np_'+normName(UNAME||'guest')+'_';
+function legacyImport(){
+  const out=[];
+  const list=sGet(lns()+'profiles',[]);
+  if(Array.isArray(list)) list.forEach(p=>{
+    if(!p||typeof p.id!=='string') return;
+    out.push({id:p.id,name:clean(p.name)||'ผู้รับแผน',data:migrate(sGet(lns()+'d_'+p.id,null))});
+  });
+  if(out.length) return out;
+  const old=sGet('nutriplan24',null);
+  if(old&&typeof old==='object'){
+    const d=Object.assign({},old);
+    d.supps=sGet('nutri_supps',null);
+    d.locks=sGet('nutri_item_locks',null);
+    d.bazi =sGet('nutri_bazi',null);
+    return [{id:newId(),name:clean(UNAME)||'ผู้รับแผนคนที่ 1',data:migrate(d)}];
   }
-  lsSet(ns()+'active',PID);
+  return [];
+}
+async function bootData(){
+  const r=await rpc('np_load',{p_token:TOKEN});
+  PROF=[]; DATA={}; PID=null;
+  ((r&&r.profiles)||[]).forEach(p=>{
+    if(!p||typeof p.id!=='string') return;
+    PROF.push({id:p.id,name:clean(p.name)||'ผู้รับแผน'});
+    DATA[p.id]=(p.data&&typeof p.data==='object'&&!Array.isArray(p.data))?p.data:null;
+  });
+  let imported=0;
+  if(!PROF.length){
+    const leg=legacyImport();
+    if(leg.length){
+      leg.forEach(x=>{ PROF.push({id:x.id,name:x.name}); DATA[x.id]=x.data||null; });
+      imported=leg.length;
+    }else{
+      const id=newId();
+      PROF.push({id,name:clean(UNAME)||'ผู้รับแผนคนที่ 1'}); DATA[id]=null;
+    }
+    PROF.forEach(p=>pushProfile(p.id));
+    const la=lsGet(lns()+'active');
+    PID=PROF.some(p=>p.id===la)?la:PROF[0].id;
+    setActive(PID);
+  }else{
+    PID=(r&&r.active)||null;
+    if(!PROF.some(p=>p.id===PID)) PID=PROF[0].id;
+    if(PID!==(r&&r.active)) setActive(PID);
+  }
+  CURDAY=0;
   renderProfSel();
   applyData(curData());
+  if(imported) profnote.innerHTML+=`<br><span style="color:var(--acc)">นำเข้าข้อมูลเดิมในเครื่องนี้ ${imported} คน ขึ้นคลาวด์เรียบร้อยแล้ว</span>`;
 }
 function renderProfSel(){
   profsel.innerHTML=PROF.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
@@ -584,7 +798,7 @@ function renderProfSel(){
 function switchProfile(id){
   if(id===PID) return;
   save();
-  PID=id; lsSet(ns()+'active',PID);
+  setActive(id);
   CURDAY=0;
   renderProfSel();
   applyData(curData());
@@ -595,9 +809,10 @@ function addProfile(){
   if(PROF.some(p=>p.name===nm)){ profnote.innerHTML='<span style="color:var(--dan)">มีชื่อนี้อยู่แล้ว</span>'; return; }
   save();
   const id=newId();
-  PROF.push({id,name:nm}); saveProfs();
-  PID=id; lsSet(ns()+'active',PID); CURDAY=0;
+  PROF.push({id,name:nm}); DATA[id]=null;
+  setActive(id); CURDAY=0;
   renderProfSel(); applyData(null);
+  markDirty(id);
   profnote.innerHTML=`<span style="color:var(--acc)">เพิ่ม "${esc(nm)}" แล้ว เริ่มกรอกข้อมูลของคนนี้ได้เลย</span>`;
 }
 function dupProfile(){
@@ -607,10 +822,10 @@ function dupProfile(){
   save();
   const src=curData();
   const id=newId();
-  PROF.push({id,name:nm}); saveProfs();
-  if(src) sSet(dkey(id),src);
-  PID=id; lsSet(ns()+'active',PID);
+  PROF.push({id,name:nm}); DATA[id]=src||null;
+  setActive(id);
   renderProfSel(); applyData(curData());
+  markDirty(id);
   profnote.innerHTML=`<span style="color:var(--acc)">ทำสำเนาเป็น "${esc(nm)}" แล้ว</span>`;
 }
 function renameProfile(){
@@ -618,7 +833,7 @@ function renameProfile(){
   if(!nm){ profnote.innerHTML='<span style="color:var(--dan)">กรุณาพิมพ์ชื่อใหม่</span>'; return; }
   if(PROF.some(p=>p.id!==PID&&p.name===nm)){ profnote.innerHTML='<span style="color:var(--dan)">ชื่อนี้ซ้ำกับคนอื่น</span>'; return; }
   const p=PROF.find(x=>x.id===PID); if(!p) return;
-  p.name=nm; saveProfs(); renderProfSel();
+  p.name=nm; markDirty(PID); renderProfSel();
   if(CFG) CFG.who=nm;
   if(DAYS.length) renderAll(CURDAY);
   upd();
@@ -627,9 +842,11 @@ function renameProfile(){
 function delProfile(){
   if(PROF.length<=1){ profnote.innerHTML='<span style="color:var(--warn)">เหลือคนสุดท้ายแล้ว ลบไม่ได้ ใช้วิธีเปลี่ยนชื่อแทน</span>'; return; }
   if(!confirm('ลบผู้รับแผน "'+profName()+'" และข้อมูลทั้งหมดของคนนี้?')) return;
-  lsDel(dkey(PID));
-  PROF=PROF.filter(p=>p.id!==PID); saveProfs();
-  PID=PROF[0].id; lsSet(ns()+'active',PID); CURDAY=0;
+  const gone=PID;
+  PROF=PROF.filter(p=>p.id!==gone); delete DATA[gone];
+  DIRTY.delete(gone); FAILED.delete('save:'+gone);
+  enqueue('del:'+gone,()=>rpc('np_delete_profile',{p_token:TOKEN,p_id:gone}));
+  setActive(PROF[0].id); CURDAY=0;
   renderProfSel(); applyData(curData());
   profnote.innerHTML='<span style="color:var(--acc)">ลบเรียบร้อยแล้ว</span>';
 }
@@ -734,7 +951,7 @@ function calcBazi(){
   const yS=((yr-4)%10+10)%10, yB=((yr-4)%12+12)%12;
   const cut=[6,4,6,5,6,6,7,8,8,8,7,7];
   let mi=Mo-1; if(D<cut[mi]) mi=(mi+11)%12;
-  const mB=(mi+2)%12;
+  const mB=(mi+1)%12;
   const yinStem=((yS%5)*2+2)%10;
   const mS=(yinStem+(((mB-2)+12)%12))%10;
   const hB=Math.floor(((H+1)%24)/2);
@@ -1532,7 +1749,9 @@ function save(){
     sup:[...SON],supps:SUPPS,locks:ITEM_LOCKS,
     bazi:{d:bdate.value,t:btime.value},rows:{}};
   document.querySelectorAll('#mrows input').forEach(i=>d.rows[i.id]=i.value);
-  sSet(dkey(PID),d);
+  const nd=JSON.parse(JSON.stringify(d));
+  if(DATA[PID]&&stable(DATA[PID])===stable(nd)) return;   /* ไม่เปลี่ยนแปลง = ไม่ส่งขึ้นคลาวด์ */
+  DATA[PID]=nd; markDirty(PID);
 }
 function upd(){
   const p=perOf(+week.value)||PERIODS[0];
@@ -1587,8 +1806,7 @@ function upd(){
   bdate.addEventListener('change',save);
   btime.addEventListener('change',save);
   pmode.addEventListener('change',applyPrintMode);
-  const r=lsGet('nutri_role'), u=lsGet('nutri_user')||'', sg=lsGet('nutri_sig');
-  if((r==='admin'||r==='user')&&sg===authSig(r,u)) enterApp(r);
+  restoreSession();
 })();
 </script>
 </body>

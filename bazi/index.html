@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root{
@@ -123,12 +123,12 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
     </div>
     <div id="paneUser">
       <input id="inUser" placeholder="ชื่อผู้ใช้งาน" autocomplete="off" autocapitalize="off">
-      <input id="inKey" placeholder="รหัสเข้าใช้ เช่น KD-4821" autocomplete="off" autocapitalize="characters">
+      <input id="inKey" type="password" placeholder="รหัสผ่าน 4 หลัก" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)">
       <button class="wide" style="margin-top:10px" onclick="userLogin()">🔓 เข้าสู่ระบบ</button>
-      <p class="small" style="margin-top:10px">🔒 ระบบจะจดจำการเข้าสู่ระบบไว้จนกว่าคุณจะกดออก หรือล้างแคชเบราว์เซอร์</p>
+      <p class="small" style="margin-top:10px">🔒 ระบบจะจดจำการเข้าสู่ระบบ 30 วัน หรือจนกว่าคุณจะกดออก · กรอกรหัสผิดครบ 5 ครั้งจะถูกล็อก 15 นาที</p>
     </div>
     <div id="paneAdmin" style="display:none">
-      <input id="inAdmin" type="password" inputmode="numeric" placeholder="รหัสผ่านแอดมิน">
+      <input id="inAdmin" type="password" placeholder="รหัสผ่านแอดมิน" autocomplete="off">
       <button class="wide" style="margin-top:10px" onclick="adminLogin()">🛡️ เข้าสู่โหมดแอดมิน</button>
     </div>
     <div id="gateMsg" class="msg"></div>
@@ -151,11 +151,11 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
       <div class="fld"><label>📝 หมายเหตุ</label><input id="agNote" placeholder="ไม่บังคับ"></div>
       <div class="fld"><label>⌛ วันหมดอายุ (ไม่บังคับ)</label><input type="date" id="agExp"></div>
       <div class="fld"><button class="wide" onclick="genKey()">⚙️ สร้างรหัส</button></div>
-      <div class="fld"><button class="wide ghost" onclick="exportKeys()">📤 ส่งออก CSV</button></div>
+      <div class="fld"><button class="wide ghost" onclick="exportKeys()">📤 ส่งออกรายชื่อ CSV</button></div>
     </div>
     <div id="keyResult"></div>
     <div id="keyList"></div>
-    <p class="small">💡 รหัสถูกสุ่มใหม่ทุกครั้งและบันทึกลงฐานข้อมูลคลาวด์ (Supabase) โดยตรง ใช้ล็อกอินได้ทุกเครื่องทันที</p>
+    <p class="small">💡 ระบบสุ่มรหัสผ่าน 4 หลักบนเซิร์ฟเวอร์ (Supabase) และแสดงให้เห็นครั้งเดียว · ฐานข้อมูลเก็บเฉพาะค่าเข้ารหัสทางเดียว จึงดูรหัสย้อนหลังไม่ได้ (ลืมให้กดรีเซ็ต) · ใช้ล็อกอินได้ทุกเครื่องทันที</p>
   </div>
 
   <!-- 1. INPUT -->
@@ -187,6 +187,7 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
     <div class="confirm" id="confirmLine">📋 …</div>
     <div class="savebar">
       <span class="small" id="saveState">💾 ข้อมูลจะถูกบันทึกลงดวงที่เลือกอัตโนมัติ</span>
+      <span class="small" id="syncSt"></span>
     </div>
     <div class="btnrow">
       <button class="mini ghost" onclick="exportPDF()">📄 ส่งออก PDF</button>
@@ -260,118 +261,274 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
 
 <script>
 /* ============================================================
-   SECTION 0 : ACCESS CONTROL — Supabase (ฐานข้อมูลจริง) + แอดมินท้องถิ่น
+   SECTION 0 : ACCESS CONTROL + CLOUD SYNC — Supabase (ฐานข้อมูลจริง)
+   ------------------------------------------------------------
+   • ใส่เฉพาะ Project URL และ anon (publishable) key เท่านั้น
+     ห้ามใส่ service_role / secret key ลงในไฟล์นี้เด็ดขาด
+   • ไม่มีรหัสแอดมินหรือรหัสผู้ใช้อยู่ในไฟล์นี้อีกต่อไป
+     รหัสแอดมินตั้งผ่าน SQL Editor (ดูท้ายไฟล์ supabase_setup.sql)
+   • ข้อมูลทั้งหมดอยู่ในฐานข้อมูล เข้าถึงผ่านฟังก์ชัน RPC bz_* ที่ตรวจสิทธิ์ฝั่งเซิร์ฟเวอร์
+   • localStorage ใช้เก็บเฉพาะโทเคนเข้าสู่ระบบ (และอ่านข้อมูลเก่าเพื่อนำขึ้นคลาวด์ครั้งเดียว)
    ============================================================ */
-// 🔧🔧 แก้ 2 บรรทัดนี้เป็นของคุณเอง จาก Project Settings > API 🔧🔧
-const SUPABASE_URL = 'https://rdqfbgoysbcchokoutum.supabase.co';
+const SUPABASE_URL      = 'https://rdqfbgoysbcchokoutum.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_oWvJkbzHOa_vflFVQJIo_w_YQR_dWVt';
+const TOKEN_KEY = 'bz_token';
+const MAX_PROFILES = 50;   /* ต้องตรงกับเพดานในฟังก์ชัน bz_save_profile */
 
+/* ---------- localStorage (โทเคน + ข้อมูลเก่า) ---------- */
+function LS(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
+function LSdel(k){try{localStorage.removeItem(k);}catch(e){}}
+
+/* ---------- Supabase client ---------- */
+const CFG_OK=/^https:\/\//.test(SUPABASE_URL)&&!/YOUR[_-]/.test(SUPABASE_URL+SUPABASE_ANON_KEY);
 let sb=null;
 try{
-  if(window.supabase && SUPABASE_URL.indexOf('YOUR_PROJECT_ID')===-1){
-    sb=window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if(CFG_OK&&window.supabase&&window.supabase.createClient){
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{
+      /* ไม่ใช้ Supabase Auth ในเบราว์เซอร์ จึงไม่ให้เก็บ session ลง localStorage */
+      auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},
+      /* keepalive ช่วยให้คำสั่งบันทึกที่ค้างอยู่ส่งออกได้แม้ปิดแท็บ (เฉพาะ body เล็ก) */
+      global:{fetch:(u,o)=>fetch(u,Object.assign({},o,{keepalive:!!(o&&typeof o.body==='string'&&o.body.length<60000)}))}
+    });
   }
-}catch(e){console.warn('Supabase init failed',e);}
+}catch(e){console.warn('Supabase init failed',e);sb=null;}
 
-const _S=['N','X','#','7','7','P','R','#','T','H','A','I'].join(''); // เปลี่ยน secret ใหม่แล้ว รหัสเก่าทั้งหมดใช้ไม่ได้
-function cyrb53(str,seed=0){let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;
- for(let i=0,ch;i<str.length;i++){ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}
- h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
- h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
- return 4294967296*(2097151&h2)+(h1>>>0);}
-const KL='ABCDEFGHJKLMNPQRSTUVWXYZ';
-function randomKey(){
-  const pick=()=>KL[Math.floor(Math.random()*KL.length)];
-  const n=String(Math.floor(Math.random()*10000)).padStart(4,'0');
-  return pick()+pick()+'-'+n;
+let CURRENT_USER='', ROLE=null, TOKEN=null, LOGGING=false, UNAUTH_SHOWN=false, INVITE=null;
+
+async function rpc(fn,args){
+  if(!sb)throw new Error(!CFG_OK?'ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_ANON_KEY ในไฟล์':'โหลดไลบรารี Supabase ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต');
+  const {data,error}=await sb.rpc(fn,args);
+  if(error){
+    const m=String(error.message||'');
+    if(m.includes('BZ_UNAUTH')){onUnauth();throw new Error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');}
+    if(m.includes('BZ_TOO_BIG'))throw new Error('ข้อมูลของดวงนี้ใหญ่เกินกำหนด');
+    if(m.includes('BZ_LIMIT'))throw new Error('จำนวนดวงครบเพดาน '+MAX_PROFILES+' ดวงแล้ว');
+    if(/Could not find the function|PGRST202|schema cache/i.test(m))throw new Error('ยังไม่ได้รันไฟล์ supabase_setup.sql ในฐานข้อมูล');
+    throw new Error(m||'เรียกใช้งานเซิร์ฟเวอร์ไม่สำเร็จ');
+  }
+  return data;
 }
-const norm=s=>(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
-let CURRENT_USER='';
+function onUnauth(){
+  if(UNAUTH_SHOWN)return;UNAUTH_SHOWN=true;
+  LSdel(TOKEN_KEY);
+  alert('เซสชันหมดอายุหรือถูกยกเลิกโดยผู้ดูแลระบบ กรุณาเข้าสู่ระบบใหม่');
+  location.reload();
+}
 
+/* ---------- helpers ---------- */
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const clean=s=>String(s??'').replace(/[<>]/g,'').trim().slice(0,80);
+function toISO(d){const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 function toast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
   clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('show'),2300);
 }
-function LS(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
-function LSdel(k){try{localStorage.removeItem(k);}catch(e){}}
-const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-function toISO(d){const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function gmsg(html){document.getElementById('gateMsg').innerHTML=html;}
+const gerrTxt=t=>gmsg('<span class="err">'+esc(t)+'</span>');
 
+/* ============================================================
+   ซิงก์ข้อมูลดวงขึ้นคลาวด์
+   อ่านจากแคชในหน่วยความจำ (โหลดครั้งเดียวตอนเข้าสู่ระบบ) · เขียนผ่านคิวที่เรียงลำดับและหน่วงเวลาเล็กน้อย
+   ============================================================ */
+const FAILED=new Map(), QUEUED=new Set(), SNAP=new Map();
+let SYNC_T=null, CHAIN=Promise.resolve(), PENDING=0, SYNCERR='';
+
+function stable(v){
+  if(Array.isArray(v))return '['+v.map(stable).join(',')+']';
+  if(v&&typeof v==='object')return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+stable(v[k])).join(',')+'}';
+  return JSON.stringify(v);
+}
+function showSync(){
+  const el=document.getElementById('syncSt');if(!el)return;
+  if(SYNCERR)el.innerHTML='<span style="color:#b91c1c;font-weight:600">⚠️ บันทึกขึ้นคลาวด์ไม่สำเร็จ: '+esc(SYNCERR)+'</span> <button type="button" class="mini" onclick="retrySync()">ลองอีกครั้ง</button>';
+  else if(PENDING>0||SYNC_T)el.innerHTML='<span style="color:#b45309">☁️ กำลังบันทึก…</span>';
+  else if(ROLE)el.innerHTML='<span style="color:#15803d">☁️ บันทึกขึ้นคลาวด์แล้ว</span>';
+  else el.innerHTML='';
+}
+function enqueue(key,fn){
+  if(QUEUED.has(key))return CHAIN;   /* งานที่ยังไม่เริ่มอ่านข้อมูลล่าสุดตอนรันอยู่แล้ว ไม่ต้องซ้อน */
+  QUEUED.add(key);PENDING++;showSync();
+  CHAIN=CHAIN.then(()=>{QUEUED.delete(key);return fn();})
+    .then(()=>{FAILED.delete(key);},
+          e=>{FAILED.set(key,fn);SYNCERR=(e&&e.message)||'เกิดข้อผิดพลาด';console.warn(key,e);})
+    .then(()=>{if(!FAILED.size)SYNCERR='';PENDING--;showSync();});
+  return CHAIN;
+}
+function bodyOf(p,i){return {p_name:clean(p.name)||'ดวง',p_data:pickFields(p),p_sort:i};}
+const sigOf=b=>stable(b);
+function pushProfile(id){
+  enqueue('save:'+id,async()=>{
+    const i=PROF.findIndex(x=>x.id===id);if(i<0||!TOKEN)return;
+    const b=bodyOf(PROF[i],i);
+    await rpc('bz_save_profile',Object.assign({p_token:TOKEN,p_id:id},b));
+    SNAP.set(id,sigOf(b));
+  });
+}
+function pushDelete(id){
+  enqueue('del:'+id,async()=>{
+    if(!TOKEN||PROF.some(p=>p.id===id))return;
+    await rpc('bz_delete_profile',{p_token:TOKEN,p_id:id});
+    SNAP.delete(id);
+  });
+}
+function queueSync(){clearTimeout(SYNC_T);SYNC_T=setTimeout(flushSync,700);showSync();}
+function flushSync(){
+  clearTimeout(SYNC_T);SYNC_T=null;
+  if(!TOKEN||!ROLE)return;
+  PROF.forEach((p,i)=>{if(SNAP.get(p.id)!==sigOf(bodyOf(p,i)))pushProfile(p.id);});
+  [...SNAP.keys()].filter(id=>!PROF.some(p=>p.id===id)).forEach(pushDelete);
+  if(ACTIVE&&ACTIVE!==ACTIVE_SYNCED)pushActive();
+  showSync();
+}
+let ACTIVE_SYNCED='';
+function pushActive(){
+  enqueue('active',async()=>{
+    if(!TOKEN||!ACTIVE)return;
+    const id=ACTIVE;
+    await rpc('bz_set_active',{p_token:TOKEN,p_id:id});
+    ACTIVE_SYNCED=id;
+  });
+}
+function retrySync(){
+  const l=[...FAILED.entries()];FAILED.clear();SYNCERR='';
+  l.forEach(([k,f])=>enqueue(k,f));
+  flushSync();showSync();
+}
+/* ส่งงานที่ค้างทันทีเมื่อซ่อนแท็บ/ปิดหน้า */
+function flushNow(){if(ROLE)flushSync();}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushNow();});
+window.addEventListener('pagehide',flushNow);
+window.addEventListener('beforeunload',e=>{if(FAILED.size){e.preventDefault();e.returnValue='';}});
+
+/* ============================================================
+   เข้าสู่ระบบ / ออกจากระบบ
+   ============================================================ */
 function switchTab(t){
   document.getElementById('paneUser').style.display=t==='user'?'block':'none';
   document.getElementById('paneAdmin').style.display=t==='admin'?'block':'none';
   document.getElementById('tbUser').className=t==='user'?'':'ghost';
   document.getElementById('tbAdmin').className=t==='admin'?'':'ghost';
-  document.getElementById('gateMsg').innerHTML='';
+  gmsg('');
 }
-function openApp(name,isAdmin){
-  CURRENT_USER=name;
-  document.getElementById('gate').style.display='none';
-  document.getElementById('app').style.display='block';
-  document.getElementById('whoami').textContent=(isAdmin?'🛡️ ADMIN · ':'')+name;
-  document.getElementById('adminCard').style.display=isAdmin?'block':'none';
-  LS('bz_ses',JSON.stringify({n:name,a:isAdmin}));
-  if(isAdmin)renderKeyList();
-  initProfiles();
-  calculateBazi();
+const LOGIN_MSG={
+  bad:'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
+  suspended:'บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ',
+  noadmin:'ยังไม่ได้ตั้งรหัสผู้ดูแลระบบในฐานข้อมูล (ดูขั้นตอนสุดท้ายในไฟล์ supabase_setup.sql)'
+};
+function loginMsg(r){
+  if(r&&r.code==='locked')return '🔒 ลองผิดหลายครั้ง ระบบล็อกชั่วคราว กรุณารออีกประมาณ '+(r.minutes||15)+' นาที';
+  if(r&&r.code==='expired')return '⌛ รหัสหมดอายุเมื่อ '+(r.date||'');
+  return LOGIN_MSG[(r&&r.code)||'bad']||LOGIN_MSG.bad;
 }
-function adminLogin(){
-  const v=document.getElementById('inAdmin').value.trim();
-  if(cyrb53(_S+v)===cyrb53(_S+'6395'))openApp('Administrator',true);
-  else document.getElementById('gateMsg').innerHTML='<span class="err">❌ รหัสแอดมินไม่ถูกต้อง</span>';
+function setLoginBusy(b){
+  document.querySelectorAll('#gate button').forEach(x=>{x.disabled=b;});
+  if(b)gmsg('⏳ กำลังเชื่อมต่อเซิร์ฟเวอร์…');
 }
 async function userLogin(){
-  const u=document.getElementById('inUser').value.trim();
-  const k=norm(document.getElementById('inKey').value);
-  const m=document.getElementById('gateMsg');
-  if(!u||!k){m.innerHTML='<span class="err">❌ กรุณากรอกชื่อและรหัสให้ครบ</span>';return;}
-  if(!sb){m.innerHTML='<span class="err">⚠️ ยังไม่ได้ตั้งค่า Supabase (SUPABASE_URL/ANON_KEY)</span>';return;}
-  m.innerHTML='⏳ กำลังตรวจสอบ...';
+  if(LOGGING)return;
+  const u=clean(document.getElementById('inUser').value);
+  const k=(document.getElementById('inKey').value||'').trim();
+  if(!u){gerrTxt('❌ กรุณากรอกชื่อผู้ใช้งาน');return;}
+  if(!/^\d{4}$/.test(k)){gerrTxt('❌ รหัสผ่านต้องเป็นตัวเลข 4 หลัก');return;}
+  if(!sb){gerrTxt(!CFG_OK?'⚠️ ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_ANON_KEY':'⚠️ โหลดไลบรารี Supabase ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรชหน้า');return;}
+  LOGGING=true;setLoginBusy(true);
   try{
-    const {data,error}=await sb.from('licenses').select('*').ilike('username',u).maybeSingle();
-    if(error||!data){m.innerHTML='<span class="err">❌ ไม่พบชื่อผู้ใช้งานนี้ในระบบ</span>';return;}
-    if(norm(data.key)!==k){m.innerHTML='<span class="err">❌ รหัสไม่ถูกต้อง</span>';return;}
-    if(data.expire_date && new Date()>new Date(data.expire_date+'T23:59:59')){
-      m.innerHTML='<span class="err">⌛ รหัสหมดอายุเมื่อ '+data.expire_date+'</span>';return;}
-    m.innerHTML='<span class="ok">✅ เข้าสู่ระบบสำเร็จ</span>';
-    setTimeout(()=>openApp(u,false),320);
-  }catch(e){m.innerHTML='<span class="err">⚠️ เชื่อมต่อฐานข้อมูลไม่สำเร็จ</span>';}
+    const r=await rpc('bz_login',{p_user:u,p_pin:k});
+    if(!r||!r.ok){gerrTxt('❌ '+loginMsg(r));return;}
+    TOKEN=r.token;LS(TOKEN_KEY,TOKEN);
+    document.getElementById('inKey').value='';
+    gmsg('<span class="ok">✅ เข้าสู่ระบบสำเร็จ</span>');
+    await enterApp(r.role,r.name);
+  }catch(e){
+    gerrTxt('⚠️ เข้าสู่ระบบไม่สำเร็จ: '+e.message);
+    abortLogin();
+  }finally{LOGGING=false;setLoginBusy(false);}
 }
-function logout(){
+async function adminLogin(){
+  if(LOGGING)return;
+  const v=(document.getElementById('inAdmin').value||'').trim();
+  if(!v){gerrTxt('❌ กรุณากรอกรหัสผู้ดูแลระบบ');return;}
+  if(!sb){gerrTxt(!CFG_OK?'⚠️ ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_ANON_KEY':'⚠️ โหลดไลบรารี Supabase ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรชหน้า');return;}
+  LOGGING=true;setLoginBusy(true);
+  try{
+    const r=await rpc('bz_admin_login',{p_pass:v});
+    if(!r||!r.ok){gerrTxt('❌ '+loginMsg(r));return;}
+    TOKEN=r.token;LS(TOKEN_KEY,TOKEN);
+    document.getElementById('inAdmin').value='';
+    gmsg('<span class="ok">✅ เข้าสู่ระบบสำเร็จ</span>');
+    await enterApp('admin',r.name);
+  }catch(e){
+    gerrTxt('⚠️ เข้าสู่ระบบไม่สำเร็จ: '+e.message);
+    abortLogin();
+  }finally{LOGGING=false;setLoginBusy(false);}
+}
+/* ล้างสถานะเมื่อเข้าแอปไม่สำเร็จ (เช่น โหลดข้อมูลไม่ได้) */
+function abortLogin(){
+  const t=TOKEN;
+  TOKEN=null;ROLE=null;CURRENT_USER='';PROF=[];ACTIVE='';ACTIVE_SYNCED='';SNAP.clear();FAILED.clear();QUEUED.clear();SYNCERR='';
+  LSdel(TOKEN_KEY);
+  if(t&&sb)sb.rpc('bz_logout',{p_token:t}).then(()=>{},()=>{});
+}
+async function enterApp(role,name){
+  ROLE=role;CURRENT_USER=name||'';
+  await loadCloud();
+  document.getElementById('gate').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('whoami').textContent=(role==='admin'?'🛡️ ADMIN · ':'')+CURRENT_USER;
+  document.getElementById('adminCard').style.display=role==='admin'?'block':'none';
+  if(role==='admin')renderKeyList();
+  const imported=initProfiles();
+  calculateBazi();
+  flushSync();
+  if(imported){   /* นำข้อมูลเก่าในเครื่องขึ้นคลาวด์สำเร็จแล้ว จึงล้างสำเนาในเครื่อง */
+    CHAIN.then(()=>{if(!FAILED.size)clearLegacy();});
+  }
+  showSync();
+}
+async function logout(){
   if(!confirm('ออกจากระบบ? (ดวงที่บันทึกไว้ทั้งหมดจะยังอยู่)'))return;
-  LSdel('bz_ses');location.reload();
+  try{flushSync();await CHAIN;}catch(e){console.warn(e);}
+  if(FAILED.size&&!confirm('ยังบันทึกข้อมูลล่าสุดขึ้นคลาวด์ไม่สำเร็จ ถ้าออกจากระบบตอนนี้ ข้อมูลที่ยังไม่ได้บันทึกจะหายไป ต้องการออกจากระบบต่อหรือไม่?'))return;
+  try{if(TOKEN)await rpc('bz_logout',{p_token:TOKEN});}catch(e){}
+  LSdel(TOKEN_KEY);
+  location.reload();
+}
+async function restoreSession(){
+  LSdel('bz_ses');   /* ล้างเซสชันแบบเก่าที่ปลอมแปลงได้ (เก็บสถานะแอดมินไว้ในเครื่อง) */
+  const t=LS(TOKEN_KEY);if(!t)return;
+  if(!sb){gerrTxt(!CFG_OK?'⚠️ ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_ANON_KEY':'⚠️ โหลดไลบรารี Supabase ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรชหน้า');return;}
+  TOKEN=t;LOGGING=true;setLoginBusy(true);
+  try{
+    const r=await rpc('bz_whoami',{p_token:t});
+    if(r&&r.ok){gmsg('');await enterApp(r.role,r.name);}
+    else{TOKEN=null;LSdel(TOKEN_KEY);gmsg('');}
+  }catch(e){
+    gerrTxt('⚠️ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้: '+e.message);
+    TOKEN=null;ROLE=null;   /* เก็บโทเคนไว้ ลองใหม่ได้เมื่อรีเฟรช */
+  }finally{LOGGING=false;setLoginBusy(false);}
 }
 
-/* ---------- ADMIN : สร้าง/ลบ/แสดงรหัส ผ่าน Supabase ---------- */
-async function genKey(){
-  const u=document.getElementById('agUser').value.trim();
-  const note=document.getElementById('agNote').value.trim();
-  const exp=document.getElementById('agExp').value||null;
-  const box=document.getElementById('keyResult');
-  if(!u){box.innerHTML='<span class="err">⚠️ กรุณากรอกชื่อผู้ใช้งาน</span>';return;}
-  if(!sb){box.innerHTML='<span class="err">⚠️ ยังไม่ได้ตั้งค่า Supabase</span>';return;}
-  const k=randomKey();
-  const {error}=await sb.from('licenses').upsert([{username:u,key:k,expire_date:exp,note}],{onConflict:'username'});
-  if(error){box.innerHTML='<span class="err">⚠️ บันทึกไม่สำเร็จ: '+esc(error.message)+'</span>';return;}
-  const eu=encodeURIComponent(u),ek=encodeURIComponent(k);
-  box.innerHTML=
-    '<div class="box" style="margin-top:12px">🎫 บันทึกลงฐานข้อมูลแล้วสำหรับ <b>'+esc(u)+'</b>'+
-    '<div class="keyout">'+k+'</div>'+
-    '<div class="btnrow">'+
-      '<button class="mini" onclick="copyText(\''+ek+'\',\'คัดลอกรหัสแล้ว\')">📋 คัดลอกรหัส</button>'+
-      '<button class="mini ghost" onclick="copyInvite(\''+eu+'\',\''+ek+'\')">💬 คัดลอกข้อความส่ง LINE</button>'+
-      '<button class="mini ghost" onclick="shareInvite(\''+eu+'\',\''+ek+'\')">📤 แชร์</button>'+
-    '</div></div>';
-  renderKeyList();
-}
+/* ============================================================
+   คอนโซลแอดมิน : ออกรหัส / รีเซ็ต / ระงับ / ลบ (ทำงานบนเซิร์ฟเวอร์ทั้งหมด)
+   ============================================================ */
+let KLIST=[];
+const ADMIN_MSG={
+  exists:'มีชื่อผู้ใช้นี้อยู่แล้ว ถ้าผู้ใช้ลืมรหัส ให้กดปุ่ม 🔑 รีเซ็ตรหัสในรายการด้านล่าง',
+  badname:'ชื่อผู้ใช้ไม่ถูกต้อง (ห้ามว่างและห้ามขึ้นต้นด้วย __)',
+  notfound:'ไม่พบชื่อผู้ใช้นี้'
+};
+const adminMsg=r=>ADMIN_MSG[(r&&r.code)||'']||'ทำรายการไม่สำเร็จ';
+const keyBox=()=>document.getElementById('keyResult');
+const aerr=t=>{keyBox().innerHTML='<span class="err">'+esc(t)+'</span>';};
+const aok=t=>{keyBox().innerHTML='<span class="ok">'+esc(t)+'</span>';};
+
 function inviteText(u,k){
   const link=location.origin+location.pathname;
-  return '🏛️ BaZi Precision Navigator\n━━━━━━━━━━━━━━━\n👤 ชื่อผู้ใช้งาน : '+u+'\n🎫 รหัสเข้าใช้งาน : '+k+
-    '\n🔗 ลิงก์ : '+link+'\n━━━━━━━━━━━━━━━\n📝 วิธีใช้\n1) เปิดลิงก์ด้านบน\n2) แท็บ "👤 ผู้ใช้งาน"\n3) กรอกชื่อและรหัสให้ตรง\n4) กรอกวันเวลาเกิด ระบบจำให้อัตโนมัติ';
+  return '🏛️ BaZi Precision Navigator\n━━━━━━━━━━━━━━━\n👤 ชื่อผู้ใช้งาน : '+u+'\n🔑 รหัสผ่าน 4 หลัก : '+k+
+    '\n🔗 ลิงก์ : '+link+'\n━━━━━━━━━━━━━━━\n📝 วิธีใช้\n1) เปิดลิงก์ด้านบน\n2) แท็บ "👤 ผู้ใช้งาน"\n3) กรอกชื่อและรหัส 4 หลักให้ตรง\n4) กรอกวันเวลาเกิด ระบบจำให้อัตโนมัติ';
 }
-function copyText(enc,okMsg){
-  const t=decodeURIComponent(enc);
+function copyText(t,okMsg){
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(()=>toast('✅ '+okMsg)).catch(()=>fallbackCopy(t,okMsg));}
   else fallbackCopy(t,okMsg);
 }
@@ -381,70 +538,170 @@ function fallbackCopy(t,okMsg){
   try{document.execCommand('copy');toast('✅ '+okMsg);}catch(e){toast('⚠️ คัดลอกไม่สำเร็จ');}
   a.remove();
 }
-function copyInvite(eu,ek){copyText(encodeURIComponent(inviteText(decodeURIComponent(eu),decodeURIComponent(ek))),'คัดลอกข้อความเชิญแล้ว');}
-function shareInvite(eu,ek){
-  const txt=inviteText(decodeURIComponent(eu),decodeURIComponent(ek));
+function copyKey(){if(INVITE)copyText(INVITE.k,'คัดลอกรหัสแล้ว');}
+function copyInvite(){if(INVITE)copyText(inviteText(INVITE.u,INVITE.k),'คัดลอกข้อความเชิญแล้ว');}
+function shareInvite(){
+  if(!INVITE)return;
+  const txt=inviteText(INVITE.u,INVITE.k);
   if(navigator.share){navigator.share({title:'BaZi Precision Navigator',text:txt}).catch(()=>{});}
-  else copyText(encodeURIComponent(txt),'คัดลอกให้แล้ว');
+  else copyText(txt,'คัดลอกให้แล้ว');
+}
+function showKey(u,k,lead){
+  INVITE={u,k};
+  keyBox().innerHTML=
+    '<div class="box" style="margin-top:12px">'+esc(lead)+' <b>'+esc(u)+'</b>'+
+    '<div class="keyout">'+esc(k)+'</div>'+
+    '<p class="small" style="margin:8px 0 0">⚠️ รหัสนี้แสดงครั้งเดียว กรุณาคัดลอกส่งให้ผู้ใช้ทันที (หากลืมให้กดรีเซ็ตรหัส)</p>'+
+    '<div class="btnrow">'+
+      '<button class="mini" onclick="copyKey()">📋 คัดลอกรหัส</button>'+
+      '<button class="mini ghost" onclick="copyInvite()">💬 คัดลอกข้อความส่ง LINE</button>'+
+      '<button class="mini ghost" onclick="shareInvite()">📤 แชร์</button>'+
+    '</div></div>';
+}
+async function genKey(){
+  const u=clean(document.getElementById('agUser').value);
+  const note=document.getElementById('agNote').value.trim().slice(0,200);
+  const exp=document.getElementById('agExp').value||null;
+  if(!u){aerr('⚠️ กรุณากรอกชื่อผู้ใช้งาน');return;}
+  keyBox().innerHTML='<span class="small">⏳ กำลังสร้างรหัส…</span>';
+  try{
+    const r=await rpc('bz_admin_issue',{p_token:TOKEN,p_user:u,p_note:note||null,p_expire:exp});
+    if(!r||!r.ok){aerr('⚠️ '+adminMsg(r));return;}
+    showKey(r.name,r.pin,'🎫 บันทึกลงฐานข้อมูลแล้วสำหรับ');
+    ['agUser','agNote','agExp'].forEach(id=>{document.getElementById(id).value='';});
+    await renderKeyList();
+  }catch(e){aerr('⚠️ '+e.message);}
 }
 async function renderKeyList(){
-  const el=document.getElementById('keyList');
-  if(!sb){el.innerHTML='<span class="small">⚠️ ยังไม่ได้ตั้งค่า Supabase</span>';return;}
-  const {data,error}=await sb.from('licenses').select('*').order('created_at',{ascending:false});
-  if(error||!data||!data.length){el.innerHTML='<span class="small">ยังไม่มีผู้ใช้งานในฐานข้อมูล</span>';return;}
-  let h='<div class="tbwrap"><table class="rtable"><thead><tr><th>👤 ผู้ใช้</th><th>🎫 รหัส</th><th>⌛ หมดอายุ</th><th>📆 สร้างเมื่อ</th><th>⚙️ จัดการ</th></tr></thead><tbody>';
-  data.forEach(x=>{
-    const eu=encodeURIComponent(x.username),ek=encodeURIComponent(x.key),encU=encodeURIComponent(x.username);
+  const el=document.getElementById('keyList');if(!el)return;
+  try{
+    const l=await rpc('bz_admin_list',{p_token:TOKEN});
+    KLIST=Array.isArray(l)?l:[];
+  }catch(e){el.innerHTML='<span class="small">⚠️ โหลดรายชื่อไม่สำเร็จ: '+esc(e.message)+'</span>';return;}
+  if(!KLIST.length){el.innerHTML='<span class="small">ยังไม่มีผู้ใช้งานในฐานข้อมูล</span>';return;}
+  const expired=x=>x.expire&&x.expire<toISO(new Date());
+  let h='<div class="tbwrap"><table class="rtable"><thead><tr><th>👤 ผู้ใช้</th><th>📝 หมายเหตุ</th><th>⌛ หมดอายุ</th><th>📆 สร้างเมื่อ</th><th>⚙️ จัดการ</th></tr></thead><tbody>';
+  KLIST.forEach((x,i)=>{
+    const st=(x.active?'':' <span class="small">⏸ ระงับ</span>')+(x.locked?' <span class="small">🔒 ล็อกชั่วคราว</span>':'')+(expired(x)?' <span class="small">⌛ หมดอายุ</span>':'');
     h+='<tr>'+
-    '<td data-label="👤 ผู้ใช้"><div>'+esc(x.username)+'</div></td>'+
-    '<td data-label="🎫 รหัส"><div style="font-family:monospace;font-weight:700;letter-spacing:2px">'+x.key+'</div></td>'+
-    '<td data-label="⌛ หมดอายุ"><div>'+(x.expire_date||'ไม่มีกำหนด')+'</div></td>'+
-    '<td data-label="📆 สร้างเมื่อ"><div>'+(x.created_at?x.created_at.slice(0,10):'-')+'</div></td>'+
+    '<td data-label="👤 ผู้ใช้"><div>'+esc(x.name)+st+'</div></td>'+
+    '<td data-label="📝 หมายเหตุ"><div>'+esc(x.note||'-')+'</div></td>'+
+    '<td data-label="⌛ หมดอายุ"><div>'+esc(x.expire||'ไม่มีกำหนด')+'</div></td>'+
+    '<td data-label="📆 สร้างเมื่อ"><div>'+esc(String(x.created||'').slice(0,10)||'-')+'</div></td>'+
     '<td data-label="⚙️ จัดการ"><div class="btnrow" style="justify-content:flex-start;margin-top:0">'+
-      '<button class="mini" onclick="copyText(\''+ek+'\',\'คัดลอกรหัสแล้ว\')">📋</button>'+
-      '<button class="mini ghost" onclick="copyInvite(\''+eu+'\',\''+ek+'\')">💬</button>'+
-      '<button class="mini ghost" onclick="delKey(\''+encU+'\')">🗑️</button>'+
+      '<button class="mini" title="รีเซ็ตรหัสใหม่" onclick="resetKey('+i+')">🔑</button>'+
+      '<button class="mini ghost" title="'+(x.active?'ระงับบัญชี':'เปิดใช้บัญชี')+'" onclick="toggleUser('+i+')">'+(x.active?'⏸':'▶')+'</button>'+
+      '<button class="mini ghost" title="ลบถาวร" onclick="delKey('+i+')">🗑️</button>'+
     '</div></td></tr>';
   });
-  el.innerHTML=h+'</tbody></table></div>';
+  el.innerHTML=h+'</tbody></table></div>'+
+    '<p class="small">🔑 รีเซ็ตรหัสใหม่ (รหัสเดิมและเซสชันที่ค้างอยู่ใช้ไม่ได้ทันที) · ⏸/▶ ระงับ/เปิดใช้บัญชี · 🗑️ ลบบัญชีและข้อมูลถาวร · ล็อกชั่วคราว 15 นาทีเมื่อกรอกรหัสผิดครบ 5 ครั้ง</p>';
 }
-async function delKey(encUser){
-  const username=decodeURIComponent(encUser);
-  if(!confirm('ลบผู้ใช้ "'+username+'" ออกจากฐานข้อมูลถาวร?'))return;
-  const {error}=await sb.from('licenses').delete().eq('username',username);
-  if(error){toast('⚠️ ลบไม่สำเร็จ: '+error.message);return;}
-  toast('🗑️ ลบผู้ใช้เรียบร้อย');renderKeyList();
+async function resetKey(i){
+  const x=KLIST[i];if(!x)return;
+  if(!confirm('รีเซ็ตรหัสของ "'+x.name+'"? รหัสเดิมและการเข้าสู่ระบบค้างอยู่จะใช้ไม่ได้ทันที'))return;
+  try{
+    const r=await rpc('bz_admin_reset',{p_token:TOKEN,p_user:x.name});
+    if(!r||!r.ok){aerr('⚠️ '+adminMsg(r));return;}
+    showKey(r.name,r.pin,'🔑 รีเซ็ตรหัสใหม่สำหรับ');
+    await renderKeyList();
+  }catch(e){aerr('⚠️ '+e.message);}
+}
+async function toggleUser(i){
+  const x=KLIST[i];if(!x)return;
+  try{
+    const r=await rpc('bz_admin_set_active',{p_token:TOKEN,p_user:x.name,p_active:!x.active});
+    if(!r||!r.ok){aerr('⚠️ '+adminMsg(r));return;}
+    aok((x.active?'ระงับ':'เปิดใช้')+'บัญชี "'+x.name+'" แล้ว');
+    await renderKeyList();
+  }catch(e){aerr('⚠️ '+e.message);}
+}
+async function delKey(i){
+  const x=KLIST[i];if(!x)return;
+  if(!confirm('ลบบัญชี "'+x.name+'" ถาวร พร้อมดวงทั้งหมดของบัญชีนี้? ย้อนกลับไม่ได้'))return;
+  try{
+    const r=await rpc('bz_admin_delete_user',{p_token:TOKEN,p_user:x.name});
+    if(!r||!r.ok){aerr('⚠️ '+adminMsg(r));return;}
+    aok('ลบบัญชี "'+x.name+'" แล้ว');
+    await renderKeyList();
+  }catch(e){aerr('⚠️ '+e.message);}
+}
+function csvCell(v){
+  let s=String(v??'');
+  if(/^[=+\-@\t\r]/.test(s))s="'"+s;   /* กัน CSV/formula injection */
+  return '"'+s.replace(/"/g,'""')+'"';
 }
 async function exportKeys(){
-  if(!sb){toast('⚠️ ยังไม่ได้ตั้งค่า Supabase');return;}
-  const {data}=await sb.from('licenses').select('*');
-  if(!data)return;
-  const csv='user,key,expire,note,created\n'+data.map(x=>[x.username,x.key,x.expire_date||'',x.note||'',x.created_at||''].join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));
-  a.download='bazi_users_db.csv';a.click();
+  try{
+    const l=await rpc('bz_admin_list',{p_token:TOKEN});
+    if(!Array.isArray(l)||!l.length){toast('ยังไม่มีผู้ใช้งานให้ส่งออก');return;}
+    const rows=[['user','note','expire','created','active']].concat(
+      l.map(x=>[x.name,x.note||'',x.expire||'',String(x.created||'').slice(0,10),x.active?'yes':'suspended']));
+    const csv=rows.map(r=>r.map(csvCell).join(',')).join('\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));
+    a.download='bazi_users_db.csv';a.click();
+    toast('📤 ส่งออกรายชื่อแล้ว (ไม่มีรหัสผ่าน เพราะเก็บแบบเข้ารหัสทางเดียว)');
+  }catch(e){toast('⚠️ ส่งออกไม่สำเร็จ: '+e.message);}
 }
 
 /* ============================================================
-   SECTION 0.5 : MULTI-PROFILE (เก็บในเครื่อง ไม่เกี่ยวกับฐานข้อมูลรหัสผ่าน)
+   SECTION 0.5 : MULTI-PROFILE (เก็บบนคลาวด์ผ่านแคชในหน่วยความจำ + คิวซิงก์)
    ============================================================ */
 const BF=['bd','bm','by','bt','province','gender'];
-const uKey=()=>(CURRENT_USER||'guest').trim().toLowerCase();
-const PKEY=()=>'bz_profiles_'+uKey();
-const AKEY=()=>'bz_active_'+uKey();
-function getProfiles(){try{const a=JSON.parse(LS(PKEY())||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
-function setProfiles(a){LS(PKEY(),JSON.stringify(a));}
-function getActiveId(){return LS(AKEY())||'';}
-function setActiveId(id){LS(AKEY(),id);}
-function newId(){return 'p'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36);}
+let PROF=[], ACTIVE='';
+function getProfiles(){return PROF;}
+function setProfiles(a){PROF=a;queueSync();}
+function getActiveId(){return ACTIVE;}
+function setActiveId(id){if(id===ACTIVE)return;ACTIVE=id;queueSync();}
+function newId(){return 'p'+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36);}
 function fieldsObj(){const o={};BF.forEach(id=>o[id]=document.getElementById(id).value);return o;}
 function migrateTime(o){/* ดวงเก่าที่บันทึกแยก ชั่วโมง/นาที -> แปลงเป็นช่องเวลาเดียว */
   if(o&&(o.bt===undefined||o.bt==='')&&o.bh!==undefined&&o.bh!==''){
     const p=n=>String(parseInt(n,10)||0).padStart(2,'0');
     return Object.assign({},o,{bt:p(o.bh)+':'+p(o.bmin)});}
   return o;}
-function pickFields(src){src=migrateTime(src);const o={};BF.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!=='')o[k]=src[k];});return o;}
+function pickFields(src){src=migrateTime(src);const o={};BF.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!==''&&src[k]!==null)o[k]=String(src[k]).slice(0,40);});return o;}
 function applyFields(o){o=migrateTime(o);BF.forEach(id=>{if(o&&o[id]!==undefined&&o[id]!=='')document.getElementById(id).value=o[id];});applyProvince();}
 const DEFAULT_FIELDS={bd:'1',bm:'1',by:'1990',bt:'12:00',province:'0',gender:'M'};
+
+/* ---------- ข้อมูลเก่าที่ค้างในเครื่อง (localStorage รุ่นก่อน) นำขึ้นคลาวด์ครั้งเดียว ---------- */
+const legacyUser=()=>(ROLE==='admin'?'administrator':(CURRENT_USER||'guest')).trim().toLowerCase();
+function legacyProfiles(){
+  try{
+    const a=JSON.parse(LS('bz_profiles_'+legacyUser())||'[]');
+    if(!Array.isArray(a))return [];
+    const seen=new Set();
+    return a.filter(p=>p&&typeof p==='object'&&p.name).slice(0,MAX_PROFILES).map(p=>{
+      let id=(typeof p.id==='string'&&p.id&&p.id.length<=64&&!seen.has(p.id))?p.id:newId();
+      seen.add(id);
+      return Object.assign({id,name:clean(p.name)||'ดวง'},DEFAULT_FIELDS,pickFields(p));
+    });
+  }catch(e){return [];}
+}
+function clearLegacy(){LSdel('bz_profiles_'+legacyUser());LSdel('bz_active_'+legacyUser());}
+let LEGACY_IMPORTED=false;
+
+async function loadCloud(){
+  const r=await rpc('bz_load',{p_token:TOKEN});
+  PROF=[];ACTIVE='';ACTIVE_SYNCED='';SNAP.clear();LEGACY_IMPORTED=false;
+  const seen=new Set();
+  ((r&&r.profiles)||[]).forEach(p=>{
+    if(!p||typeof p.id!=='string'||seen.has(p.id))return;
+    seen.add(p.id);
+    const o=Object.assign({id:p.id,name:clean(p.name)||'ดวง'},DEFAULT_FIELDS,pickFields(p.data&&typeof p.data==='object'?p.data:{}));
+    PROF.push(o);
+  });
+  PROF.forEach((p,i)=>SNAP.set(p.id,sigOf(bodyOf(p,i))));
+  if(r&&typeof r.active==='string'&&PROF.some(p=>p.id===r.active)){ACTIVE=r.active;ACTIVE_SYNCED=r.active;}
+  if(!PROF.length){
+    const leg=legacyProfiles();
+    if(leg.length){
+      PROF=leg;LEGACY_IMPORTED=true;
+      const la=LS('bz_active_'+legacyUser());
+      if(la&&PROF.some(p=>p.id===la))ACTIVE=la;
+    }
+  }
+}
 
 function activeProfile(){const ps=getProfiles();return ps.find(x=>x.id===getActiveId())||ps[0]||null;}
 function initProfiles(){
@@ -457,16 +714,17 @@ function initProfiles(){
   if(!ps.find(x=>x.id===aid)){aid=ps[0].id;setActiveId(aid);}
   applyFields(ps.find(x=>x.id===aid));
   renderProfiles();updateConfirm();
+  return LEGACY_IMPORTED;
 }
 function renderProfiles(){
   const ps=getProfiles(),aid=getActiveId(),sel=document.getElementById('profileSel');
-  sel.innerHTML=ps.map(p=>`<option value="${p.id}"${p.id===aid?' selected':''}>👤 ${esc(p.name)}</option>`).join('');
+  sel.innerHTML=ps.map(p=>`<option value="${esc(p.id)}"${p.id===aid?' selected':''}>👤 ${esc(p.name)}</option>`).join('');
   const cur=activeProfile();
   document.getElementById('chartWho').innerHTML=cur?`👥 กำลังแสดงดวงของ <b>${esc(cur.name)}</b> · บันทึกทั้งหมด ${ps.length} ดวง`:'';
 }
 function saveActiveProfile(){
   const ps=getProfiles(),aid=getActiveId();const i=ps.findIndex(x=>x.id===aid);if(i<0)return;
-  Object.assign(ps[i],pickFields(fieldsObj()),{_t:new Date().toISOString()});
+  Object.assign(ps[i],pickFields(fieldsObj()));
   setProfiles(ps);
   document.getElementById('saveState').innerHTML=`💾 บันทึกลงดวง <b>${esc(ps[i].name)}</b> เรียบร้อย ✅`;
   renderProfiles();
@@ -475,23 +733,26 @@ function switchProfile(id){
   const ps=getProfiles(),p=ps.find(x=>x.id===id);if(!p)return;
   setActiveId(id);applyFields(p);renderProfiles();calculateBazi();toast('👥 เปลี่ยนเป็นดวงของ '+p.name);
 }
+function limitHit(){if(getProfiles().length>=MAX_PROFILES){toast('⚠️ จำนวนดวงครบเพดาน '+MAX_PROFILES+' ดวงแล้ว');return true;}return false;}
 function addProfile(){
-  const n=(prompt('ตั้งชื่อดวงใหม่ (เช่น คุณแม่ / ลูกชาย)','')||'').trim();if(!n)return;
+  if(limitHit())return;
+  const n=clean(prompt('ตั้งชื่อดวงใหม่ (เช่น คุณแม่ / ลูกชาย)','')||'');if(!n)return;
   const ps=getProfiles();if(ps.some(x=>x.name.toLowerCase()===n.toLowerCase())){toast('⚠️ มีชื่อนี้อยู่แล้ว');return;}
   const p=Object.assign({id:newId(),name:n},DEFAULT_FIELDS);
   ps.push(p);setProfiles(ps);setActiveId(p.id);applyFields(p);renderProfiles();calculateBazi();
   toast('➕ เพิ่มดวง '+n+' แล้ว');
 }
 function dupProfile(){
+  if(limitHit())return;
   const cur=activeProfile();if(!cur)return;
-  const n=(prompt('ชื่อสำเนาใหม่','')||'').trim()||(cur.name+' (สำเนา)');
+  const n=clean(prompt('ชื่อสำเนาใหม่','')||'')||clean(cur.name+' (สำเนา)');
   const ps=getProfiles();const p=Object.assign({},cur,pickFields(fieldsObj()),{id:newId(),name:n});
   ps.push(p);setProfiles(ps);setActiveId(p.id);applyFields(p);renderProfiles();calculateBazi();
   toast('📑 ทำสำเนาเป็น '+n);
 }
 function renameProfile(){
   const ps=getProfiles(),aid=getActiveId(),i=ps.findIndex(x=>x.id===aid);if(i<0)return;
-  const n=(prompt('เปลี่ยนชื่อดวงนี้',ps[i].name)||'').trim();if(!n)return;
+  const n=clean(prompt('เปลี่ยนชื่อดวงนี้',ps[i].name)||'');if(!n)return;
   ps[i].name=n;setProfiles(ps);renderProfiles();toast('✏️ เปลี่ยนชื่อเป็น '+n);
 }
 function delProfile(){
@@ -505,7 +766,7 @@ function delProfile(){
 function exportProfiles(){
   const data={app:'BaZi Precision Navigator',v:2,user:CURRENT_USER,exported:new Date().toISOString(),profiles:getProfiles()};
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
-  a.download='bazi_profiles_'+uKey()+'.json';a.click();toast('📤 สำรองข้อมูลเรียบร้อย');
+  a.download='bazi_profiles_'+legacyUser().replace(/[^a-z0-9ก-๙_-]/gi,'_')+'.json';a.click();toast('📤 สำรองข้อมูลเรียบร้อย');
 }
 function importProfiles(el){
   const f=el.files&&el.files[0];if(!f)return;
@@ -515,11 +776,13 @@ function importProfiles(el){
       const d=JSON.parse(r.result);const inc=Array.isArray(d)?d:(d.profiles||[]);if(!inc.length)throw 0;
       const ps=getProfiles();let add=0;
       inc.forEach(p=>{
-        if(!p||!p.name)return;
-        let nm=p.name,c=2;while(ps.some(x=>x.name.toLowerCase()===nm.toLowerCase())){nm=p.name+' ('+c+')';c++;}
+        if(!p||!p.name||ps.length>=MAX_PROFILES)return;
+        const base=clean(p.name)||'ดวง';
+        let nm=base,c=2;while(ps.some(x=>x.name.toLowerCase()===nm.toLowerCase())){nm=clean(base+' ('+c+')');c++;}
         ps.push(Object.assign({id:newId(),name:nm},DEFAULT_FIELDS,pickFields(p)));add++;
       });
-      setProfiles(ps);renderProfiles();toast('📥 นำเข้า '+add+' ดวงเรียบร้อย');
+      setProfiles(ps);renderProfiles();
+      toast('📥 นำเข้า '+add+' ดวงเรียบร้อย'+(add<inc.length?' (ข้ามบางรายการ เพดาน '+MAX_PROFILES+' ดวง)':''));
     }catch(e){toast('⚠️ ไฟล์ไม่ถูกต้อง');}
     el.value='';
   };
@@ -1904,7 +2167,7 @@ document.addEventListener('copy',e=>{const t=(e.target.tagName||'').toUpperCase(
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncToday();});
   window.addEventListener('focus',syncToday);
   setInterval(syncToday,60000);
-  try{const s=LS('bz_ses');if(s){const o=JSON.parse(s);openApp(o.n,o.a);}}catch(err){}
+  restoreSession();
 })();
 </script>
 </body>

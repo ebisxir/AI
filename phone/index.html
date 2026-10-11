@@ -32,6 +32,17 @@ ul{margin:6px 0;padding-left:22px}li{margin:3px 0}
 #inp input[type=time]{-webkit-appearance:none;appearance:none;text-align:left;display:block}#inp #ph{font-size:20px;letter-spacing:1px;text-align:center}
 #inp #go{min-height:52px;font-size:17px;margin-top:14px;border-radius:12px;box-shadow:0 2px 0 rgba(0,0,0,.12)}
 @media(max-width:700px){body{padding:10px}h1{font-size:23px;line-height:1.3}.c{padding:14px}#inp .fg{grid-template-columns:1fr 1fr;gap:10px}#inp .fg2{grid-template-columns:1fr;gap:10px}#inp .fg>div:first-child,#inp .fg>div:nth-child(2){grid-column:auto}#inp .sm{font-size:13px}}
+/* ตัวเลือกการคำนวณเวลา */
+.tm{border:0;padding:0;margin:14px 0 0;min-width:0}.tm legend{font-size:14px;color:var(--mut);font-weight:600;padding:0;margin-bottom:6px}
+#inp .tmg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#inp .tmo{display:flex;align-items:flex-start;gap:10px;margin:0;padding:12px 14px;min-height:48px;border:1px solid #b8c0cc;border-radius:10px;background:#f8fafb;color:var(--ink);font-size:15px;font-weight:400;cursor:pointer;min-width:0}
+#inp .tmo:has(input:checked){background:#e7f3f1;border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+#inp .tmo:focus-within{outline:3px solid #7dd3c8}
+#inp .tmo input{width:22px;height:22px;min-height:0;padding:0;margin:2px 0 0;flex:none;accent-color:var(--acc);background:none}
+#inp .tmo b{font-weight:700}#inp .tmo small{display:block;color:var(--mut);font-size:13px;line-height:1.5;margin-top:3px}
+#inp .tmo em{font-style:normal;background:var(--acc);color:#fff;border-radius:10px;padding:0 8px;font-size:12px;margin-left:6px;white-space:nowrap}
+#tmv{margin-top:10px;padding:10px 12px;border-radius:8px;background:#f1f5f4;border:1px dashed #b8c0cc;font-size:14px;line-height:1.55;overflow-wrap:anywhere}#tmv:empty{display:none}#tmv .sm{display:block;margin-top:2px}
+@media(max-width:700px){#inp .tmg{grid-template-columns:1fr}#inp .tmo{padding:12px}#tmv{font-size:13.5px}}
 @media print{body{background:#fff;padding:0}.noprint{display:none!important}.c{border:0;padding:0}.p,.dim,.b,.v,li{break-inside:avoid}h3{break-after:avoid}}
 </style></head><body><div class="w">
 <h1>🔮 BaZi + ลัคนา + เลขศาสตร์ไทย</h1>
@@ -43,8 +54,12 @@ ul{margin:6px 0;padding-left:22px}li{margin:3px 0}
 <div><label for="by">ปีเกิด (พ.ศ. หรือ ค.ศ.)</label><input id="by" type="number" placeholder="เช่น 2530"></div>
 <div><label for="bt">🕐 เวลาตกฟาก</label><input id="bt" type="time"></div></div>
 <div class="fg2"><div><label for="pl">📍 จังหวัดที่เกิด (77 จังหวัด)</label><select id="pl"></select></div><div><label for="sx">⚧ เพศ</label><select id="sx"><option value="M">👨 ชาย</option><option value="F">👩 หญิง</option></select></div></div>
+<fieldset class="tm" id="tmf"><legend>⏱️ การคำนวณเวลา</legend><div class="tmg">
+<label class="tmo" for="tm1"><input type="radio" name="tm" id="tm1" value="solar" checked><span><b>☀️ เวลาสุริยะเต็มรูปแบบ</b><em>แนะนำ</em><small>ปรับเวลานาฬิกาตามลองจิจูดของจังหวัด + สมการเวลา (Equation of Time) ใช้กับเสายาม/เสาวัน และลัคนา</small></span></label>
+<label class="tmo" for="tm2"><input type="radio" name="tm" id="tm2" value="clock"><span><b>🕐 เวลานาฬิกาตรงๆ</b><small>ใช้เวลาที่กรอกตามที่เป็น ไม่ปรับอะไร เหมาะเมื่อเวลาตกฟากที่ได้มาเป็นเวลาท้องถิ่นของสถานที่เกิดอยู่แล้ว</small></span></label></div>
+<div id="tmv" role="status" aria-live="polite"></div></fieldset>
 <div style="margin-top:12px"><label for="ph">📱 เบอร์โทรศัพท์ 10 หลัก</label><input id="ph" inputmode="numeric" maxlength="12" placeholder="เช่น 0814916249"></div>
-<p class="sm">ใช้เวลาตกฟากจริง (ไม่ทราบเวลา ผลเสาชั่วโมงและลัคนาจะคลาดเคลื่อน) · ระบบใช้พิกัดตัวจังหวัดคำนวณเวลาสุริยคติท้องถิ่น ฤดูกาล และลัคนาให้เอง (เวลามาตรฐานไทย UTC+7) · เพศมีผลกับความหมายของบางคู่เลขและดาวคู่ครอง</p>
+<p class="sm">ใช้เวลาตกฟากจริง (ไม่ทราบเวลา ผลเสาชั่วโมงและลัคนาจะคลาดเคลื่อน) · ระบบใช้พิกัดตัวจังหวัดคำนวณฤดูกาลและลัคนาให้เอง (เวลามาตรฐานไทย UTC+7) · เลือกวิธีคำนวณเวลาได้ในหัวข้อ “การคำนวณเวลา” · เพศมีผลกับความหมายของบางคู่เลขและดาวคู่ครอง</p>
 <button id="go">🔍 วิเคราะห์</button></div>
 
 <div id="res"><div class="ex noprint"><button id="pdf">📄 ดาวน์โหลด PDF</button><button id="shr" class="l">💬 ส่ง PDF เข้า LINE</button><button id="ln" class="l">📝 ส่งสรุปข้อความเข้า LINE</button></div><div class="sm noprint" id="lnmsg" role="status"></div>
@@ -143,15 +158,19 @@ const TH_MON=["มกราคม","กุมภาพันธ์","มีน�
 const mod=(a,n)=>((a%n)+n)%n,sIdx=ch=>STEMS.indexOf(ch);
 function jdn(y,m,d,h){if(m<=2){y-=1;m+=12}const A=Math.floor(y/100),B=2-A+Math.floor(A/4);return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5+h/24}
 function sunLon(j){const d=j-2451543.5,w=282.9404+4.70935e-5*d,M=mod(356.0470+0.9856002585*d,360),e=0.016709-1.151e-9*d,E=M+(180/Math.PI)*e*Math.sin(M*Math.PI/180),xv=Math.cos(E*Math.PI/180)-e,yv=Math.sin(E*Math.PI/180)*Math.sqrt(1-e*e);return mod(Math.atan2(yv,xv)*180/Math.PI+w,360)}
-function eotMin(doy){const B=2*Math.PI*(doy-81)/364;return 9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B)}
-function getPillars(y,mo,d,hr,mi,lon,tz){
-  const clock=hr+mi/60,jUT=jdn(y,mo,d,clock-tz),doy=Math.floor(jUT-jdn(y,1,0,-tz)),corr=(lon-tz*15)*4/60+eotMin(doy)/60,solarH=clock+corr;
-  let dayShift=0;if(solarH>=23)dayShift=1;else if(solarH<0)dayShift=-1;
+// สมการเวลา (นาที) = เวลาสุริยะปรากฏ − เวลาสุริยะเฉลี่ย = (ลองจิจูดเฉลี่ยของดวงอาทิตย์ − ไรต์แอสเซนชัน) × 4 นาที/องศา · ใช้จังหวะเวลา UT จริง (ไม่ใช้วันที่ปัดเป็นจำนวนเต็ม)
+function eotMin(j){const d=j-2451543.5,L=mod(mod(356.0470+0.9856002585*d,360)+282.9404+4.70935e-5*d,360),lam=sunLon(j)*Math.PI/180,eps=(23.4393-3.563e-7*d)*Math.PI/180,ra=Math.atan2(Math.cos(eps)*Math.sin(lam),Math.cos(lam))*180/Math.PI;return(mod(L-ra+180,360)-180)*4}
+// ตัวปรับเวลาสุริยะ (ชม.): cL = ส่วนต่างลองจิจูดจากเส้นเมริเดียนมาตรฐาน (4 นาที/องศา) · cE = สมการเวลา · corr = cL+cE
+function solarInfo(y,mo,d,hr,mi,lon,tz){const clock=hr+mi/60,jUT=jdn(y,mo,d,clock-tz),cL=(lon-tz*15)*4/60,cE=eotMin(jUT)/60;return{clock,jUT,cL,cE,corr:cL+cE}}
+// tm='solar' ใช้เวลาสุริยะจริง (ลองจิจูด+EoT) · tm='clock' ใช้เวลานาฬิกาตรงๆ · เสาปี/เดือนใช้ "ขณะจริง" (UT) เพราะ節氣เป็นเหตุการณ์ทางดาราศาสตร์ ไม่ขึ้นกับเวลาท้องถิ่น
+function getPillars(y,mo,d,hr,mi,lon,tz,tm){
+  const S=solarInfo(y,mo,d,hr,mi,lon,tz),clock=S.clock,jUT=S.jUT,solar=tm!=='clock',corr=solar?S.corr:0,solarH=clock+corr;
+  const dayShift=Math.floor((solarH+1)/24); /* เปลี่ยนวันที่ 23:00 (子初換日): ≥23:00 → วันถัดไป · 23:00-24:00 ของวันก่อนหน้า → นับเป็นวันนี้ (shift 0) · ก่อน 23:00 ของวันก่อนหน้า → วันก่อนหน้า */
   const di=mod(Math.floor(jdn(y,mo,d,12)+0.5)+49+dayShift,60),dS=di%10,dB=di%12;
   const sl=sunLon(jUT),k=Math.floor(mod(sl-315,360)/30);let bzY=y;if(k>=10&&mo<=2)bzY-=1;
   const yS=mod(bzY-4,10),yB=mod(bzY-4,12),mB=mod(k+2,12),mS=mod((yS%5)*2+2+k,10),hB=Math.floor(mod(solarH+1,24)/2),hS=mod((dS%5)*2+hB,10);
   const mk=(s,b)=>({si:s,bi:b,stem:STEMS[s],branch:BRANCH[b],sEl:STEM_EL[s],bEl:BR_EL[b],yy:STEM_YY[s],animal:BR_TH[b],hidden:HIDDEN[BRANCH[b]].map(x=>({s:x[0],w:x[1],el:STEM_EL[sIdx(x[0])]}))});
-  return{year:mk(yS,yB),month:mk(mS,mB),day:mk(dS,dB),hour:mk(hS,hB),solarH,corr,k}}
+  return{year:mk(yS,yB),month:mk(mS,mB),day:mk(dS,dB),hour:mk(hS,hB),solarH,corr,clock,cL:S.cL,cE:S.cE,corrAll:S.corr,tm:solar?'solar':'clock',k}}
 function tenGod(dm,t){const de=STEM_EL[dm],te=STEM_EL[t],same=(dm%2)===(t%2);
   if(te===de)return same?{n:"比肩 พี่น้อง",c:"เพื่อน"}:{n:"劫財 เพื่อนฝูง",c:"เพื่อน"};
   if(PRODUCE[de]===te)return same?{n:"食神 บริวาร",c:"แสดงออก"}:{n:"傷官 วาทะ",c:"แสดงออก"};
@@ -190,7 +209,8 @@ function elScores(A){const s={};if(A.status.k==='strong'){s[A.out]=2;s[A.wea]=2;
 // ===== ลัคนาราศีแบบไทย (นิรายนะ) =====
 const SIGN=['เมษ','พฤษภ','เมถุน','กรกฎ','สิงห์','กันย์','ตุลย์','พิจิก','ธนู','มกร','กุมภ์','มีน'],RULER=[3,6,4,2,1,4,6,3,5,7,7,5];
 const PLN={1:'อาทิตย์',2:'จันทร์',3:'อังคาร',4:'พุธ',5:'พฤหัสบดี',6:'ศุกร์',7:'เสาร์',8:'ราหู',9:'เกตุ',0:'มฤตยู'};
-function ascendant(y,mo,d,hr,mi,lat,lon,tz){const jUT=jdn(y,mo,d,hr+mi/60-tz),T=(jUT-2451545)/36525,gmst=280.46061837+360.98564736629*(jUT-2451545)+0.000387933*T*T,
+// tm='clock': ถือว่าเวลานาฬิกาเป็นเวลาท้องถิ่นของเส้นเมริเดียนมาตรฐาน (ไม่ปรับลองจิจูดจังหวัด) · tm='solar': ใช้ลองจิจูดจริงของจังหวัด (เทียบเท่าเวลาสุริยะจริง)
+function ascendant(y,mo,d,hr,mi,lat,lon0,tz,tm){const lon=tm==='clock'?tz*15:lon0,jUT=jdn(y,mo,d,hr+mi/60-tz),T=(jUT-2451545)/36525,gmst=280.46061837+360.98564736629*(jUT-2451545)+0.000387933*T*T,
   lst=mod(gmst+lon,360)*Math.PI/180,eps=(23.4392911-0.0130042*T)*Math.PI/180,phi=lat*Math.PI/180;
   const asc=mod(Math.atan2(Math.cos(lst),-(Math.sin(lst)*Math.cos(eps)+Math.tan(phi)*Math.sin(eps)))*180/Math.PI,360),ay=23.857+(jUT-2451545)/365.25*0.013972,sid=mod(asc-ay,360);
   return{trop:asc,sid,sign:Math.floor(sid/30),deg:sid%30,ay}}
@@ -346,11 +366,18 @@ function luckHTML(){const{LK,P,es}=CTX,A=CTX.A,age=a=>Math.floor(a)+' ปี'+(M
   else cur=`<div class="sm">📍 อายุปัจจุบัน ${Math.floor(LK.now)} ปี ${LK.now<LK.age0?'ยังไม่เข้าช่วงโชคแรก (เริ่มอายุ '+age(LK.age0)+')':'พ้นช่วงโชคที่คำนวณไว้'}</div>`;
   return `<div class="p"><b>🔄 ดวงจรโชค 10 ปี (大運)</b><div class="sm">ทิศทาง: <b>${LK.fwd?'เดินหน้า (順行)':'ถอยหลัง (逆行)'}</b> เพราะ${CTX.sex==='M'?'ชาย':'หญิง'}เกิดปีธาตุ${LK.yang?'หยาง':'หยิน'} (${P.year.stem}) · เริ่มจรอายุ <b>${age(LK.age0)}</b> (นับจาก ${LK.dd.toFixed(1)} วันถึงเทศกาลสุริยคติ ÷ 3)</div>${cur}
   <div style="overflow-x:auto"><table><tr><th>ช่วง</th><th>อายุ</th><th>พ.ศ.</th><th>เสา</th><th>สิบเทพ</th><th>ธาตุ</th><th>ผลกับดวงเดิม</th></tr>${rows}</table></div></div>`}
+function tmHTML(){const{P,asc,b,alt}=CTX,sol=P.tm==='solar',pc=p=>p.stem+p.branch,df=[];
+  [['เสาวัน','day'],['เสาชั่วโมง','hour']].forEach(([n,k])=>{if(pc(P[k])!==pc(alt.P[k]))df.push(`${n} ${pc(P[k])} → ${pc(alt.P[k])}`)});
+  if(asc.sign!==alt.asc.sign)df.push(`ลัคนา ราศี${SIGN[asc.sign]} → ราศี${SIGN[alt.asc.sign]}`);
+  const o=sol?'เวลานาฬิกาตรงๆ':'เวลาสุริยะเต็มรูปแบบ',
+   l1=sol?`⏱️ <b>เวลาสุริยะจริง ${fmtH(P.solarH)}</b> · นาฬิกา ${fmtH(P.clock)} ปรับ ${mn(P.corr*60)} นาที (ลองจิจูด${b.prov} ${mn(P.cL*60)} + สมการเวลา ${mn(P.cE*60)}) · ใช้กับเสาวัน/ชั่วโมงและลัคนา`
+    :`⏱️ <b>เวลานาฬิกาตรงๆ ${fmtH(P.clock)}</b> ไม่ปรับ · เวลาสุริยะจริงที่${b.prov}คือ ${fmtH(P.clock+P.corrAll)} (ต่างกัน ${mn(P.corrAll*60)} นาที) · ลัคนาถือเวลานาฬิกาเป็นเวลาท้องถิ่นของเส้นเมริเดียนมาตรฐาน`;
+  return `<div class="sm" style="margin:10px 0">${l1}<br>${df.length?`ถ้าเลือก${o} จะต่างที่: <b>${df.join(' · ')}</b>`:`ผลเสาวัน เสาชั่วโมง และลัคนาเหมือนกันทั้งสองวิธี`}</div>`}
 function chartHTML(){const{P,A,asc,ruler}=CTX,pil=[['ปี','year'],['เดือน','month'],['วัน (ดิถี)','day'],['เวลา','hour']];
   const cells=pil.map(([n,k])=>{const p=P[k];return `<div class="pil"><div class="sm">${n}</div><div class="cn">${p.stem}${p.branch}</div><div class="sm">${EM[p.sEl]}${p.yy}${p.sEl} · ${p.animal}</div><div class="sm">${k==='day'?'👑 Day Master':tenGod(P.day.si,p.si).n}</div></div>`}).join('');
   const els=Object.keys(A.sc).map(e=>`<span class="chip" style="background:${COL[e]}">${EM[e]} ${e} ${A.pc(e)}%</span>`).join(''),es=Object.keys(CTX.es).map(e=>`<span class="chip" style="background:${COL[e]}">${EM[e]} ${sg(CTX.es[e])}</span>`).join('');
   const edge=asc.deg<1.5||asc.deg>28.5;
-  return `<div class="g4">${cells}</div>${luckHTML()}<div class="p"><div class="sm"><b>${A.status.t}</b> · Day Master = ${EM[A.dm]}ธาตุ${A.dm} · กำลังหนุน ${A.support}% (แกร่ง >55 · อ่อน <45)</div><div class="sm">สัดส่วนธาตุ: ${els}</div><div class="sm">ธาตุที่ควรเสริม: <b>${A.fav.map(e=>EM[e]+e).join(' ')}</b> · ธาตุที่ควรเลี่ยง: <b>${A.unfav.map(e=>EM[e]+e).join(' ')}</b></div><div class="sm">คะแนนธาตุที่ใช้กับตัวเลข (เฉลี่ย 0): ${es}</div>
+  return `<div class="g4">${cells}</div>${tmHTML()}${luckHTML()}<div class="p"><div class="sm"><b>${A.status.t}</b> · Day Master = ${EM[A.dm]}ธาตุ${A.dm} · กำลังหนุน ${A.support}% (แกร่ง >55 · อ่อน <45)</div><div class="sm">สัดส่วนธาตุ: ${els}</div><div class="sm">ธาตุที่ควรเสริม: <b>${A.fav.map(e=>EM[e]+e).join(' ')}</b> · ธาตุที่ควรเลี่ยง: <b>${A.unfav.map(e=>EM[e]+e).join(' ')}</b></div><div class="sm">คะแนนธาตุที่ใช้กับตัวเลข (เฉลี่ย 0): ${es}</div>
   <div class="sm">💞 ${spouseLine()}</div><div class="sm">🌙 <b>ลัคนาราศี${SIGN[asc.sign]}</b> ${Math.floor(asc.deg)}°${String(Math.round((asc.deg%1)*60)).padStart(2,'0')}′ · ลัคนาธิบดี = ดาว${PLN[ruler]} (เลข ${ruler})${edge?' · ⚠️ ใกล้เส้นแบ่งราศี ควรตรวจเวลาตกฟากให้แม่น':''}</div></div>`}
 function render(r){
   const{A,asc}=CTX;
@@ -484,11 +511,23 @@ function readBirth(){let y=+$('by').value;const m=+$('bm').value,d=+$('bd').valu
   if(y>2400)y-=543;const dt=new Date(y,m-1,d);
   if(!y||y<1900||y>2100||!(dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d)){alert('วันเดือนปีเกิดไม่ถูกต้อง (รองรับปี 1900-2100)');return null}
   if(!t){alert('กรุณากรอกเวลาตกฟาก');return null}
-  const[hh,mi]=t.split(':').map(Number),tz=y<1920?6.7:7; /* ก่อน 2463 (1920) ไทยใช้เวลาท้องถิ่นกรุงเทพ UTC+6:42 */return{y,m,d,hh,mi,lat,lon,tz,sex:$('sx').value,prov:pv.n}}
+  const[hh,mi]=t.split(':').map(Number),tz=tzOf(y,m);return{y,m,d,hh,mi,lat,lon,tz,tm:(document.querySelector('input[name=tm]:checked')||{}).value||'solar',sex:$('sx').value,prov:pv.n}}
+/* ไทยใช้เวลาท้องถิ่นกรุงเทพ (UTC+6:42) จนถึง 31 มี.ค. 1920 แล้วเปลี่ยนเป็น UTC+7 วันที่ 1 เม.ย. 1920 */
+const tzOf=(y,m)=>(y<1920||(y===1920&&m<4))?6.7:7;
+function fmtH(h){const t=Math.round(h*60),dd=Math.floor(t/1440),r=mod(t,1440);return String(Math.floor(r/60)).padStart(2,'0')+':'+String(r%60).padStart(2,'0')+(dd<0?' (วันก่อนหน้า)':dd>0?' (วันถัดไป)':'')}
+const mn=x=>(x<0?'−':'+')+Math.abs(x).toFixed(1);
+function tmPreview(){const el=$('tmv');let y=+$('by').value;const m=+$('bm').value,d=+$('bd').value,t=$('bt').value;if(y>2400)y-=543;
+  if(!y||!d||!t||y<1900||y>2100){el.innerHTML='';return}
+  const dt=new Date(y,m-1,d);if(dt.getFullYear()!==y||dt.getMonth()!==m-1||dt.getDate()!==d){el.innerHTML='';return}
+  const pv=PROV[+$('pl').value],[hh,mi]=t.split(':').map(Number),S=solarInfo(y,m,d,hh,mi,pv.lon,tzOf(y,m)),sol=document.querySelector('input[name=tm]:checked').value!=='clock';
+  el.innerHTML=sol?`☀️ จะใช้เวลาสุริยะจริง <b>${fmtH(S.clock+S.corr)}</b><span class="sm">นาฬิกา ${fmtH(S.clock)} ปรับ ${mn(S.corr*60)} นาที (ลองจิจูด${pv.n} ${mn(S.cL*60)} + สมการเวลา ${mn(S.cE*60)})</span>`
+   :`🕐 จะใช้เวลานาฬิกา <b>${fmtH(S.clock)}</b> ตรงๆ<span class="sm">เวลาสุริยะจริงที่${pv.n}คือ ${fmtH(S.clock+S.corr)} (ต่างกัน ${mn(S.corr*60)} นาที) แต่ไม่ได้นำมาปรับ</span>`}
+['bd','bm','by','bt','pl'].forEach(id=>{$(id).addEventListener('input',tmPreview);$(id).addEventListener('change',tmPreview)});
+document.querySelectorAll('input[name=tm]').forEach(r=>r.addEventListener('change',tmPreview));tmPreview();
 $('go').onclick=()=>{const b=readBirth();if(!b)return;const ph=$('ph').value.replace(/\D/g,'');if(!/^0\d{9}$/.test(ph)){alert('กรุณากรอกเบอร์ 10 หลักที่ขึ้นต้นด้วย 0');return}
-  const P=getPillars(b.y,b.m,b.d,b.hh,b.mi,b.lon,b.tz),A=analyse(P),asc=ascendant(b.y,b.m,b.d,b.hh,b.mi,b.lat,b.lon,b.tz),ruler=RULER[asc.sign];
+  const P=getPillars(b.y,b.m,b.d,b.hh,b.mi,b.lon,b.tz,b.tm),A=analyse(P),asc=ascendant(b.y,b.m,b.d,b.hh,b.mi,b.lat,b.lon,b.tz,b.tm),ruler=RULER[asc.sign],ot=b.tm==='clock'?'solar':'clock',alt={tm:ot,P:getPillars(b.y,b.m,b.d,b.hh,b.mi,b.lon,b.tz,ot),asc:ascendant(b.y,b.m,b.d,b.hh,b.mi,b.lat,b.lon,b.tz,ot)};
   const LK=luckCycles(b,P,b.sex),esC=LK.cur>=0?elScores(analyse(P,LK.cyc[LK.cur].p)):null,esN=LK.nxt>=0?elScores(analyse(P,LK.cyc[LK.nxt].p)):null;
-  setGender(b.sex);CTX={P,A,asc,ruler,es:elScores(A),esC,esN,LK,lag:LAG[ruler],b,sex:b.sex};R0=evalPhone(ph);render(R0)};
+  setGender(b.sex);CTX={P,A,asc,ruler,alt,es:elScores(A),esC,esN,LK,lag:LAG[ruler],b,sex:b.sex};R0=evalPhone(ph);render(R0)};
 $('gls').onchange=showRec;$('go2').onclick=compare;$('qbox').onchange=()=>{readPer();showRec()};readPer();
 
 // ===== ส่งออก LINE / PDF =====

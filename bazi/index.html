@@ -182,7 +182,7 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
       <div class="fld"><label>📍 ละติจูด</label><input type="text" id="lat" readonly></div>
       <div class="fld"><label>📍 ลองจิจูด</label><input type="text" id="lon" readonly></div>
       <div class="fld"><label>🕰️ Time Zone</label><input type="text" id="tz" value="+7 (ประเทศไทย)" readonly></div>
-      <div class="fld" style="grid-column:span 2"><label>🧮 การคำนวณเวลา</label><select id="tmode" onchange="updateConfirm()"><option value="solar">☀️ เวลาสุริยะจริงเต็มรูปแบบ (ลองจิจูด + EoT)</option><option value="clock">🕐 เวลานาฬิกาตรง ๆ (+7)</option></select><div class="small" id="tmodeHint" style="margin-top:4px"></div></div>
+      <div class="fld" style="grid-column:span 2"><label>🧮 การคำนวณเวลา</label><select id="tmode" onchange="updateConfirm()"><option value="solar">☀️ เวลาสุริยะจริงเต็มรูปแบบ</option><option value="clock">🕐 เวลานาฬิกาตรง ๆ (+7)</option></select><div class="small" id="tmodeHint" style="margin-top:4px"></div></div>
       <div class="fld" style="grid-column:span 2"><button class="wide" onclick="calculateBazi()">🔮 วิเคราะห์ดวงชะตา</button></div>
     </div>
     <div class="confirm" id="confirmLine">📋 …</div>
@@ -1242,7 +1242,7 @@ function updateConfirm(){
     const sm=Math.round(mod(cl+cr,24)*60)%1440, dd=(cl+cr)<0?' (ของวันก่อนหน้า)':(cl+cr)>=24?' (ของวันถัดไป)':'';
     const dm=Math.round(cr*60);
     tmTxt=' (เวลาสุริยะจริง <b>'+String(Math.floor(sm/60)).padStart(2,'0')+':'+String(sm%60).padStart(2,'0')+' น.</b>'+dd+' · '+(dm>=0?'+':'−')+Math.abs(dm)+' นาที)';
-    tmHint='ปรับตามลองจิจูดจังหวัด + Equation of Time · กระทบเสาวัน/เสาเวลา · ลัคนาใช้พิกัดจริงเสมอ';
+    tmHint='กระทบเสาวัน/เสาเวลา · ลัคนา';
   }
   const hintEl=document.getElementById('tmodeHint');if(hintEl)hintEl.textContent=tmHint;
   el.innerHTML=who+`📋 <b>ยืนยันข้อมูล:</b> เพศ<b>${genderTxt}</b> เกิด<b>วัน${TH_DOW[dt.getDay()]}</b> ที่ <b>${d} ${TH_MON[m-1]} ค.ศ. ${y}</b> `+

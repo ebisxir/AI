@@ -182,6 +182,10 @@ body.isadmin .adminonly{display:block!important}
   body.pcompact .tl,body.pcompact .elrow{padding:5px 0;font-size:8pt}
   body.pcompact .tl b,body.pcompact .elrow b{min-width:95px;font-size:7.5pt}
 }
+.hrow{display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:7px 0;font-size:12.5px}
+.hrow .hd{flex:1;min-width:0}.hrow .hd small{display:block;color:var(--mut);font-size:11px;margin-top:2px}
+.hrow .hw{min-width:74px;text-align:right;font-weight:700}
+.hsum{font-size:12px;color:var(--acc2);margin:8px 0 2px}
 </style>
 </head>
 <body class="pcompact">
@@ -243,6 +247,18 @@ body.isadmin .adminonly{display:block!important}
         <button class="btn2" style="margin-top:8px" onclick="delProfile()">🗑️ ลบคนนี้</button>
       </div>
       <div id="profnote" class="note"></div>
+    </div>
+
+    <div class="sec" style="border-color:rgba(56,189,248,.5)">
+      <div class="st">📈 ประวัติการบันทึกของผู้รับแผน (ไว้ติดตามผล)</div>
+      <div class="row">
+        <div><label>น้ำหนัก (กก.) — ไม่บังคับ</label><input type="number" id="hwt" step="0.1" min="20" max="300" placeholder="เช่น 68.5"></div>
+        <div><label>หมายเหตุ — ไม่บังคับ</label><input type="text" id="hnote" maxlength="200" placeholder="เช่น หิวช่วงบ่าย"></div>
+      </div>
+      <button type="button" class="btn2" onclick="histManual()">📌 บันทึกประวัติครั้งนี้</button>
+      <div id="histst" class="note"></div>
+      <div id="histlist"></div>
+      <div class="note">ระบบบันทึกประวัติให้อัตโนมัติเมื่อสร้าง/ทำสำเนาผู้รับแผน หรือเมื่อเปลี่ยนเป้าหมาย สัปดาห์ วันเริ่มต้น จำนวนมื้อ ระดับ Visceral โปรตีน (เก็บบน Supabase)</div>
     </div>
 
     <label>📅 วันเริ่มต้นของแผน 7 วันนี้</label>
@@ -769,7 +785,7 @@ function migrate(d){
   Object.keys(o.locks).forEach(k=>{
     const v=o.locks[k];
     if(!/^[0-6]\|/.test(k)||!Array.isArray(v)){ delete o.locks[k]; return; }
-    o.locks[k]=v.filter(i=>i&&menuOf(i.n)).map(i=>({n:i.n,q:(+i.q>0&&+i.q<=2)?+i.q:1}));
+    o.locks[k]=v.filter(i=>i&&menuOf(i.n)).map(i=>({n:i.n,q:(+i.q>0&&+i.q<=4)?+i.q:1}));
     if(!o.locks[k].length) delete o.locks[k];
   });
   o.schema=SCHEMA;
@@ -826,6 +842,7 @@ async function bootData(){
   CURDAY=0;
   renderProfSel();
   applyData(curData());
+  histLoad();
   if(imported) profnote.innerHTML+=`<br><span style="color:var(--acc)">นำเข้าข้อมูลเดิมในเครื่องนี้ ${imported} คน ขึ้นคลาวด์เรียบร้อยแล้ว</span>`;
 }
 function renderProfSel(){
@@ -840,8 +857,10 @@ function switchProfile(id){
   save();
   setActive(id);
   CURDAY=0;
+  HSHOW=10;
   renderProfSel();
   applyData(curData());
+  histLoad();
 }
 function addProfile(){
   const nm=clean(profname.value);
@@ -853,6 +872,7 @@ function addProfile(){
   setActive(id); CURDAY=0;
   renderProfSel(); applyData(null);
   markDirty(id);
+  histLog(id,'create');
   profnote.innerHTML=`<span style="color:var(--acc)">เพิ่ม "${esc(nm)}" แล้ว เริ่มกรอกข้อมูลของคนนี้ได้เลย</span>`;
 }
 function dupProfile(){
@@ -866,6 +886,7 @@ function dupProfile(){
   setActive(id);
   renderProfSel(); applyData(curData());
   markDirty(id);
+  histLog(id,'duplicate');
   profnote.innerHTML=`<span style="color:var(--acc)">ทำสำเนาเป็น "${esc(nm)}" แล้ว</span>`;
 }
 function renameProfile(){
@@ -886,8 +907,9 @@ function delProfile(){
   PROF=PROF.filter(p=>p.id!==gone); delete DATA[gone];
   DIRTY.delete(gone); FAILED.delete('save:'+gone);
   enqueue('del:'+gone,()=>rpc('np_delete_profile',{p_token:TOKEN,p_id:gone}));
-  setActive(PROF[0].id); CURDAY=0;
+  setActive(PROF[0].id); CURDAY=0; HSHOW=10;
   renderProfSel(); applyData(curData());
+  histLoad();
   profnote.innerHTML='<span style="color:var(--acc)">ลบเรียบร้อยแล้ว</span>';
 }
 function applyData(d){
@@ -929,6 +951,101 @@ function applyData(d){
   sumRows();
   BOOTING=false;
   run();
+  if(PID&&DATA[PID]) HISTSIG[PID]=histSig(DATA[PID]);   /* ฐานเทียบสำหรับบันทึกประวัติอัตโนมัติ */
+}
+
+/* ================= ประวัติผู้รับแผน (เก็บบน Supabase: ตาราง np_profile_history ผ่าน RPC) =================
+   ใช้ rpc() ตัวเดิม แต่ไม่ผ่านคิวซิงก์หลัก — ถ้ายังไม่ได้รัน supabase_history.sql จะแจ้งเตือนเฉพาะกล่องนี้
+   และไม่กระทบการบันทึกแผนตามปกติ */
+let HIST=[], HISTSIG={}, HT={}, HSHOW=10, HOK=true;
+const histSig=d=>d?stable({w:d.w,sd:d.sd,k:d.k,p:d.p,m:d.m,v:d.v,s:d.s,b:d.b,dm:d.dm,ds:d.ds,
+  pt1:d.pt1,ps1:d.ps1,pt2:d.pt2,ps2:d.ps2,pt3:d.pt3,ps3:d.ps3}):'';
+function histMsg(h,col){ const el=document.getElementById('histst'); if(el) el.innerHTML=h?`<span style="color:var(${col||'--mut'})">${h}</span>`:''; }
+function histErrText(e){
+  const m=String((e&&e.message)||'');
+  if(/np_log_history|np_history_list|np_history_delete|schema cache|Could not find/i.test(m)) return 'ยังไม่ได้ติดตั้งตารางประวัติใน Supabase — ให้รันไฟล์ supabase_history.sql ใน SQL Editor ก่อน';
+  return m||'เกิดข้อผิดพลาด';
+}
+function fmtHT(v){
+  const d=new Date(v); if(isNaN(d)) return String(v||'').slice(0,16);
+  return `${thMid(d)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+async function histLoad(){
+  const pid=PID; if(!pid||!TOKEN) return;
+  try{
+    const l=await rpc('np_history_list',{p_token:TOKEN,p_id:pid,p_limit:200});
+    if(pid!==PID) return;
+    HIST=Array.isArray(l)?l:[]; HOK=true; histMsg('');
+  }catch(e){ if(pid!==PID) return; HIST=[]; HOK=false; histMsg('⚠️ '+esc(histErrText(e)),'--warn'); }
+  renderHist();
+}
+async function histLog(pid,trigger,wt,note){
+  const d=DATA[pid]; if(!pid||!TOKEN||!d) return false;
+  const nm=(PROF.find(x=>x.id===pid)||{}).name||'';
+  try{
+    const r=await rpc('np_log_history',{p_token:TOKEN,p_id:pid,p_name:nm,p_data:d,p_trigger:trigger,p_weight:wt==null?null:wt,p_note:note||null});
+    HISTSIG[pid]=histSig(d);
+    if(pid===PID) await histLoad();
+    return r||true;
+  }catch(e){ histMsg('⚠️ บันทึกประวัติไม่สำเร็จ: '+esc(histErrText(e)),'--dan'); return false; }
+}
+async function histManual(){
+  if(!PID) return;
+  save();
+  const wv=document.getElementById('hwt').value.trim();
+  let wt=null;
+  if(wv!==''){
+    const w=parseFloat(wv);
+    if(!Number.isFinite(w)||w<20||w>300){ histMsg('น้ำหนักไม่ถูกต้อง (ใส่ 20–300 กก.)','--dan'); return; }
+    wt=Math.round(w*10)/10;
+  }
+  const note=String(document.getElementById('hnote').value||'').replace(/[<>]/g,'').trim().slice(0,200);
+  histMsg('กำลังบันทึกประวัติ…');
+  const r=await histLog(PID,'manual',wt,note);
+  if(r){ document.getElementById('hwt').value=''; document.getElementById('hnote').value=''; histMsg('บันทึกประวัติเรียบร้อยแล้ว','--acc'); }
+}
+/* เรียกจาก save() ทุกครั้งที่ข้อมูลเปลี่ยน — บันทึกอัตโนมัติเมื่อ "ค่าหลักของแผน" เปลี่ยน (หน่วงเวลา 4 วินาทีกันบันทึกถี่) */
+function histMark(){
+  const pid=PID; if(!pid||!TOKEN||!HOK) return;
+  const d=DATA[pid]; if(!d) return;
+  const sig=histSig(d);
+  if(HISTSIG[pid]===undefined){ HISTSIG[pid]=sig; return; }
+  if(sig===HISTSIG[pid]) return;
+  clearTimeout(HT[pid]);
+  HT[pid]=setTimeout(()=>{ if(DATA[pid]&&histSig(DATA[pid])!==HISTSIG[pid]) histLog(pid,'auto'); },4000);
+}
+async function histDel(id){
+  if(!confirm('ลบรายการประวัตินี้?')) return;
+  try{ await rpc('np_history_delete',{p_token:TOKEN,p_hid:id}); await histLoad(); }
+  catch(e){ histMsg('⚠️ ลบไม่สำเร็จ: '+esc(histErrText(e)),'--dan'); }
+}
+function renderHist(){
+  const el=document.getElementById('histlist'); if(!el) return;
+  if(!HIST.length){
+    el.innerHTML=HOK?'<div class="note">ยังไม่มีประวัติของผู้รับแผนคนนี้ กดปุ่มด้านบนเพื่อบันทึก หรือเปลี่ยนเป้าหมาย/สัปดาห์ ระบบจะบันทึกให้เอง</div>':'';
+    return;
+  }
+  const lab={manual:'📌 บันทึกเอง',auto:'⚙️ อัตโนมัติ',create:'🆕 สร้างใหม่',duplicate:'📄 ทำสำเนา'};
+  const wl=HIST.filter(x=>x.weight_kg!=null);
+  let sum='';
+  if(wl.length>=2){
+    const dw=Number(wl[0].weight_kg)-Number(wl[wl.length-1].weight_kg);
+    sum=`<div class="hsum">⚖️ น้ำหนักจาก ${r1(Number(wl[wl.length-1].weight_kg))} → ${r1(Number(wl[0].weight_kg))} กก. (${dw>0?'+':''}${r1(dw)} กก.) · ${HIST.length} ครั้งที่บันทึก</div>`;
+  }
+  const rows=HIST.slice(0,HSHOW).map((x,i)=>{
+    let wt='';
+    if(x.weight_kg!=null){
+      const nx=HIST.slice(i+1).find(y=>y.weight_kg!=null);
+      const dl=nx?Number(x.weight_kg)-Number(nx.weight_kg):null;
+      wt=`${r1(Number(x.weight_kg))} กก.${dl!==null?`<small style="color:${dl<=0?'var(--acc)':'var(--warn)'}">${dl>0?'+':''}${r1(dl)}</small>`:''}`;
+    }
+    return `<div class="hrow"><div class="hd"><b>${esc(fmtHT(x.taken_at))}</b>
+      <small>${lab[x.source]||esc(x.source||'')} · Week ${esc(x.week??'-')} · ${esc(x.kcal??'-')} kcal · โปรตีน ${esc(x.protein??'-')} ก. · Visceral ${esc(x.visceral??'-')}</small>
+      ${x.note?`<small>📝 ${esc(x.note)}</small>`:''}</div>
+      <div class="hw">${wt}</div>
+      <button type="button" class="sdel" title="ลบรายการนี้" onclick="histDel(${Number(x.id)})">✕</button></div>`;
+  }).join('');
+  el.innerHTML=sum+rows+(HIST.length>HSHOW?`<button type="button" class="btn2" onclick="HSHOW+=20;renderHist()">แสดงเพิ่ม (${HIST.length-HSHOW} รายการ)</button>`:'');
 }
 
 /* ================= วันที่ไทย ================= */
@@ -1253,14 +1370,24 @@ const MENUS=[
  M('เห็ดหูหนูดำยำ','1 จานเล็ก',90,5,8,'snack','plant','water'),
  M('ซุปใสเต้าหู้ไข่','1 ถ้วย',100,9,5,'snack','plant','earth')
 ];
+/* ตัวช่วยปรับแคลอรี่ (tag 'fill'): ไข่ต้ม + ขนมปังโฮลวีต — ใช้เมื่ออาหารปกติเติมแล้วไม่ถึง/เกินเป้ามื้อ
+   q = จำนวนหน่วย (ฟอง/แผ่น) · ไข่ 1 ฟอง ≈ 72 kcal โปรตีน 6.3 ก. · ขนมปังโฮลวีต 1 แผ่น (~30 ก.) ≈ 75 kcal โปรตีน 3.5 ก. คาร์บ 13 ก. */
+MENUS.push(
+ Object.assign(M('ไข่ต้ม (เสริม)','เติมแคลอรี่ให้พอดีเป้ามื้อ',72,6.3,0.5,'fill','egg','earth',1),{u:'ฟอง'}),
+ Object.assign(M('ขนมปังโฮลวีต (เสริม)','เติมแคลอรี่ให้พอดีเป้ามื้อ',75,3.5,13,'fill','plant','earth',0),{u:'แผ่น'})
+);
 const MENUMAP=new Map(MENUS.map(m=>[m.n,m]));
+const FILL_EGG=MENUMAP.get('ไข่ต้ม (เสริม)'), FILL_BREAD=MENUMAP.get('ขนมปังโฮลวีต (เสริม)');
+const FILLS=[];   /* ชุดเสริมทุกแบบ: ไข่ 0–2 ฟอง × ขนมปัง 0–4 แผ่น */
+for(let e=0;e<=2;e++) for(let b=0;b<=4;b++) if(e||b) FILLS.push({e,b,egg:e,
+  K:e*FILL_EGG.kcal+b*FILL_BREAD.kcal, P:e*FILL_EGG.p+b*FILL_BREAD.p, C:e*FILL_EGG.c+b*FILL_BREAD.c});
 const menuOf=n=>MENUMAP.get(n);
 function dietOK(m,s){
   if(s==='all'||s==='bazi') return true;
   if(s==='fish') return ['fish','plant','egg'].includes(m.diet);
   return ['plant','egg'].includes(m.diet);
 }
-const foodItem=(m,q)=>({n:m.n,d:m.d,q,u:'ที่',kcal:m.kcal*q,p:m.p*q,c:m.c*q});
+const foodItem=(m,q)=>({n:m.n,d:m.d,q,u:m.u||'ที่',kcal:m.kcal*q,p:m.p*q,c:m.c*q});
 
 /* ================= อาหารเสริม ================= */
 const TIMES=[['เช้า','ก่อน'],['เช้า','หลัง'],['กลางวัน','ก่อน'],['กลางวัน','หลัง'],['เย็น','ก่อน'],['เย็น','หลัง']];
@@ -1296,6 +1423,8 @@ const perOf=w=>PERIODS.find(p=>w>=p.w[0]&&w<=p.w[1]);
 /* ================= UTILS ================= */
 let SEED=1, USED={}, LASTDAY={}, CURDAY=0, ITEM_LOCKS={}, ROLLED=0;
 const r0=x=>Math.round(x), r1=x=>Math.round(x*10)/10;
+/* ความคลาดเคลื่อนพลังงานรายมื้อที่ยอมรับได้ = ±10% ของเป้ามื้อ (เกินนี้ถือว่าไม่ผ่าน) */
+const KTOL=0.10;
 const SLOTSET={2:['เช้า','เย็น'],3:['เช้า','กลางวัน','เย็น'],4:['เช้า','กลางวัน','ว่างบ่าย','เย็น'],
  5:['เช้า','ว่างเช้า','กลางวัน','ว่างบ่าย','เย็น'],6:['เช้า','ว่างเช้า','กลางวัน','ว่างบ่าย','เย็น','ว่างค่ำ']};
 /* ค่าเริ่มต้น 3 มื้อ = 1,150 kcal / โปรตีน 110 ก. ตรงกับเป้ารายวัน */
@@ -1333,7 +1462,7 @@ function allocScoops(blends){
   return out;
 }
 /* เติมโปรตีนก่อนอาหาร: เพิ่มช้อนจากชนิดที่ผู้ใช้เลือก จนถึงเป้าโปรตีนของมื้อ
-   ไม่เกินกฎจำนวนช้อน และไม่ทำให้พลังงานเกินเป้ามื้อ + 40 kcal */
+   ไม่เกินกฎจำนวนช้อน และไม่ทำให้พลังงานเกินเป้ามื้อเกิน 8% */
 function proteinFill(blends,tK,tP,baseK,baseP){
   let a=allocScoops(blends);
   if(!document.getElementById('autop').checked||!blends.length) return a;
@@ -1345,7 +1474,7 @@ function proteinFill(blends,tK,tP,baseK,baseP){
     if(P>=tP) break;
     let added=false;
     for(const t of types){
-      if(K+PRODS[t].kcal>tK+40) continue;
+      if(K+PRODS[t].kcal>tK*(1+KTOL*0.8)) continue;
       const trial=a.map(b=>({...b}));
       const ex=trial.find(b=>b.type===t);
       if(ex) ex.q++; else trial.push({type:t,...PRODS[t],q:1});
@@ -1365,14 +1494,20 @@ function blendSummary(){
   blendnote.innerHTML=`บอดี้คีย์มาจาก Period อัตโนมัติ ไม่ต้องเลือกเอง<br>
     🥤 ตั้งต้นต่อมื้อเชก: ${esc(a.map(x=>x.n.replace('โปรตีน','')+' '+x.q+' ช้อน').join(' + ')||'—')}
     <span class="pill p-blue">${r0(K)} kcal</span> <span class="pill p-acc">โปรตีน ${r1(P)} ก.</span> <span class="pill p-pur">คาร์บ ${r1(C)} ก.</span>${cut?' <span class="pill p-warn">ถูกตัดตามกฎจำนวนช้อน</span>':''}<br>
+    🎯 พลังงานรายมื้อต้องคลาดเคลื่อนไม่เกิน ±10% — ถ้าอาหารปกติเติมแล้วไม่พอดี ระบบใช้ไข่ต้ม/ขนมปังโฮลวีตเสริมให้พอดี<br>
     ${document.getElementById('autop').checked?'⚡ ถ้ามื้อยังไม่ถึงเป้าโปรตีน ระบบจะเติมช้อนจากชนิดที่เลือกก่อน แล้วจึงเติมอาหารปกติ':'✋ ใช้จำนวนช้อนตามที่กรอกเท่านั้น'}<br>
     <span style="font-size:10.5px">กฎ: สูงสุด 3 ช้อน/มื้อ · ออลแพลนท์ล้วน ≤2 · รสชาติล้วนรวม ≤3 · ผสมกัน = ออลแพลนท์ 1 + รสชาติรวม 2</span>`;
 }
 
-/* ========== เลือกเมนู : คุมคาร์บ + กันซ้ำ + ดวงจีน ==========
+/* ========== เลือกเมนู : พลังงานพอดีมื้อก่อน → คุมคาร์บ → กันซ้ำ → ดวงจีน ==========
+   tK        = พลังงานที่ยังขาดในมื้อ (เป้ามื้อ − ที่มีแล้ว)
+   opt.tol   = ความคลาดเคลื่อนพลังงานที่ยอมรับได้ (kcal) — เมนูที่เกินกรอบนี้ถูกตัดทิ้งก่อน ไม่ว่าคาร์บจะเป็นอย่างไร
    opt.strict  = ห้ามเกินเพดานคาร์บ (คืน null ถ้าไม่มี)
    opt.hardBan = ตัดเมนูใน ban ออกจริง (ใช้ตอนสุ่มรายมื้อ)
-   opt.jitter  = สุ่มเพิ่มเพื่อให้ได้เมนูหลากหลาย */
+   opt.jitter  = สุ่มเพิ่มเพื่อให้ได้เมนูหลากหลาย
+   opt.skipIfNoGain = ถ้าของที่เลือกได้ไม่ทำให้พลังงานใกล้เป้าขึ้น ไม่ต้องเติม (คืน null)
+   กฎเสริม: ถ้าอาหารปกติเติมแล้ว "ไม่ถึง" เป้า (ต่ำกว่าเป้าเกิน 5%) จะสร้างตัวเลือก อาหารปกติ + ไข่ต้ม/ขนมปังโฮลวีต
+   ถ้าอาหารปกติ "เกิน" เป้า จะถูกตัดออกและเลือกอาหารปกติที่เบากว่า + ไข่ต้ม/ขนมปังโฮลวีตมาเติมส่วนที่เหลือแทน */
 const WIDE_SLACK=4;   /* ค่าเผื่อคาร์บ (กรัม/มื้อ) ตอนโควตาคาร์บหมดแล้ว — ตั้ง 0 ถ้าต้องการเคร่งที่สุด */
 function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban,opt){
   opt=opt||{};
@@ -1384,45 +1519,75 @@ function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban,opt){
   if(!mains.length) mains=MENUS.filter(m=>m.tag==='main'&&ok(m)).sort((a,b)=>a.c-b.c).slice(0,10);
   if(!snacks.length) snacks=MENUS.filter(m=>m.tag==='snack'&&ok(m)).sort((a,b)=>a.c-b.c).slice(0,8);
 
+  const tol=opt.tol>0?opt.tol:Infinity;
   const primary=snack?snacks.concat(mains.filter(m=>m.kcal<=200)):mains;
   const side=snacks.concat(mains.filter(m=>m.kcal<=200));
   const banned=cb=>opt.hardBan&&ban&&cb.some(x=>ban.has(x.m.n));
-  const cands=[];
-  primary.forEach(m=>[1,1.5].forEach(q=>{
-    const cb=[{m,q}];
-    if(st.eggs+m.egg*q<=4&&!banned(cb)) cands.push(cb);
-  }));
+  const mk=cb=>{let K=0,P=0,C=0,E=0;cb.forEach(x=>{K+=x.m.kcal*x.q;P+=x.m.p*x.q;C+=x.m.c*x.q;E+=x.m.egg*x.q;});return {cb,K,P,C,E,nf:0};};
+
+  /* 1) ชุดอาหารปกติ (ยังไม่รวมตัวเสริม) */
+  const raw=[];
+  const add=cb=>{ if(banned(cb)) return; const v=mk(cb); if(st.eggs+v.E<=4) raw.push(v); };
+  const qs=tK>=380?[1,1.5,2]:[1,1.5], aq=tK>=500?[1,1.5]:[1];   /* มื้อใหญ่ให้เพิ่มปริมาณได้ */
+  primary.forEach(m=>qs.forEach(q=>add([{m,q}])));
   if(maxItems>=2) primary.forEach(a=>side.forEach(b=>{
     if(a.n===b.n||(a.rice&&b.rice)) return;
-    [1,0.5].forEach(q=>{
-      const cb=[{m:a,q:1},{m:b,q}];
-      if(st.eggs+a.egg+b.egg*q<=4&&!banned(cb)) cands.push(cb);
-    });
+    aq.forEach(qa=>[1,0.5].forEach(q=>add([{m:a,q:qa},{m:b,q}])));
   }));
-  if(!cands.length) return null;
-  const sum=cb=>{let K=0,P=0,C=0;cb.forEach(x=>{K+=x.m.kcal*x.q;P+=x.m.p*x.q;C+=x.m.c*x.q;});return {K,P,C};};
 
-  /* minPool: ถ้าเมนูที่อยู่ในโควตาคาร์บมีน้อยกว่านี้ (เช่น โควตาถูกบอดี้คีย์กินหมด เหลือแค่เมนูคาร์บ 0)
-     ถือว่าตัวเลือกน้อยเกินไปจนการสุ่มไม่มีผล → strict คืน null เพื่อให้ไปใช้รอบขยายพูล */
+  /* 2) ตัวเลือกที่เติมไข่ต้ม/ขนมปังโฮลวีต เมื่ออาหารปกติยังขาดเกิน 5% ของเป้ามื้อ (รวมกรณีใช้ตัวเสริมล้วน) */
+  const cands=raw.slice();
+  if(Number.isFinite(tol)){
+    const mkFill=(v,f)=>{
+      const cb=v.cb.slice();
+      if(f.e) cb.push({m:FILL_EGG,q:f.e});
+      if(f.b) cb.push({m:FILL_BREAD,q:f.b});
+      return {cb,K:v.K+f.K,P:v.P+f.P,C:v.C+f.C,E:v.E+f.egg,nf:(f.e?1:0)+(f.b?1:0)};
+    };
+    const bases=raw.slice();
+    if(tK<=400) bases.push({cb:[],K:0,P:0,C:0,E:0,nf:0});
+    bases.forEach(v=>{
+      const gap=tK-v.K;
+      if(gap<=tol*0.5) return;
+      let bestAll=null, bestEgg=null;
+      FILLS.forEach(f=>{
+        if(st.eggs+v.E+f.egg>4) return;
+        const err=Math.abs(gap-f.K);
+        if(!bestAll||err<bestAll.err) bestAll={f,err};
+        if(f.b===0&&(!bestEgg||err<bestEgg.err)) bestEgg={f,err};   /* ทางเลือกไม่เพิ่มคาร์บ */
+      });
+      if(bestAll) cands.push(mkFill(v,bestAll.f));
+      if(bestEgg&&(!bestAll||bestEgg.f!==bestAll.f)) cands.push(mkFill(v,bestEgg.f));
+    });
+  }
+  if(!cands.length) return null;
+
+  /* 3) กรองพลังงานก่อน: ต้องอยู่ในกรอบ ±tol ถ้าไม่มีเลยค่อยใช้ชุดที่ใกล้เป้าที่สุด */
+  let base=cands.filter(v=>Math.abs(v.K-tK)<=tol);
+  if(!base.length){
+    if(opt.strict) return null;
+    base=cands.slice().sort((a,b)=>Math.abs(a.K-tK)-Math.abs(b.K-tK)).slice(0,60);
+  }
+
+  /* 4) คาร์บ: ในกรอบพลังงานแล้ว เลือกชุดที่ไม่เกินโควตาก่อน
+     minPool: ถ้าชุดที่อยู่ในโควตามีน้อยกว่านี้ ถือว่าตัวเลือกน้อยเกินไปจนการสุ่มไม่มีผล → strict คืน null */
   const minPool=opt.minPool||1;
-  const byCarb=(a,b)=>sum(a).C-sum(b).C;
-  let pool=cands.filter(cb=>sum(cb).C<=carbCap+0.5), over=false;
-  let carbW=40;   /* น้ำหนักค่าปรับต่อคาร์บ 1 ก. ที่เกินโควตา */
+  let pool=base.filter(v=>v.C<=carbCap+0.5);
+  let carbW=40;
   if(pool.length<minPool){
     if(opt.strict) return null;
-    /* ขยายพูล: เมนูที่คาร์บไม่เกิน (คาร์บต่ำสุดที่มี + WIDE_SLACK ก.) เพื่อให้สุ่มสลับเมนูได้จริง
-       ถ้ายังได้น้อยกว่า 25 ชุด ใช้ 25 ชุดคาร์บต่ำสุดแทน */
-    const sorted=cands.slice().sort(byCarb);
-    const minC=sum(sorted[0]).C;
-    let wide=sorted.filter(cb=>sum(cb).C<=minC+WIDE_SLACK);
+    const sorted=base.slice().sort((a,b)=>a.C-b.C);
+    const minC=sorted[0].C;
+    let wide=sorted.filter(v=>v.C<=minC+WIDE_SLACK);
     if(wide.length<25) wide=sorted.slice(0,Math.max(25,pool.length));
-    if(wide.length>pool.length){ pool=wide; over=true; carbW=12; }   /* โควตาถูกเชก/บอดี้คีย์กินหมดแล้ว ลดค่าปรับให้เมนูหลากหลายขึ้น */
+    if(wide.length>pool.length){ pool=wide; carbW=12; }
   }
 
   let best=null;
-  pool.forEach(cb=>{
-    const v=sum(cb); let rep=0, bz=0;
-    cb.forEach(x=>{
+  pool.forEach(v=>{
+    let rep=0, bz=0;
+    v.cb.forEach(x=>{
+      if(x.m.tag==='fill') return;   /* ตัวเสริมใช้ซ้ำได้ ไม่คิดค่าปรับความซ้ำ */
       const n=x.m.n;
       rep+=(USED[n]||0)*130+hsh(n,day,salt);
       const last=LASTDAY[n];
@@ -1434,13 +1599,17 @@ function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban,opt){
         if(cfg.bazi.avoid.includes(x.m.el)) bz+=160;
       }
     });
-    const s=Math.abs(v.K-tK)+Math.max(0,tP-v.P)*9+Math.max(0,v.P-tP-20)*0.5
-            +Math.max(0,v.C-carbCap)*carbW+rep+bz+cb.length*4+(opt.jitter?Math.random()*150:0);
-    if(!best||s<best.s) best={s,cb,K:v.K,P:v.P,C:v.C};
+    const s=Math.abs(v.K-tK)*3+Math.max(0,tP-v.P)*9+Math.max(0,v.P-tP-20)*0.5
+            +Math.max(0,v.C-carbCap)*carbW+rep+bz+v.cb.length*4+v.nf*25+(opt.jitter?Math.random()*150:0);
+    if(!best||s<best.s) best={s,cb:v.cb,K:v.K,P:v.P,C:v.C};
   });
+  if(!best) return null;
+  if(opt.skipIfNoGain&&Math.abs(best.K-tK)>=Math.abs(tK)) return null;
   best.cb.forEach(x=>{
+    st.eggs+=x.m.egg*x.q;
+    if(x.m.tag==='fill') return;
     USED[x.m.n]=(USED[x.m.n]||0)+1; LASTDAY[x.m.n]=day;
-    st.today.add(x.m.n); st.eggs+=x.m.egg*x.q;
+    st.today.add(x.m.n);
   });
   best.over=best.C>carbCap+0.5;
   return best;
@@ -1508,7 +1677,9 @@ function planDay(day,cfg){
   /* 3) เติมอาหารปกติ: โควตามื้อ → โควตาที่เหลือทั้งวัน → เมนูคาร์บต่ำที่สุด */
   meals.forEach((m,i)=>{
     const gK=m.tK-m.K, gP=m.tP-m.P;
-    const need=m.locked?(gK>60||gP>4):(gK>40||gP>2);
+    const tolK=m.tK*KTOL;
+    /* เติมเมื่อพลังงานยังขาดเกิน 5% ของเป้ามื้อ หรือโปรตีนขาด (และยังมีที่ว่างพลังงาน) · มื้อที่ล็อกเมนูไว้เติมเฉพาะเมื่อหลุดกรอบ ±10% */
+    const need=m.locked?(gK>tolK||gP>4):(gK>m.tK*0.05||(gP>2&&gK>m.tK*0.02));
     if(need){
       const free=Math.max(0,budget);
       const share=needLeft>0?free*needs[i]/needLeft:free;
@@ -1516,9 +1687,10 @@ function planDay(day,cfg){
       const snack=isSnackSlot(m.slot);
       const a=[cfg,st,Math.max(0,gK),Math.max(0,gP)];
       const MINP=6;   /* ต้องมีเมนูที่ไม่เกินโควตาอย่างน้อย 6 ชุด ไม่งั้นขยายพูลเพื่อให้สุ่มได้ */
-      let r=pickMenus(...a,share,snack,maxI,day,0,null,{strict:true,minPool:MINP});
-      if(!r) r=pickMenus(...a,free,snack,maxI,day,0,null,{strict:true,minPool:MINP});
-      if(!r) r=pickMenus(...a,free,snack,maxI,day,0,null,{minPool:MINP});
+      const o={strict:true,minPool:MINP,tol:tolK,skipIfNoGain:true};
+      let r=pickMenus(...a,share,snack,maxI,day,0,null,o);
+      if(!r) r=pickMenus(...a,free,snack,maxI,day,0,null,o);
+      if(!r) r=pickMenus(...a,free,snack,maxI,day,0,null,{minPool:MINP,tol:tolK,skipIfNoGain:true});
       if(r){
         r.cb.forEach(x=>m.items.push(foodItem(x.m,x.q)));
         budget-=r.C; m.over=!!r.over;
@@ -1551,8 +1723,8 @@ function dayStatus(p,c){
   p.meals.forEach(m=>{
     if(!m.items.length) return;
     if(m.P<m.tP-1.5) warn.push(`มื้อ${m.slot}: โปรตีน ${r1(m.P)} ก. ต่ำกว่าเป้ามื้อ ${m.tP} ก.`);
-    if(m.K<m.tK-60) warn.push(`มื้อ${m.slot}: พลังงาน ${r0(m.K)} kcal ต่ำกว่าเป้ามื้อ ${m.tK} kcal`);
-    if(m.K>m.tK+80) warn.push(`มื้อ${m.slot}: พลังงาน ${r0(m.K)} kcal เกินเป้ามื้อ ${m.tK} kcal`);
+    const ek=(m.K-m.tK)/Math.max(1,m.tK);
+    if(Math.abs(ek)>KTOL+0.0005) fail.push(`มื้อ${m.slot}: พลังงาน ${r0(m.K)} kcal คลาดจากเป้ามื้อ ${m.tK} kcal ${ek>0?'+':''}${Math.round(ek*100)}% (เกินเกณฑ์ ±${Math.round(KTOL*100)}%)${m.items.every(i=>PRODNAMES.has(i.n))?' — ปรับจำนวนช้อนโปรตีนหรือเป้ามื้อ':m.locked?' — ลองปลดล็อกเมนูในมื้อนี้':''}`);
   });
   return {level:fail.length?'fail':warn.length?'warn':'pass',fail,warn};
 }
@@ -1566,6 +1738,7 @@ function rerollMeal(day,slot){
     return;
   }
   const backup=JSON.parse(JSON.stringify(p));
+  const failBefore=dayStatus(p,CFG).fail.length;
   const m=p.meals[mi];
   const oldFood=m.items.filter(i=>!PRODNAMES.has(i.n));
   const ban=new Set(oldFood.map(i=>i.n));
@@ -1577,8 +1750,9 @@ function rerollMeal(day,slot){
   ROLLED++;
   const maxI=m.type==='shake'?(gK>250?2:1):2;
   const a=[CFG,st,Math.max(0,gK),Math.max(0,gP),free,isSnackSlot(slot),maxI,day,ROLLED,ban];
-  let r=pickMenus(...a,{strict:true,hardBan:true,jitter:true,minPool:6});
-  if(!r) r=pickMenus(...a,{hardBan:true,jitter:true,minPool:6});
+  const tolK=m.tK*KTOL;
+  let r=pickMenus(...a,{strict:true,hardBan:true,jitter:true,minPool:6,tol:tolK});
+  if(!r) r=pickMenus(...a,{hardBan:true,jitter:true,minPool:6,tol:tolK});
   if(!r){
     DAYS[day]=backup; renderAll(day);
     lockinfo.innerHTML='<span style="color:var(--warn)">ไม่พบเมนูอื่นที่เหมาะกับมื้อนี้ จึงคงเมนูเดิมไว้</span>';
@@ -1587,7 +1761,7 @@ function rerollMeal(day,slot){
   r.cb.forEach(x=>m.items.push(foodItem(x.m,x.q)));
   m.over=!!r.over;
   recalcDay(p);
-  if(dayStatus(p,CFG).level==='fail'){
+  if(dayStatus(p,CFG).fail.length>failBefore){
     DAYS[day]=backup; renderAll(day);
     lockinfo.innerHTML='<span style="color:var(--warn)">เมนูใหม่ทำให้วันนี้ไม่ผ่านการตรวจสอบ จึงคืนเมนูเดิม</span>';
     return;
@@ -1694,7 +1868,7 @@ function dayBlock(p,idx){
     ${box}`;
 
   p.meals.forEach(m=>{
-    const okK=m.K>=m.tK-60&&m.K<=m.tK+80, okP=m.P>=m.tP-1.5, sup=suppFor(m.slot,m.type,m.topped);
+    const okK=Math.abs(m.K-m.tK)<=m.tK*KTOL+0.5, okP=m.P>=m.tP-1.5, sup=suppFor(m.slot,m.type,m.topped);
     const tag=m.type==='shake'
       ? `<span class="pill p-acc">🥤 ${m.bk?'บอดี้คีย์ + โปรตีน':'โปรตีน'}${m.topped?' + อาหารปกติ':''}</span>`
       : '<span class="pill p-blue">🍽️ อาหารปกติ</span>';
@@ -1933,7 +2107,7 @@ function save(){
   document.querySelectorAll('#mrows input').forEach(i=>d.rows[i.id]=i.value);
   const nd=JSON.parse(JSON.stringify(d));
   if(DATA[PID]&&stable(DATA[PID])===stable(nd)) return;   /* ไม่เปลี่ยนแปลง = ไม่ส่งขึ้นคลาวด์ */
-  DATA[PID]=nd; markDirty(PID);
+  DATA[PID]=nd; markDirty(PID); histMark();
 }
 function upd(){
   const p=perOf(+week.value)||PERIODS[0];

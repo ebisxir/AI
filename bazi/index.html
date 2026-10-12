@@ -1178,37 +1178,7 @@ function analyse(P){
   const ctot=Object.values(cat).reduce((a,b)=>a+b,0);
   return {sc,pc,tot,dm,res,out,wea,pow,support,status,fav,unfav,cat,ctot,dmIdx:P.day.si,P};
 }
-function evaluateDay(dp){
-  const A=CH, s={"ไม้":0,"ไฟ":0,"ดิน":0,"ทอง":0,"น้ำ":0};
-  s[dp.sEl]+=2; dp.hidden.forEach(h=>s[h.el]+=2*h.w/100);
-  const dom=Object.keys(s).reduce((a,b)=>s[a]>=s[b]?a:b);
-  const god=tenGod(A.dmIdx,dp.si);
-  let sv=50; const tags=[];
-  if(A.fav.includes(dom)){sv+=20;tags.push("✨ ธาตุเด่นวันนี้เป็นธาตุให้คุณ");}
-  if(A.unfav.includes(dom)){sv-=18;tags.push("🌀 ธาตุเด่นวันนี้ซ้ำเติมจุดอ่อนดวง");}
-  if(A.fav.includes(dp.sEl))sv+=10;
-  if(A.unfav.includes(dp.sEl))sv-=9;
-  const db=dp.branch;
-  if(CLASH[db]===A.P.day.branch){sv-=26;tags.push("💥 ชงดิถี");}
-  else if(CLASH[db]===A.P.year.branch){sv-=15;tags.push("⚡ ชงปีเกิด");}
-  else if(CLASH[db]===A.P.month.branch){sv-=12;tags.push("⚡ ชงเดือนเกิด");}
-  if(COMBINE[db]===A.P.day.branch){sv+=14;tags.push("🤝 ฮะดิถี");}
-  else if(COMBINE[db]===A.P.year.branch){sv+=8;tags.push("🤝 ฮะปีเกิด");}
-  if(HARM[db]===A.P.day.branch){sv-=8;tags.push("🩹 ไห่ดิถี");}
-  sv=Math.max(5,Math.min(95,Math.round(sv)));
-  let lv;
-  if(sv>=75)lv={e:"🟢",t:"วันมงคลเยี่ยม",c:"#15803d"};
-  else if(sv>=60)lv={e:"🟩",t:"วันราบรื่น",c:"#16a34a"};
-  else if(sv>=45)lv={e:"🟡",t:"วันปานกลาง",c:"#ca8a04"};
-  else if(sv>=30)lv={e:"🟠",t:"วันท้าทาย",c:"#ea580c"};
-  else lv={e:"🔴",t:"วันต้องระวัง",c:"#b91c1c"};
-  const lucky=[...A.fav].sort((a,b)=>(CONTROL[b]===dom?1:0)-(CONTROL[a]===dom?1:0));
-  const bad=[...A.unfav].sort((a,b)=>(b===dom?1:0)-(a===dom?1:0));
-  const act=GOD_ACT[god.c];
-  const good=(sv>=45?"":"🕊️ โหมดประคองตัว · ")+act.g;
-  const avoid=(sv<45?"🚫 ":"")+act.b+(tags.some(t=>t.includes("ชง"))?" · เลี่ยงเดินทางไกล/ของมีคม":"");
-  return {s,dom,god,sv,lv,tags,lucky,bad,food:FOOD[lucky[0]],good,avoid};
-}
+
 
 /* ============================================================
    SECTION 4 : แสดงผล
@@ -1423,40 +1393,7 @@ function syncToday(){
   const el=document.getElementById('navDate'),t=toISO(new Date());
   if(el&&el.value&&el.value!==t){el.value=t;loadNavigator();}
 }
-function loadNavigator(){
-  const v=document.getElementById('navDate').value; if(!v||!CH)return;
-  const base=parseLocal(v);const todayISO=toISO(new Date());
-  const loc=currentLatLon();
-  const DP=d=>getPillars(d.getFullYear(),d.getMonth()+1,d.getDate(),12,0,loc.lon,TZ_FIXED);
-  const p=DP(base), ev=evaluateDay(p.day);
-  document.getElementById('dailyBox').innerHTML=
-   `📆 <b>วัน${TH_DOW[base.getDay()]}ที่ ${base.getDate()} ${TH_MON[base.getMonth()]} ค.ศ. ${base.getFullYear()}</b>`+
-   (toISO(base)===todayISO?' <span class="badge" style="background:#15803d">วันนี้</span>':'')+`<br>`+
-   `🥢 เสาวันจร <b style="font-family:var(--cn);font-size:26px;color:var(--primary)">${p.day.stem}${p.day.branch}</b> · ${EL_EMO[p.day.sEl]} <b>${p.day.yy}${p.day.sEl}</b> · ${p.day.animal}<br>`+
-   `🌟 สิบเทพประจำวัน: <b>${ev.god.n}</b> (หมวด${ev.god.c})<br>`+
-   `${ev.lv.e} <b style="color:${ev.lv.c};font-size:17px">${ev.lv.t} · คะแนน ${ev.sv}/100</b>`+
-   (ev.tags.length?`<br><span class="small">${ev.tags.join(' · ')}</span>`:'')+
-   `<hr style="border:none;border-top:1px dashed var(--gold);margin:12px 0">`+
-   `🎨 <b>สีมงคล:</b> ${dots(ev.lucky)}<br>🚫 <b>สีกาลกิณี:</b> ${dots(ev.bad)}<br>`+
-   `✅ <b>ควรทำ:</b> ${ev.good}<br>⚠️ <b>ควรเลี่ยง:</b> ${ev.avoid}<br>🍲 <b>โภชนาการ:</b> ${ev.food}`;
-  let h='';
-  for(let i=0;i<7;i++){
-    const d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+i,12,0,0,0);
-    const q=DP(d), e=evaluateDay(q.day), isToday=toISO(d)===todayISO;
-    h+=`<tr>
-      <td data-label="📅 วันที่"><div><b>${TH_DOWS[d.getDay()]}</b> ${d.getDate()} ${TH_MONS[d.getMonth()]}${isToday?' <span class="badge" style="background:#15803d">วันนี้</span>':''}</div></td>
-      <td data-label="🥢 เสาวันจร"><div><b style="font-family:var(--cn);font-size:19px;color:var(--primary)">${q.day.stem}${q.day.branch}</b><span class="badge bg${q.day.sEl}">${EL_EMO[q.day.sEl]}${q.day.yy}${q.day.sEl}</span></div></td>
-      <td data-label="🐉 นักษัตร"><div>${q.day.animal} <span class="small">${q.day.hidden.map(x=>x.s+' '+x.w+'%').join(' · ')}</span></div></td>
-      <td data-label="🌟 สิบเทพ"><div><span class="small">${e.god.n}</span> <span class="badge" style="background:var(--primary)">${e.god.c}</span></div></td>
-      <td data-label="⚖️ คะแนน"><div><b style="color:${e.lv.c};font-size:14px">${e.lv.e} ${e.lv.t}</b><div class="bar"><i style="width:${e.sv}%;background:${e.lv.c}"></i></div></div></td>
-      <td data-label="🎨 สีมงคล"><div>${dots(e.lucky)}</div></td>
-      <td data-label="🚫 สีกาลกิณี"><div>${dots(e.bad)}</div></td>
-      <td data-label="✅ ควรทำ"><div style="text-align:left;font-size:12.5px">${e.good}</div></td>
-      <td data-label="⚠️ ควรเลี่ยง"><div style="text-align:left;font-size:12.5px;color:#b91c1c">${e.avoid}</div></td>
-      <td data-label="🍲 โภชนาการ"><div style="text-align:left;font-size:12.5px">${e.food}</div></td></tr>`;
-  }
-  document.getElementById('wk').innerHTML=h;
-}
+
 
 /* ============================================================
    SECTION 3.5 : วิเคราะห์ชีวิต 9 มิติ (BaZi × ลัคนา)
@@ -2237,6 +2174,205 @@ document.addEventListener('copy',e=>{const t=(e.target.tagName||'').toUpperCase(
 /* ============================================================
    SECTION 6 : BOOT
    ============================================================ */
+/* ============================================================
+   PATCH v10 : พยากรณ์วันจรแบบไดนามิก (สีมงคล/กาลกิณี + กิจกรรม)
+   วางไว้ "เหนือ" บรรทัด (function boot(){ — ฟังก์ชัน evaluateDay / loadNavigator
+   ชื่อเดิมจะถูกแทนที่อัตโนมัติ (ประกาศทีหลังมีผลเหนือกว่า)
+   ============================================================ */
+const DX_EL=["ไม้","ไฟ","ดิน","ทอง","น้ำ"];
+const DX_FAV_W=[3,2.2,1.6], DX_UNFAV_W=[3,2.6,2.3];
+const dxCtrlOf=e=>DX_EL.find(k=>CONTROL[k]===e);            /* ธาตุที่ข่ม e */
+function dxBridge(a,b){                                       /* ธาตุเชื่อม (通關) ระหว่างสองธาตุที่ข่มกัน */
+  if(a===b)return null;
+  if(CONTROL[a]===b)return PRODUCE[a];
+  if(CONTROL[b]===a)return PRODUCE[b];
+  return null;
+}
+/* ---------- กิจกรรมตามสิบเทพรายตัว (10 เทพ) ---------- */
+const DX_GOD10={
+ "比肩":{g:["🤝 ทำงานเป็นทีม แบ่งหน้าที่ให้ชัด","🏃 ออกกำลังกาย เล่นกีฬา","💬 คุยงานกับเพื่อนร่วมงานระดับเดียวกัน"],
+         b:["💸 ให้ยืมเงิน/ค้ำประกัน","📄 ลงทุนร่วมโดยไม่มีสัญญา","🙉 ดื้อดึงไม่ฟังความเห็นคนอื่น"]},
+ "劫財":{g:["🏆 แข่งขัน ทำยอด ประกวดผลงาน","🌐 ขยายเครือข่าย ออกงานสังคม","🦁 งานที่ต้องใช้ความกล้าและความเร็ว"],
+         b:["🛍️ ใช้จ่ายตามเพื่อน ช้อปปิ้งเกินงบ","📉 ลงทุนเสี่ยงสูง เก็งกำไรระยะสั้น","⚔️ ปะทะคารมเรื่องผลประโยชน์"]},
+ "食神":{g:["🎨 งานสร้างสรรค์ ออกแบบ เขียนงาน","👩‍🏫 สอนงาน แบ่งปันความรู้","🍵 พักผ่อน ดูแลตัวเอง ทานอาหารดี ๆ"],
+         b:["🍰 กินดื่มเกินพอดี","🛋️ ติดสบายจนผัดงาน","🎉 ใช้จ่ายเพื่อความบันเทิงเกินงบ"]},
+ "傷官":{g:["💡 นำเสนอไอเดียใหม่ พิทช์งาน","🛠️ แก้ปัญหาเชิงเทคนิค","🎙️ ทำคอนเทนต์ สื่อสาร ไลฟ์"],
+         b:["🗣️ วิจารณ์หัวหน้าหรือผู้มีอำนาจ","📱 โพสต์ระบายอารมณ์ในโซเชียล","📑 ฝ่ากฎระเบียบหรือขั้นตอนราชการ"]},
+ "偏財":{g:["💼 เจรจาธุรกิจ หาลูกค้าใหม่","💰 ปิดการขาย งานเซลส์","🥂 สังสรรค์เชิงธุรกิจ"],
+         b:["🎲 ลงทุนตามกระแสโดยไม่ศึกษา","🤝 รับปากเรื่องเงินเกินตัว","💔 ความสัมพันธ์ซ้อน ไม่ชัดเจน"]},
+ "正財":{g:["📊 วางงบประมาณ ออมเงิน","🧾 เคลียร์บัญชี ติดตามหนี้","✅ ทำงานประจำให้เสร็จตามแผน"],
+         b:["🛒 ซื้อของชิ้นใหญ่แบบไม่วางแผน","🔒 ตระหนี่จนเสียโอกาส","🏠 ละเลยคนในบ้านเพราะงาน"]},
+ "七殺":{g:["⚡ จัดการเรื่องยากหรืองานเร่งด่วน","🏋️ ฝึกวินัย ออกกำลังกายเข้มข้น","🎯 ตัดสินใจเรื่องที่ค้างคา"],
+         b:["⚔️ เผชิญหน้าผู้มีอำนาจตรง ๆ","🚗 ขับรถเร็ว กิจกรรมเสี่ยงอันตราย","🔥 ทำงานหักโหมเกินกำลัง"]},
+ "正官":{g:["📜 ยื่นเอกสาร เซ็นสัญญา","👔 สัมภาษณ์งาน พบผู้ใหญ่","🏅 สร้างภาพลักษณ์และความน่าเชื่อถือ"],
+         b:["⏰ ผิดนัดหรือผิดสัญญา","🚫 ฝ่าฝืนกฎ ภาษี ใบสั่ง","🤐 รับปากเกินความรับผิดชอบ"]},
+ "偏印":{g:["🔬 ค้นคว้า วิจัย ศึกษาศาสตร์เฉพาะทาง","🧘 ทำสมาธิ อยู่กับตัวเอง","♟️ วางกลยุทธ์ระยะยาว"],
+         b:["🌀 คิดมาก ระแวงคนรอบข้าง","🚪 เก็บตัวจนตัดขาดผู้คน","🔀 เปลี่ยนแผนกลางคัน"]},
+ "正印":{g:["📚 เรียน อบรม สอบ","🧓 ขอคำปรึกษาผู้ใหญ่หรืออาจารย์","🙏 ทำบุญ ตรวจสุขภาพ"],
+         b:["🛌 พึ่งคนอื่นจนไม่ลงมือ","⏳ ผัดวันประกันพรุ่ง","🍩 ตามใจตัวเองจนเฉื่อย"]}
+};
+/* ---------- กิจกรรมตามความสัมพันธ์กิ่งวันจร × ดวงกำเนิด ---------- */
+const DX_REL={
+ clashD:{g:"🧯 เคลียร์งานค้าง เตรียมแผนสำรอง",b:"💥 ตัดสินใจใหญ่ ย้ายบ้าน เดินทางไกล ใช้ของมีคม"},
+ clashY:{b:"⚡ โต้เถียงกับผู้ใหญ่หรือคนในครอบครัว"},
+ clashM:{b:"⚡ เปลี่ยนงานหรือย้ายที่ทำงานกะทันหัน"},
+ combD:{g:"🤝 เจรจา คืนดี เริ่มความร่วมมือ นัดพบคนสำคัญ"},
+ combY:{g:"🏠 ขอความช่วยเหลือจากครอบครัวหรือผู้ใหญ่"},
+ harm:{b:"🩹 สื่อสารกำกวม — ตรวจทานข้อความและเอกสารซ้ำ"},
+ fuyin:{g:"🔁 ทบทวนและต่อยอดงานเดิม",b:"🔁 ทำผิดซ้ำรอยเดิม"}
+};
+const dxPick=(arr,n,off)=>{const o=[];for(let i=0;i<n&&i<arr.length;i++)o.push(arr[(off+i)%arr.length]);return o;};
+const dxUniq=a=>[...new Set(a.filter(Boolean))];
+const dxTag=(A,el)=>A.fav.includes(el)?'ธาตุให้คุณ':A.unfav.includes(el)?'ธาตุให้โทษ':'ธาตุกลาง';
+
+/* ---------- สีประจำวัน: ให้คะแนนธาตุใหม่ทุกวันจากดวง × ธาตุวันจร ---------- */
+function dxColors(A,dp,s,dom){
+  const tot=DX_EL.reduce((a,e)=>a+s[e],0)||1, sh={};
+  DX_EL.forEach(e=>sh[e]=s[e]/tot);
+  const sc={},why={};DX_EL.forEach(e=>{sc[e]=0;why[e]=[];});
+  const add=(e,v,t)=>{if(!e)return;sc[e]+=v;why[e].push({t,v});};
+  A.fav.forEach((e,i)=>add(e,DX_FAV_W[i]||1.4,'ธาตุให้คุณของดวง'));
+  A.unfav.forEach((e,i)=>add(e,-(DX_UNFAV_W[i]||2.2),'ธาตุให้โทษของดวง'));
+  DX_EL.forEach(e=>{
+    if(A.fav.includes(e)){
+      if(sh[e]===0)add(e,0.8,'วันนี้ธาตุนี้ขาด ควรเติม');
+      else if(sh[e]>=0.5)add(e,-0.6,'วันจรมีธาตุนี้มากอยู่แล้ว เสริมพอประมาณ');
+    }
+    if(A.unfav.includes(e)){
+      if(sh[e]===0)add(e,1.4,'วันจรไม่มีธาตุนี้ แรงลบต่ำ');
+      else if(sh[e]>=0.35)add(e,-1.2,'วันจรมีธาตุนี้มาก ซ้ำเติมจุดอ่อน');
+    }
+  });
+  if(A.unfav.includes(dom)){
+    add(dxCtrlOf(dom),1.6,'ช่วยสกัดธาตุ'+dom+'ที่ล้นในวันนี้');
+    add(PRODUCE[dom],1.0,'ช่วยระบายธาตุ'+dom+'ที่ล้นในวันนี้');
+  }
+  if(CLASH[dp.branch]===A.P.day.branch){
+    add(dxBridge(BR_EL[dp.bi],A.P.day.bEl),1.2,'ธาตุเชื่อม (通關) ลดแรงปะทะวันชง');
+  }
+  const desc=[...DX_EL].sort((a,b)=>sc[b]-sc[a]);
+  let lucky=desc.filter(e=>sc[e]>=1).slice(0,2);
+  if(!lucky.length)lucky=[desc[0]];
+  const bad=[...DX_EL].sort((a,b)=>sc[a]-sc[b]).filter(e=>sc[e]<=-2&&!lucky.includes(e)).slice(0,2);
+  const relaxed=A.unfav.filter(e=>!bad.includes(e)&&!lucky.includes(e));
+  return {sh,sc,why,lucky,bad,relaxed};
+}
+
+/* ---------- กิจกรรมประจำวัน: ก้านวัน × กิ่งวัน × คุณ/โทษ × ชง/ฮะ/ไห่ ---------- */
+function dxActs(A,dp,sv){
+  const gS=tenGod(A.dmIdx,dp.si), mh=dp.hidden[0], gB=tenGod(A.dmIdx,sIdx(mh.s));
+  const kS=gS.n.split(' ')[0], kB=gB.n.split(' ')[0];
+  const sFav=A.fav.includes(dp.sEl), sBad=A.unfav.includes(dp.sEl);
+  const bFav=A.fav.includes(mh.el), bBad=A.unfav.includes(mh.el);
+  let G=[],B=[];
+  if(sFav){G.push(...dxPick(DX_GOD10[kS].g,2,dp.bi));B.push(...dxPick(DX_GOD10[kS].b,1,dp.bi));}
+  else if(sBad){G.push(...dxPick(DX_GOD10[kS].g,1,dp.bi));B.push(...dxPick(DX_GOD10[kS].b,2,dp.bi));}
+  else{G.push(...dxPick(DX_GOD10[kS].g,1,dp.bi));B.push(...dxPick(DX_GOD10[kS].b,1,dp.bi));}
+  if(kB!==kS){
+    if(bFav||!bBad)G.push(dxPick(DX_GOD10[kB].g,1,dp.si)[0]);
+    if(bBad)B.push(dxPick(DX_GOD10[kB].b,1,dp.si)[0]);
+  }
+  const nd=A.P.day.branch, db=dp.branch;
+  if(CLASH[db]===nd){G.unshift(DX_REL.clashD.g);B.unshift(DX_REL.clashD.b);}
+  else if(CLASH[db]===A.P.year.branch)B.unshift(DX_REL.clashY.b);
+  else if(CLASH[db]===A.P.month.branch)B.unshift(DX_REL.clashM.b);
+  if(COMBINE[db]===nd)G.unshift(DX_REL.combD.g);
+  else if(COMBINE[db]===A.P.year.branch)G.push(DX_REL.combY.g);
+  if(HARM[db]===nd)B.push(DX_REL.harm.b);
+  if(db===nd){G.push(DX_REL.fuyin.g);B.push(DX_REL.fuyin.b);}
+  G=dxUniq(G).slice(0,4);B=dxUniq(B).slice(0,4);
+  const modeTxt=sv>=75?'🚀 วันเหมาะลงมือเรื่องสำคัญ':sv<30?'🛑 วันลดความเสี่ยง ทำเฉพาะงานจำเป็น':sv<45?'🕊️ โหมดประคองตัว':'';
+  return {gS,gB,G,B,modeTxt,sTag:dxTag(A,dp.sEl),bTag:dxTag(A,mh.el)};
+}
+
+/* ---------- evaluateDay (แทนของเดิม · คะแนน/ชง/ฮะ/ไห่ คงตรรกะเดิมทุกจุด) ---------- */
+function evaluateDay(dp){
+  const A=CH, s={"ไม้":0,"ไฟ":0,"ดิน":0,"ทอง":0,"น้ำ":0};
+  s[dp.sEl]+=2; dp.hidden.forEach(h=>s[h.el]+=2*h.w/100);
+  const dom=Object.keys(s).reduce((a,b)=>s[a]>=s[b]?a:b);
+  let sv=50; const tags=[];
+  if(A.fav.includes(dom)){sv+=20;tags.push("✨ ธาตุเด่นวันนี้เป็นธาตุให้คุณ");}
+  if(A.unfav.includes(dom)){sv-=18;tags.push("🌀 ธาตุเด่นวันนี้ซ้ำเติมจุดอ่อนดวง");}
+  if(A.fav.includes(dp.sEl))sv+=10;
+  if(A.unfav.includes(dp.sEl))sv-=9;
+  const db=dp.branch;
+  if(CLASH[db]===A.P.day.branch){sv-=26;tags.push("💥 ชงดิถี");}
+  else if(CLASH[db]===A.P.year.branch){sv-=15;tags.push("⚡ ชงปีเกิด");}
+  else if(CLASH[db]===A.P.month.branch){sv-=12;tags.push("⚡ ชงเดือนเกิด");}
+  if(COMBINE[db]===A.P.day.branch){sv+=14;tags.push("🤝 ฮะดิถี");}
+  else if(COMBINE[db]===A.P.year.branch){sv+=8;tags.push("🤝 ฮะปีเกิด");}
+  if(HARM[db]===A.P.day.branch){sv-=8;tags.push("🩹 ไห่ดิถี");}
+  sv=Math.max(5,Math.min(95,Math.round(sv)));
+  let lv;
+  if(sv>=75)lv={e:"🟢",t:"วันมงคลเยี่ยม",c:"#15803d"};
+  else if(sv>=60)lv={e:"🟩",t:"วันราบรื่น",c:"#16a34a"};
+  else if(sv>=45)lv={e:"🟡",t:"วันปานกลาง",c:"#ca8a04"};
+  else if(sv>=30)lv={e:"🟠",t:"วันท้าทาย",c:"#ea580c"};
+  else lv={e:"🔴",t:"วันต้องระวัง",c:"#b91c1c"};
+  const C=dxColors(A,dp,s,dom), X=dxActs(A,dp,sv);
+  return {s,dom,god:X.gS,godB:X.gB,sTag:X.sTag,bTag:X.bTag,sv,lv,tags,
+    lucky:C.lucky,bad:C.bad,relaxed:C.relaxed,why:C.why,sh:C.sh,
+    food:FOOD[C.lucky[0]],
+    goodList:X.G,avoidList:X.B,modeTxt:X.modeTxt,
+    good:(X.modeTxt?X.modeTxt+' · ':'')+X.G.join(' · '),
+    avoid:X.B.join(' · ')};
+}
+function dxWhy(ev,e,pos){
+  const r=(ev.why[e]||[]).filter(x=>pos?x.v>0:x.v<0).map(x=>x.t);
+  return r.length?dxUniq(r).join(' · '):(pos?'ธาตุเสริมสมดุลวันนี้':'ธาตุให้โทษของดวง');
+}
+
+/* ---------- loadNavigator (แทนของเดิม) ---------- */
+function loadNavigator(){
+  const v=document.getElementById('navDate').value; if(!v||!CH)return;
+  const base=parseLocal(v);const todayISO=toISO(new Date());
+  const loc=currentLatLon();
+  const DP=d=>getPillars(d.getFullYear(),d.getMonth()+1,d.getDate(),12,0,loc.lon,TZ_FIXED);
+  const p=DP(base), ev=evaluateDay(p.day);
+  const shTxt=DX_EL.filter(e=>ev.sh[e]>0).sort((a,b)=>ev.sh[b]-ev.sh[a])
+    .map(e=>EL_EMO[e]+e+' '+Math.round(ev.sh[e]*100)+'%').join(' · ');
+  const colLine=(arr,pos)=>arr.map(e=>`${dots([e])} <span class="small">${EL_EMO[e]}${e} — ${dxWhy(ev,e,pos)}</span>`).join('<br>');
+  const ul=a=>a.map(x=>'• '+x).join('<br>');
+  document.getElementById('dailyBox').innerHTML=
+   `📆 <b>วัน${TH_DOW[base.getDay()]}ที่ ${base.getDate()} ${TH_MON[base.getMonth()]} ค.ศ. ${base.getFullYear()}</b>`+
+   (toISO(base)===todayISO?' <span class="badge" style="background:#15803d">วันนี้</span>':'')+`<br>`+
+   `🥢 เสาวันจร <b style="font-family:var(--cn);font-size:26px;color:var(--primary)">${p.day.stem}${p.day.branch}</b> · ${EL_EMO[p.day.sEl]} <b>${p.day.yy}${p.day.sEl}</b> · ${p.day.animal}<br>`+
+   `🧪 ธาตุวันจร (รวมธาตุแฝง): ${shTxt}<br>`+
+   `🌟 สิบเทพก้านวัน: <b>${ev.god.n}</b> (${ev.sTag}) · กิ่งวัน: <b>${ev.godB.n}</b> (${ev.bTag})<br>`+
+   `${ev.lv.e} <b style="color:${ev.lv.c};font-size:17px">${ev.lv.t} · คะแนน ${ev.sv}/100</b>`+
+   (ev.tags.length?`<br><span class="small">${ev.tags.join(' · ')}</span>`:'')+
+   `<hr style="border:none;border-top:1px dashed var(--gold);margin:12px 0">`+
+   `🎨 <b>สีมงคลวันนี้</b><br>${colLine(ev.lucky,true)}<br>`+
+   `🚫 <b>สีกาลกิณีวันนี้</b><br>`+
+   (ev.bad.length?colLine(ev.bad,false):'<span class="small" style="color:#15803d">✅ วันนี้ไม่มีสีต้องห้ามเด็ดขาด</span>')+
+   (ev.relaxed.length?`<br><span class="small">🟢 ผ่อนผันวันนี้ (ธาตุให้โทษของดวง แต่วันนี้แรงลบต่ำ ใช้ได้):</span> ${dots(ev.relaxed)}`:'')+
+   `<hr style="border:none;border-top:1px dashed var(--gold);margin:12px 0">`+
+   (ev.modeTxt?`<b>${ev.modeTxt}</b><br>`:'')+
+   `✅ <b>ควรทำ</b><br>${ul(ev.goodList)}<br>`+
+   `⚠️ <b>ควรเลี่ยง</b><br><span style="color:#b91c1c">${ul(ev.avoidList)}</span><br>`+
+   `🍲 <b>โภชนาการ:</b> ${ev.food}`;
+  let h='';
+  for(let i=0;i<7;i++){
+    const d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+i,12,0,0,0);
+    const q=DP(d), e=evaluateDay(q.day), isToday=toISO(d)===todayISO;
+    const badCell=(e.bad.length
+        ?`${dots(e.bad)}<div class="edesc">${dxWhy(e,e.bad[0],false)}</div>`
+        :`<span class="small" style="color:#15803d">✅ ไม่มีสีต้องห้าม</span>`)+
+      (e.relaxed.length?`<div class="edesc">🟢 ผ่อนผัน ${dots(e.relaxed)}</div>`:'');
+    h+=`<tr>
+      <td data-label="📅 วันที่"><div><b>${TH_DOWS[d.getDay()]}</b> ${d.getDate()} ${TH_MONS[d.getMonth()]}${isToday?' <span class="badge" style="background:#15803d">วันนี้</span>':''}</div></td>
+      <td data-label="🥢 เสาวันจร"><div><b style="font-family:var(--cn);font-size:19px;color:var(--primary)">${q.day.stem}${q.day.branch}</b><span class="badge bg${q.day.sEl}">${EL_EMO[q.day.sEl]}${q.day.yy}${q.day.sEl}</span></div></td>
+      <td data-label="🐉 นักษัตร"><div>${q.day.animal} <span class="small">${q.day.hidden.map(x=>x.s+' '+x.w+'%').join(' · ')}</span></div></td>
+      <td data-label="🌟 สิบเทพ"><div><span class="small">ก้าน ${e.god.n} · กิ่ง ${e.godB.n}</span> <span class="badge" style="background:var(--primary)">${e.god.c}</span><div class="edesc">${e.sTag}</div></div></td>
+      <td data-label="⚖️ คะแนน"><div><b style="color:${e.lv.c};font-size:14px">${e.lv.e} ${e.lv.t}</b><div class="bar"><i style="width:${e.sv}%;background:${e.lv.c}"></i></div>${e.tags.length?`<span class="small">${e.tags.join(' · ')}</span>`:''}</div></td>
+      <td data-label="🎨 สีมงคล"><div>${dots(e.lucky)}<div class="edesc">${dxWhy(e,e.lucky[0],true)}</div></div></td>
+      <td data-label="🚫 สีกาลกิณี"><div>${badCell}</div></td>
+      <td data-label="✅ ควรทำ"><div style="text-align:left;font-size:12.5px">${e.modeTxt?'<b>'+e.modeTxt+'</b><br>':''}${ul(e.goodList)}</div></td>
+      <td data-label="⚠️ ควรเลี่ยง"><div style="text-align:left;font-size:12.5px;color:#b91c1c">${ul(e.avoidList)}</div></td>
+      <td data-label="🍲 โภชนาการ"><div style="text-align:left;font-size:12.5px">${e.food}</div></td></tr>`;
+  }
+  document.getElementById('wk').innerHTML=h;
+}
 (function boot(){
   initProvince();
   const inp=document.getElementById('inKey');

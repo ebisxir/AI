@@ -204,6 +204,10 @@ body.isadmin .adminonly{display:block!important}
 .hrow .hd{flex:1;min-width:0}.hrow .hd small{display:block;color:var(--mut);font-size:11px;margin-top:2px}
 .hrow .hw{min-width:74px;text-align:right;font-weight:700}
 .hsum{font-size:12px;color:var(--acc2);margin:8px 0 2px}
+.hclick{cursor:pointer;border-radius:8px}
+.hclick:hover{background:rgba(56,189,248,.07)}
+.hchev{color:var(--acc2);width:14px;flex:none;font-size:12px}
+.hdet{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px;margin:4px 0 8px;font-size:12.5px}
 </style>
 </head>
 <body class="pcompact">
@@ -276,7 +280,7 @@ body.isadmin .adminonly{display:block!important}
       <button type="button" class="btn2" onclick="histManual()">📌 บันทึกประวัติครั้งนี้</button>
       <div id="histst" class="note"></div>
       <div id="histlist"></div>
-      <div class="note">ระบบบันทึกประวัติให้อัตโนมัติเมื่อสร้าง/ทำสำเนาผู้รับแผน หรือเมื่อเปลี่ยนเป้าหมาย สัปดาห์ วันเริ่มต้น จำนวนมื้อ ระดับ Visceral โปรตีน (เก็บบน Supabase)</div>
+      <div class="note">ประวัติจะถูกบันทึกเฉพาะเมื่อกดปุ่ม "บันทึกประวัติครั้งนี้" เท่านั้น (เก็บบน Supabase) · กดที่รายการเพื่อดูรายละเอียดย้อนหลัง</div>
     </div>
 
     <label>📅 วันเริ่มต้นของแผน 7 วันนี้</label>
@@ -293,14 +297,21 @@ body.isadmin .adminonly{display:block!important}
         <div><label>1.1 แคลอรี่/วัน (kcal)</label><input type="number" id="kcal" value="1150" min="800" max="4000" step="10"></div>
         <div><label>1.2 โปรตีนขั้นต่ำ/วัน (ก.)</label><input type="number" id="prot" value="110" min="40" max="300" step="1"></div>
       </div>
-      <label>1.3 จำนวนมื้ออาหาร/วัน</label>
-      <select id="meals"><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option></select>
+      <label>1.3 จำนวนมื้ออาหาร/วัน <span style="color:var(--acc2)">(คำนวณอัตโนมัติ)</span></label>
+      <select id="meals" disabled><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+      <div id="mealnote" class="note"></div>
     </div>
 
     <div class="sec" style="border-color:rgba(56,189,248,.45)">
       <div class="st">1.4 กำหนดแคลอรี่และโปรตีนของแต่ละมื้อเอง</div>
       <table id="mrows"></table>
       <div id="msum" class="note"></div>
+      <label>โมเดลการกระจายเป้ารายมื้อ</label>
+      <select id="dmodel">
+        <option value="fat">รูปแบบ 1 — เป้าหมายหลัก: ลดไขมัน</option>
+        <option value="muscle">รูปแบบ 2 — เป้าหมายหลัก: เพิ่มกล้ามเนื้อ</option>
+      </select>
+      <div id="distnote" class="note"></div>
       <button class="btn2" style="margin-top:8px;padding:8px;font-size:12px" onclick="redistribute();run()">⚖️ กระจายเป้ารายมื้อให้ตรงเป้ารายวัน</button>
     </div>
 
@@ -893,7 +904,6 @@ function addProfile(){
   setActive(id); CURDAY=0;
   renderProfSel(); applyData(null);
   markDirty(id);
-  histLog(id,'create');
   profnote.innerHTML=`<span style="color:var(--acc)">เพิ่ม "${esc(nm)}" แล้ว เริ่มกรอกข้อมูลของคนนี้ได้เลย</span>`;
 }
 function dupProfile(){
@@ -907,7 +917,6 @@ function dupProfile(){
   setActive(id);
   renderProfSel(); applyData(curData());
   markDirty(id);
-  histLog(id,'duplicate');
   profnote.innerHTML=`<span style="color:var(--acc)">ทำสำเนาเป็น "${esc(nm)}" แล้ว</span>`;
 }
 function renameProfile(){
@@ -935,9 +944,10 @@ function delProfile(){
 }
 function applyData(d){
   BOOTING=true;
-  d=d||{};
+  d=migSlots(JSON.parse(JSON.stringify(d||{})));
   week.value=d.w||'1';
-  kcal.value=d.k||1150; prot.value=d.p||110; meals.value=d.m||'3'; vis.value=d.v||9;
+  kcal.value=d.k||1150; prot.value=d.p||110; meals.value=String(autoMealCount(+kcal.value,+prot.value)); vis.value=d.v||9;
+  dmodel.value=(d.gm==='muscle')?'muscle':'fat';
   pt1.value=(d.pt1!==undefined?d.pt1:'allplant'); ps1.value=(d.ps1!==undefined?d.ps1:2);
   pt2.value=d.pt2||''; ps2.value=d.ps2||0;
   pt3.value=d.pt3||''; ps3.value=d.ps3||0;
@@ -968,23 +978,27 @@ function applyData(d){
   document.body.classList.toggle('pfull',pmode.value!=='compact');
   mrows.innerHTML='';   /* ไม่นำค่ารายมื้อของคนก่อนหน้ามาใช้ */
   upd();
-  if(d.rows&&typeof d.rows==='object') Object.entries(d.rows).forEach(([k,v])=>{const e=document.getElementById(k);if(e&&e.closest('#mrows'))e.value=v;});
+  /* ใช้เป้ารายมื้อที่บันทึกไว้ได้ก็ต่อเมื่อครบพอดีกับจำนวนมื้อที่คำนวณได้ในตอนนี้ ไม่งั้นกระจายใหม่ตามโมเดลที่เลือก */
+  {
+    const need=SLOTSET[+meals.value]||SLOTSET[3], rw=(d.rows&&typeof d.rows==='object')?d.rows:{};
+    const saved=Object.keys(rw).filter(k=>k.startsWith('k_')).length;
+    const ok=saved===need.length&&need.every(x=>rw['k_'+x]!==undefined&&rw['p_'+x]!==undefined);
+    if(ok) Object.entries(rw).forEach(([k,v])=>{const e=document.getElementById(k);if(e&&e.closest('#mrows'))e.value=v;});
+    else redistribute();
+  }
   sumRows();
   BOOTING=false;
   run();
-  if(PID&&DATA[PID]) HISTSIG[PID]=histSig(DATA[PID]);   /* ฐานเทียบสำหรับบันทึกประวัติอัตโนมัติ */
 }
 
 /* ================= ประวัติผู้รับแผน (เก็บบน Supabase: ตาราง np_profile_history ผ่าน RPC) =================
-   ใช้ rpc() ตัวเดิม แต่ไม่ผ่านคิวซิงก์หลัก — ถ้ายังไม่ได้รัน supabase_history.sql จะแจ้งเตือนเฉพาะกล่องนี้
-   และไม่กระทบการบันทึกแผนตามปกติ */
-let HIST=[], HISTSIG={}, HT={}, HSHOW=10, HOK=true;
-const histSig=d=>d?stable({w:d.w,sd:d.sd,k:d.k,p:d.p,m:d.m,v:d.v,s:d.s,b:d.b,dm:d.dm,ds:d.ds,
-  pt1:d.pt1,ps1:d.ps1,pt2:d.pt2,ps2:d.ps2,pt3:d.pt3,ps3:d.ps3}):'';
+   บันทึกเฉพาะเมื่อกดปุ่ม "บันทึกประวัติครั้งนี้" เท่านั้น · กดที่รายการเพื่อดูรายละเอียดย้อนหลัง
+   ไม่ผ่านคิวซิงก์หลัก — ถ้ายังไม่ได้รัน supabase_history.sql จะแจ้งเตือนเฉพาะกล่องนี้ ไม่กระทบการบันทึกแผนปกติ */
+let HIST=[], HSHOW=10, HOK=true, HDET={}, HOPEN=null;
 function histMsg(h,col){ const el=document.getElementById('histst'); if(el) el.innerHTML=h?`<span style="color:var(${col||'--mut'})">${h}</span>`:''; }
 function histErrText(e){
   const m=String((e&&e.message)||'');
-  if(/np_log_history|np_history_list|np_history_delete|schema cache|Could not find/i.test(m)) return 'ยังไม่ได้ติดตั้งตารางประวัติใน Supabase — ให้รันไฟล์ supabase_history.sql ใน SQL Editor ก่อน';
+  if(/np_log_history|np_history_list|np_history_get|np_history_delete|schema cache|Could not find/i.test(m)) return 'ยังไม่ได้ติดตั้ง/อัปเดตฟังก์ชันประวัติใน Supabase — ให้รันไฟล์ supabase_history.sql ใน SQL Editor ก่อน';
   return m||'เกิดข้อผิดพลาด';
 }
 function fmtHT(v){
@@ -1000,19 +1014,11 @@ async function histLoad(){
   }catch(e){ if(pid!==PID) return; HIST=[]; HOK=false; histMsg('⚠️ '+esc(histErrText(e)),'--warn'); }
   renderHist();
 }
-async function histLog(pid,trigger,wt,note){
-  const d=DATA[pid]; if(!pid||!TOKEN||!d) return false;
-  const nm=(PROF.find(x=>x.id===pid)||{}).name||'';
-  try{
-    const r=await rpc('np_log_history',{p_token:TOKEN,p_id:pid,p_name:nm,p_data:d,p_trigger:trigger,p_weight:wt==null?null:wt,p_note:note||null});
-    HISTSIG[pid]=histSig(d);
-    if(pid===PID) await histLoad();
-    return r||true;
-  }catch(e){ histMsg('⚠️ บันทึกประวัติไม่สำเร็จ: '+esc(histErrText(e)),'--dan'); return false; }
-}
+/* บันทึกประวัติ (เรียกจากปุ่มเท่านั้น) */
 async function histManual(){
-  if(!PID) return;
+  const pid=PID; if(!pid||!TOKEN) return;
   save();
+  const d=DATA[pid]; if(!d){ histMsg('ยังไม่มีข้อมูลให้บันทึก','--dan'); return; }
   const wv=document.getElementById('hwt').value.trim();
   let wt=null;
   if(wv!==''){
@@ -1021,29 +1027,70 @@ async function histManual(){
     wt=Math.round(w*10)/10;
   }
   const note=String(document.getElementById('hnote').value||'').replace(/[<>]/g,'').trim().slice(0,200);
+  const nm=(PROF.find(x=>x.id===pid)||{}).name||'';
   histMsg('กำลังบันทึกประวัติ…');
-  const r=await histLog(PID,'manual',wt,note);
-  if(r){ document.getElementById('hwt').value=''; document.getElementById('hnote').value=''; histMsg('บันทึกประวัติเรียบร้อยแล้ว','--acc'); }
-}
-/* เรียกจาก save() ทุกครั้งที่ข้อมูลเปลี่ยน — บันทึกอัตโนมัติเมื่อ "ค่าหลักของแผน" เปลี่ยน (หน่วงเวลา 4 วินาทีกันบันทึกถี่) */
-function histMark(){
-  const pid=PID; if(!pid||!TOKEN||!HOK) return;
-  const d=DATA[pid]; if(!d) return;
-  const sig=histSig(d);
-  if(HISTSIG[pid]===undefined){ HISTSIG[pid]=sig; return; }
-  if(sig===HISTSIG[pid]) return;
-  clearTimeout(HT[pid]);
-  HT[pid]=setTimeout(()=>{ if(DATA[pid]&&histSig(DATA[pid])!==HISTSIG[pid]) histLog(pid,'auto'); },4000);
+  try{
+    await rpc('np_log_history',{p_token:TOKEN,p_id:pid,p_name:nm,p_data:d,p_trigger:'manual',p_weight:wt,p_note:note||null});
+    document.getElementById('hwt').value=''; document.getElementById('hnote').value='';
+    HOK=true; await histLoad();
+    histMsg('บันทึกประวัติเรียบร้อยแล้ว','--acc');
+  }catch(e){ histMsg('⚠️ บันทึกประวัติไม่สำเร็จ: '+esc(histErrText(e)),'--dan'); }
 }
 async function histDel(id){
   if(!confirm('ลบรายการประวัตินี้?')) return;
-  try{ await rpc('np_history_delete',{p_token:TOKEN,p_hid:id}); await histLoad(); }
+  try{ await rpc('np_history_delete',{p_token:TOKEN,p_hid:id}); delete HDET[id]; if(HOPEN===id) HOPEN=null; await histLoad(); }
   catch(e){ histMsg('⚠️ ลบไม่สำเร็จ: '+esc(histErrText(e)),'--dan'); }
+}
+/* รายละเอียดของรายการประวัติ 1 ครั้ง (ค่าตั้งต้นของแผนตอนที่บันทึก) */
+function histDetailHtml(r){
+  const d=migSlots(JSON.parse(JSON.stringify((r&&r.data)||{})));
+  const optText=(id,v)=>{ const e=document.getElementById(id); const o=e&&e.options?[...e.options].find(x=>x.value===String(v)):null; return o?o.textContent:v; };
+  const per=perOf(+d.w);
+  const row=(k,v)=>(v===undefined||v===null||v==='')?'':`<tr><td>${k}</td><td>${v}</td></tr>`;
+  const blends=[1,2,3].map(i=>(d['pt'+i]&&PRODS[d['pt'+i]]&&+d['ps'+i]>0)?`${esc(PRODS[d['pt'+i]].n)} ${+d['ps'+i]} ช้อน`:'').filter(Boolean).join('<br>');
+  const slots=['เช้า','สาย','กลางวัน','บ่าย','เย็น'].filter(s=>d.rows&&d.rows['k_'+s]!==undefined);
+  const meals=slots.map(s=>`${esc(SLOTTH[s]||s)}: ${esc(d.rows['k_'+s])} kcal / โปรตีน ${esc(d.rows['p_'+s])} ก.`).join('<br>');
+  const sups=(Array.isArray(d.supps)?d.supps:[]).filter(x=>!Array.isArray(d.sup)||d.sup.includes(x.id)).map(x=>esc(x.n)).join(' · ');
+  let sd=''; try{ sd=d.sd?thFull(parseDate(d.sd)):''; }catch(e){ sd=esc(d.sd||''); }
+  const lab={manual:'📌 บันทึกเอง',auto:'⚙️ อัตโนมัติ',create:'🆕 สร้างใหม่',duplicate:'📄 ทำสำเนา'};
+  return `<div style="margin-bottom:6px"><b>${esc(fmtHT(r.taken_at))}</b> · ${lab[r.source]||esc(r.source||'')}${r.weight_kg!=null?` · ⚖️ ${r1(Number(r.weight_kg))} กก.`:''}</div>
+    ${r.note?`<div style="margin-bottom:6px">📝 ${esc(r.note)}</div>`:''}
+    <table>
+      ${row('สัปดาห์',per?`Week ${esc(d.w)} — Period ${per.id} ${esc(per.name)}`:esc(d.w))}
+      ${row('วันเริ่มแผน',sd)}
+      ${row('แคลอรี่/วัน',d.k?esc(d.k)+' kcal':'')}
+      ${row('โปรตีนขั้นต่ำ/วัน',d.p?esc(d.p)+' ก.':'')}
+      ${row('จำนวนมื้อ',d.m?esc(d.m)+' มื้อ':'')}
+      ${row('เป้ารายมื้อ',meals)}
+      ${row('โมเดลกระจายเป้า',d.gm?(d.gm==='muscle'?'เพิ่มกล้ามเนื้อ':'ลดไขมัน'):'')}
+      ${row('Visceral',esc(d.v))}
+      ${row('สไตล์อาหาร',esc(optText('style',d.s)))}
+      ${row('โปรตีนที่ใช้',blends)}
+      ${row('เติมโปรตีนอัตโนมัติ',d.af===false?'ปิด':'เปิด')}
+      ${row('อาหารเสริมที่เปิดใช้',sups)}
+    </table>
+    <div class="note">นี่คือค่าตั้งต้นของแผนตอนที่กดบันทึก ส่วนเมนูรายวันคำนวณใหม่จากค่านี้ทุกครั้ง</div>`;
+}
+async function histToggle(id){
+  const box=document.getElementById('hd'+id); if(!box) return;
+  const wasOpen=!box.classList.contains('hide');
+  document.querySelectorAll('.hdet').forEach(e=>e.classList.add('hide'));
+  document.querySelectorAll('.hchev').forEach(e=>e.textContent='▸');
+  if(wasOpen){ box.classList.add('hide'); HOPEN=null; return; }
+  HOPEN=id; box.classList.remove('hide');
+  const chev=document.getElementById('hc'+id); if(chev) chev.textContent='▾';
+  if(HDET[id]){ box.innerHTML=histDetailHtml(HDET[id]); return; }
+  box.innerHTML='กำลังโหลดรายละเอียด…';
+  try{
+    const r=await rpc('np_history_get',{p_token:TOKEN,p_hid:id});
+    HDET[id]=r;
+    if(HOPEN===id) box.innerHTML=histDetailHtml(r);
+  }catch(e){ box.innerHTML='<span style="color:var(--warn)">⚠️ '+esc(histErrText(e))+'</span>'; }
 }
 function renderHist(){
   const el=document.getElementById('histlist'); if(!el) return;
   if(!HIST.length){
-    el.innerHTML=HOK?'<div class="note">ยังไม่มีประวัติของผู้รับแผนคนนี้ กดปุ่มด้านบนเพื่อบันทึก หรือเปลี่ยนเป้าหมาย/สัปดาห์ ระบบจะบันทึกให้เอง</div>':'';
+    el.innerHTML=HOK?'<div class="note">ยังไม่มีประวัติของผู้รับแผนคนนี้ กดปุ่ม “บันทึกประวัติครั้งนี้” ด้านบนเพื่อเริ่มบันทึก</div>':'';
     return;
   }
   const lab={manual:'📌 บันทึกเอง',auto:'⚙️ อัตโนมัติ',create:'🆕 สร้างใหม่',duplicate:'📄 ทำสำเนา'};
@@ -1054,19 +1101,24 @@ function renderHist(){
     sum=`<div class="hsum">⚖️ น้ำหนักจาก ${r1(Number(wl[wl.length-1].weight_kg))} → ${r1(Number(wl[0].weight_kg))} กก. (${dw>0?'+':''}${r1(dw)} กก.) · ${HIST.length} ครั้งที่บันทึก</div>`;
   }
   const rows=HIST.slice(0,HSHOW).map((x,i)=>{
+    const id=Number(x.id), open=(HOPEN===id&&!!HDET[id]);
     let wt='';
     if(x.weight_kg!=null){
       const nx=HIST.slice(i+1).find(y=>y.weight_kg!=null);
       const dl=nx?Number(x.weight_kg)-Number(nx.weight_kg):null;
       wt=`${r1(Number(x.weight_kg))} กก.${dl!==null?`<small style="color:${dl<=0?'var(--acc)':'var(--warn)'}">${dl>0?'+':''}${r1(dl)}</small>`:''}`;
     }
-    return `<div class="hrow"><div class="hd"><b>${esc(fmtHT(x.taken_at))}</b>
+    return `<div class="hitem"><div class="hrow hclick" onclick="histToggle(${id})" title="กดเพื่อดูรายละเอียด">
+      <span class="hchev" id="hc${id}">${open?'▾':'▸'}</span>
+      <div class="hd"><b>${esc(fmtHT(x.taken_at))}</b>
       <small>${lab[x.source]||esc(x.source||'')} · Week ${esc(x.week??'-')} · ${esc(x.kcal??'-')} kcal · โปรตีน ${esc(x.protein??'-')} ก. · Visceral ${esc(x.visceral??'-')}</small>
       ${x.note?`<small>📝 ${esc(x.note)}</small>`:''}</div>
       <div class="hw">${wt}</div>
-      <button type="button" class="sdel" title="ลบรายการนี้" onclick="histDel(${Number(x.id)})">✕</button></div>`;
+      <button type="button" class="sdel" title="ลบรายการนี้" onclick="event.stopPropagation();histDel(${id})">✕</button></div>
+      <div class="hdet ${open?'':'hide'}" id="hd${id}">${open?histDetailHtml(HDET[id]):''}</div></div>`;
   }).join('');
-  el.innerHTML=sum+rows+(HIST.length>HSHOW?`<button type="button" class="btn2" onclick="HSHOW+=20;renderHist()">แสดงเพิ่ม (${HIST.length-HSHOW} รายการ)</button>`:'');
+  el.innerHTML=sum+'<div class="note" style="margin-top:4px">👆 กดที่รายการเพื่อดูรายละเอียดของครั้งนั้น</div>'+rows+
+    (HIST.length>HSHOW?`<button type="button" class="btn2" onclick="HSHOW+=20;renderHist()">แสดงเพิ่ม (${HIST.length-HSHOW} รายการ)</button>`:'');
 }
 
 /* ================= วันที่ไทย ================= */
@@ -1446,12 +1498,77 @@ let SEED=1, USED={}, LASTDAY={}, CURDAY=0, ITEM_LOCKS={}, ROLLED=0;
 const r0=x=>Math.round(x), r1=x=>Math.round(x*10)/10;
 /* ความคลาดเคลื่อนพลังงานรายมื้อที่ยอมรับได้ = ±10% ของเป้ามื้อ (เกินนี้ถือว่าไม่ผ่าน) */
 const KTOL=0.10;
-const SLOTSET={2:['เช้า','เย็น'],3:['เช้า','กลางวัน','เย็น'],4:['เช้า','กลางวัน','ว่างบ่าย','เย็น'],
- 5:['เช้า','ว่างเช้า','กลางวัน','ว่างบ่าย','เย็น'],6:['เช้า','ว่างเช้า','กลางวัน','ว่างบ่าย','เย็น','ว่างค่ำ']};
+const SLOTSET={2:['เช้า','เย็น'],3:['เช้า','กลางวัน','เย็น'],4:['เช้า','สาย','กลางวัน','เย็น'],
+ 5:['เช้า','สาย','กลางวัน','บ่าย','เย็น']};
+/* ข้อมูลที่บันทึกไว้ก่อนหน้านี้ใช้ชื่อมื้อเดิม (ว่างเช้า/ว่างบ่าย) → แปลงเป็นชื่อใหม่ตอนโหลด */
+const SLOT_MIG={['ว่าง'+'เช้า']:'สาย',['ว่าง'+'บ่าย']:'บ่าย'};
+function migSlots(d){
+  if(!d||typeof d!=='object') return d;
+  if(d.rows&&typeof d.rows==='object'){
+    const r={};
+    Object.keys(d.rows).forEach(k=>{
+      let nk=k;
+      Object.keys(SLOT_MIG).forEach(o=>{ if(k==='k_'+o||k==='p_'+o) nk=k.slice(0,2)+SLOT_MIG[o]; });
+      r[nk]=d.rows[k];
+    });
+    d.rows=r;
+  }
+  if(d.locks&&typeof d.locks==='object'){
+    const l={};
+    Object.keys(d.locks).forEach(k=>{
+      const i=k.indexOf('|'); let nk=k;
+      if(i>=0&&SLOT_MIG[k.slice(i+1)]) nk=k.slice(0,i+1)+SLOT_MIG[k.slice(i+1)];
+      l[nk]=d.locks[k];
+    });
+    d.locks=l;
+  }
+  return d;
+}
+const SLOTTH={'เช้า':'เช้า','สาย':'สาย','กลางวัน':'เที่ยง','บ่าย':'บ่าย','เย็น':'เย็น','ว่างค่ำ':'ค่ำ'};
 /* ค่าเริ่มต้น 3 มื้อ = 1,150 kcal / โปรตีน 110 ก. ตรงกับเป้ารายวัน */
-const DEF={'เช้า':[350,35],'ว่างเช้า':[150,12],'กลางวัน':[450,40],'ว่างบ่าย':[150,12],'เย็น':[350,35],'ว่างค่ำ':[120,10]};
-const SLOTICON={'เช้า':'🌅','ว่างเช้า':'🍎','กลางวัน':'☀️','ว่างบ่าย':'🥤','เย็น':'🌙','ว่างค่ำ':'🌜'};
-const isSnackSlot=s=>s.startsWith('ว่าง');
+const DEF={'เช้า':[350,35],'สาย':[150,12],'กลางวัน':[450,40],'บ่าย':[150,12],'เย็น':[350,35],'ว่างค่ำ':[120,10]};
+/* ===== จำนวนมื้อต่อวัน (คำนวณอัตโนมัติ: แคลอรี่ก่อน แล้วดูโปรตีน ใช้ค่าที่มากกว่า) =====
+   แคลอรี่ <800 → 2 · 800–<2200 → 3 · ≥2200 → 5
+   โปรตีน >90 และ <120 → 4 · ≥120 → 5 (90 ลงมา ไม่เพิ่มมื้อ)
+   ถ้าโปรตีนต้องการมื้อมากกว่าแคลอรี่ → ยึดเป้าโปรตีน: เพิ่มมื้อสาย (4 มื้อ) หรือมื้อสาย+บ่าย (5 มื้อ) */
+function mealsByKcal(K){ return K<800?2:K<2200?3:5; }
+function mealsByProtein(P){ return P>=120?5:P>90?4:0; }
+function autoMealCount(K,P){
+  const k=Number.isFinite(K)&&K>0?mealsByKcal(K):3;
+  const p=Number.isFinite(P)&&P>0?mealsByProtein(P):0;
+  return Math.max(k,p);
+}
+/* ===== โมเดลกระจายเป้ารายมื้อ (% ของเป้ารายวัน) ตามลำดับมื้อใน SLOTSET ===== */
+const MEAL_MODELS={
+  fat:{name:'ลดไขมัน',
+    3:{k:[30,40,30],p:[30,35,35]},
+    4:{k:[25,15,35,25],p:[25,20,30,25]},
+    5:{k:[20,15,30,15,20],p:[20,20,25,15,20]}},
+  muscle:{name:'เพิ่มกล้ามเนื้อ',
+    3:{k:[30,35,35],p:[30,35,35]},
+    4:{k:[25,15,30,30],p:[25,20,25,30]},
+    5:{k:[20,15,25,15,25],p:[20,20,20,20,20]}}
+};
+/* 2 มื้อ (เช้า+เย็น) ไม่มีตารางของตัวเอง → ใช้สัดส่วนเช้า/เย็นของโมเดล 3 มื้อ ปรับให้รวม 100% */
+function modelRatios(model,n){
+  const M=MEAL_MODELS[model]||MEAL_MODELS.fat;
+  if(M[n]) return M[n];
+  if(n===2){
+    const norm=a=>{const t=a[0]+a[2];return [a[0]*100/t,a[2]*100/t];};
+    return {k:norm(M[3].k),p:norm(M[3].p)};
+  }
+  return M[3];
+}
+/* แบ่งยอดรวมตามเปอร์เซ็นต์ ปัดเศษแล้วให้มื้อที่ใหญ่สุดรับส่วนต่าง เพื่อให้ผลรวมตรงเป้ารายวันพอดี */
+function splitByPct(total,pcts,step){
+  const out=pcts.map(p=>{const x=total*p/100;return step>1?Math.round(x/step)*step:Math.round(x);});
+  const diff=total-out.reduce((a,b)=>a+b,0);
+  let mi=0; pcts.forEach((p,i)=>{if(p>pcts[mi]) mi=i;});
+  out[mi]+=diff;
+  return out;
+}
+const SLOTICON={'เช้า':'🌅','สาย':'🍎','กลางวัน':'☀️','บ่าย':'🥤','เย็น':'🌙','ว่างค่ำ':'🌜'};
+const isSnackSlot=s=>s==='สาย'||s==='บ่าย'||s==='ว่างค่ำ';   /* มื้อสาย/บ่าย = โปรตีน ขนมปังโฮลวีต ไข่ต้ม หรือของว่างที่หาทานง่ายเท่านั้น */
 function hsh(str,day,salt){
   let h=(SEED*131+day*977+(salt||0)*7919)>>>0;
   for(let i=0;i<str.length;i++) h=(h*31+str.charCodeAt(i))>>>0;
@@ -1506,6 +1623,31 @@ function proteinFill(blends,tK,tP,baseK,baseP){
   }
   return a;
 }
+/* มื้อสาย/บ่าย: ตัวเลือกจำนวนโปรตีนผง 0,1,2,3 ช้อน (เพิ่มทีละช้อนจากชนิดที่โปรตีนสูงสุดที่เลือกไว้ในข้อ 1.5 · ไม่เกินกฎจำนวนช้อน · พลังงานไม่เกินเป้ามื้อเกิน 8%)
+   planDay จะลองทุกตัวเลือกร่วมกับของว่าง แล้วเลือกชุดที่ทั้งมื้อพอดีเป้ามากที่สุด */
+function snackShakeOptions(blends,tK,tP){
+  const out=[[]];
+  if(!blends.length||!document.getElementById('autop').checked) return out;
+  const tot=x=>x.reduce((s,b)=>s+b.q,0);
+  const types=[...new Set(blends.map(b=>b.type))].sort((x,y)=>PRODS[y].p-PRODS[x].p);
+  let a=[];
+  for(let g=0;g<3;g++){
+    const K=a.reduce((s,b)=>s+b.kcal*b.q,0), P=a.reduce((s,b)=>s+b.p*b.q,0);
+    if(P>=tP) break;
+    let added=false;
+    for(const t of types){
+      if(K+PRODS[t].kcal>tK*(1+KTOL*0.8)) continue;
+      const trial=a.map(b=>({...b}));
+      const ex=trial.find(b=>b.type===t);
+      if(ex) ex.q++; else trial.push({type:t,...PRODS[t],q:1});
+      const a2=allocScoops(trial);
+      if(tot(a2)>tot(a)){ a=a2; added=true; break; }
+    }
+    if(!added) break;
+    out.push(a.map(b=>({...b})));
+  }
+  return out;
+}
 function blendSummary(){
   const b=readBlends();
   if(!b.length){ blendnote.innerHTML='<span style="color:var(--warn)">ยังไม่ได้เลือกโปรตีน ระบบจะเติมแคลอรี่ด้วยอาหารปกติทั้งหมด</span>'; return; }
@@ -1529,6 +1671,8 @@ function blendSummary(){
    opt.skipIfNoGain = ถ้าของที่เลือกได้ไม่ทำให้พลังงานใกล้เป้าขึ้น ไม่ต้องเติม (คืน null)
    กฎเสริม: ถ้าอาหารปกติเติมแล้ว "ไม่ถึง" เป้า (ต่ำกว่าเป้าเกิน 5%) จะสร้างตัวเลือก อาหารปกติ + ไข่ต้ม/ขนมปังโฮลวีต
    ถ้าอาหารปกติ "เกิน" เป้า จะถูกตัดออกและเลือกอาหารปกติที่เบากว่า + ไข่ต้ม/ขนมปังโฮลวีตมาเติมส่วนที่เหลือแทน */
+/* ของว่างที่หาทานยาก/ต้องทำเอง ไม่ใช้ในมื้อสาย–บ่าย (ยังใช้เป็นเมนูเสริมในมื้อหลักได้) */
+const SNACK_NOT_EASY=new Set(['เห็ดหูหนูดำยำ','ซุปใสเต้าหู้ไข่','เต้าหู้ไข่ลวก + น้ำจิ้มซีฟู้ด','งาดำบด 1 ชต. + นมถั่วเหลือง']);
 const WIDE_SLACK=4;   /* ค่าเผื่อคาร์บ (กรัม/มื้อ) ตอนโควตาคาร์บหมดแล้ว — ตั้ง 0 ถ้าต้องการเคร่งที่สุด */
 function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban,opt){
   opt=opt||{};
@@ -1541,8 +1685,11 @@ function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban,opt){
   if(!snacks.length) snacks=MENUS.filter(m=>m.tag==='snack'&&ok(m)).sort((a,b)=>a.c-b.c).slice(0,8);
 
   const tol=opt.tol>0?opt.tol:Infinity;
-  const primary=snack?snacks.concat(mains.filter(m=>m.kcal<=200)):mains;
-  const side=snacks.concat(mains.filter(m=>m.kcal<=200));
+  /* มื้อสาย/บ่าย: ของว่างที่หาทานง่าย + (ไข่ต้ม/ขนมปังโฮลวีตเสริม) เท่านั้น ไม่ใช้อาหารจานหลัก */
+  let easy=snacks.filter(m=>!SNACK_NOT_EASY.has(m.n));
+  if(!easy.length) easy=snacks;
+  const primary=snack?easy:mains;
+  const side=snack?easy:snacks.concat(mains.filter(m=>m.kcal<=200));
   const banned=cb=>opt.hardBan&&ban&&cb.some(x=>ban.has(x.m.n));
   const mk=cb=>{let K=0,P=0,C=0,E=0;cb.forEach(x=>{K+=x.m.kcal*x.q;P+=x.m.p*x.q;C+=x.m.c*x.q;E+=x.m.egg*x.q;});return {cb,K,P,C,E,nf:0};};
 
@@ -1626,6 +1773,8 @@ function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban,opt){
   });
   if(!best) return null;
   if(opt.skipIfNoGain&&Math.abs(best.K-tK)>=Math.abs(tK)) return null;
+  best.over=best.C>carbCap+0.5;
+  if(opt.dry) return best;   /* ลองคำนวณเฉยๆ ไม่บันทึกการใช้เมนู */
   best.cb.forEach(x=>{
     st.eggs+=x.m.egg*x.q;
     if(x.m.tag==='fill') return;
@@ -1684,9 +1833,10 @@ function planDay(day,cfg){
       proteinFill(blends,s.kcal,s.prot,bK,bP).forEach(f=>
         items.push({n:f.n,q:f.q,u:f.u,kcal:f.kcal*f.q,p:f.p*f.q,c:f.c*f.q}));
     }
+    const sn=isSnackSlot(s.slot);
     const locked=(ITEM_LOCKS[day+'|'+s.slot]||[]).map(li=>{const mn=menuOf(li.n);return mn?foodItem(mn,+li.q||1):null;}).filter(Boolean);
     locked.forEach(it=>{ items.push(it); st.today.add(it.n); st.eggs+=menuOf(it.n).egg*it.q; });
-    return {slot:s.slot,type:mode?'shake':'normal',bk:mode==='bk',items,tK:s.kcal,tP:s.prot,locked:locked.length>0,over:false};
+    return {slot:s.slot,type:sn?'snack':(mode?'shake':'normal'),bk:mode==='bk',items,tK:s.kcal,tP:s.prot,locked:locked.length>0,over:false};
   });
   const p={meals}; recalcDay(p);
 
@@ -1697,21 +1847,43 @@ function planDay(day,cfg){
 
   /* 3) เติมอาหารปกติ: โควตามื้อ → โควตาที่เหลือทั้งวัน → เมนูคาร์บต่ำที่สุด */
   meals.forEach((m,i)=>{
-    const gK=m.tK-m.K, gP=m.tP-m.P;
     const tolK=m.tK*KTOL;
-    /* เติมเมื่อพลังงานยังขาดเกิน 5% ของเป้ามื้อ หรือโปรตีนขาด (และยังมีที่ว่างพลังงาน) · มื้อที่ล็อกเมนูไว้เติมเฉพาะเมื่อหลุดกรอบ ±10% */
-    const need=m.locked?(gK>tolK||gP>4):(gK>m.tK*0.05||(gP>2&&gK>m.tK*0.02));
-    if(need){
-      const free=Math.max(0,budget);
-      const share=needLeft>0?free*needs[i]/needLeft:free;
+    const snack=isSnackSlot(m.slot);
+    const free=Math.max(0,budget);
+    const share=needLeft>0?free*needs[i]/needLeft:free;
+    const pick=(gK,gP,dry)=>{
       const maxI=m.locked?1:(m.type==='shake'?(gK>250?2:1):2);
-      const snack=isSnackSlot(m.slot);
       const a=[cfg,st,Math.max(0,gK),Math.max(0,gP)];
-      const MINP=6;   /* ต้องมีเมนูที่ไม่เกินโควตาอย่างน้อย 6 ชุด ไม่งั้นขยายพูลเพื่อให้สุ่มได้ */
-      const o={strict:true,minPool:MINP,tol:tolK,skipIfNoGain:true};
+      const o={strict:true,minPool:6,tol:tolK,skipIfNoGain:true,dry};   /* minPool: ต้องมีเมนูที่ไม่เกินโควตาอย่างน้อย 6 ชุด ไม่งั้นขยายพูล */
       let r=pickMenus(...a,share,snack,maxI,day,0,null,o);
       if(!r) r=pickMenus(...a,free,snack,maxI,day,0,null,o);
-      if(!r) r=pickMenus(...a,free,snack,maxI,day,0,null,{minPool:MINP,tol:tolK,skipIfNoGain:true});
+      if(!r) r=pickMenus(...a,free,snack,maxI,day,0,null,{minPool:6,tol:tolK,skipIfNoGain:true,dry});
+      return r;
+    };
+    const needFood=(gK,gP)=>m.locked?(gK>tolK||gP>4):(gK>m.tK*0.05||(gP>2&&gK>m.tK*0.02));
+
+    /* มื้อสาย/บ่าย: ลองจำนวนโปรตีนผง 0–3 ช้อน ร่วมกับของว่าง/ไข่ต้ม/ขนมปังโฮลวีต แล้วเลือกชุดที่พอดีเป้าพลังงานและโปรตีนที่สุด */
+    if(snack&&!m.locked){
+      let best=null;
+      snackShakeOptions(blends,m.tK,m.tP).forEach(opt=>{
+        const sK=opt.reduce((a,b)=>a+b.kcal*b.q,0), sP=opt.reduce((a,b)=>a+b.p*b.q,0);
+        const gK=m.tK-m.K-sK, gP=m.tP-m.P-sP;
+        let fK=0,fP=0;
+        if(needFood(gK,gP)){ const r=pick(gK,gP,true); if(r){ fK=r.K; fP=r.P; } }
+        const eK=Math.abs(m.tK-(m.K+sK+fK)), sh=Math.max(0,m.tP-(m.P+sP+fP));
+        const sc=(eK<=tolK?0:5000+eK*10)+sh*9+eK*0.5+(opt.length?0:2);
+        if(!best||sc<best.sc) best={sc,opt};
+      });
+      best.opt.forEach(f=>{
+        m.items.push({n:f.n,q:f.q,u:f.u,kcal:f.kcal*f.q,p:f.p*f.q,c:f.c*f.q});
+        m.K+=f.kcal*f.q; m.P+=f.p*f.q; m.C+=f.c*f.q; budget-=f.c*f.q;
+      });
+    }
+
+    const gK=m.tK-m.K, gP=m.tP-m.P;
+    /* เติมเมื่อพลังงานยังขาดเกิน 5% ของเป้ามื้อ หรือโปรตีนขาด (และยังมีที่ว่างพลังงาน) · มื้อที่ล็อกเมนูไว้เติมเฉพาะเมื่อหลุดกรอบ ±10% */
+    if(needFood(gK,gP)){
+      const r=pick(gK,gP,false);
       if(r){
         r.cb.forEach(x=>m.items.push(foodItem(x.m,x.q)));
         budget-=r.C; m.over=!!r.over;
@@ -1890,7 +2062,9 @@ function dayBlock(p,idx){
 
   p.meals.forEach(m=>{
     const okK=Math.abs(m.K-m.tK)<=m.tK*KTOL+0.5, okP=m.P>=m.tP-1.5;
-    const tag=m.type==='shake'
+    const tag=m.type==='snack'
+      ? `<span class="pill p-pur">🍎 ${m.items.some(i=>PRODNAMES.has(i.n))?'โปรตีน + ของว่าง':'ของว่าง'}</span>`
+      : m.type==='shake'
       ? `<span class="pill p-acc">🥤 ${m.bk?'บอดี้คีย์ + โปรตีน':'โปรตีน'}${m.topped?' + อาหารปกติ':''}</span>`
       : '<span class="pill p-blue">🍽️ อาหารปกติ</span>';
     const lk=ITEM_LOCKS[idx+'|'+m.slot]||[];
@@ -2183,21 +2357,58 @@ function buildRows(){
   document.querySelectorAll('#mrows input').forEach(i=>i.addEventListener('change',()=>{sumRows();run();}));
   sumRows();
 }
-/* กระจายเป้ารายวันลงรายมื้อตามสัดส่วนค่าเริ่มต้น ให้ผลรวมตรงพอดี */
+/* กระจายเป้ารายวันลงรายมื้อตามโมเดลที่เลือก (dropdown) ให้ผลรวมตรงเป้ารายวันพอดี */
 function redistribute(){
   const slots=SLOTSET[+meals.value]||SLOTSET[3];
   const K=+kcal.value||0, P=+prot.value||0;
-  const wk=slots.reduce((a,s)=>a+DEF[s][0],0), wp=slots.reduce((a,s)=>a+DEF[s][1],0);
-  let ak=0, ap=0;
+  const R=modelRatios(dmodel.value,slots.length);
+  const ks=splitByPct(K,R.k,10), ps=splitByPct(P,R.p,1);
   slots.forEach((s,i)=>{
-    const last=i===slots.length-1;
-    const k=last?K-ak:Math.round(K*DEF[s][0]/wk/10)*10;
-    const p=last?P-ap:Math.round(P*DEF[s][1]/wp);
-    ak+=k; ap+=p;
     const ek=document.getElementById('k_'+s), ep=document.getElementById('p_'+s);
-    if(ek) ek.value=k; if(ep) ep.value=p;
+    if(ek) ek.value=Math.max(0,ks[i]);
+    if(ep) ep.value=Math.max(0,ps[i]);
   });
   sumRows();
+}
+/* แสดงเหตุผลของจำนวนมื้อ และสัดส่วนของโมเดลที่เลือกอยู่ */
+function mealsUI(){
+  const K=+kcal.value, P=+prot.value;
+  const n=autoMealCount(K,P);
+  meals.value=String(n);
+  const kc=Number.isFinite(K)&&K>0?mealsByKcal(K):3, pc=Number.isFinite(P)&&P>0?mealsByProtein(P):0;
+  let why=`แคลอรี่ ${Number.isFinite(K)?K:'-'} kcal → ${kc} มื้อ · โปรตีน ${Number.isFinite(P)?P:'-'} ก. → ${pc?pc+' มื้อ':'ไม่เพิ่มมื้อ'}`;
+  if(n>kc){
+    const add=SLOTSET[n].filter(x=>!SLOTSET[kc].includes(x)).map(x=>'มื้อ'+SLOTTH[x]);
+    why+=` <br>⇒ ใช้ <b>${n} มื้อ</b> (เพิ่ม${add.join('และ')}เพื่อรองรับโปรตีน)`;
+  }else why+=` <br>⇒ ใช้ <b>${n} มื้อ</b>`;
+  document.getElementById('mealnote').innerHTML=why;
+}
+/* เชก (บอดี้คีย์ + โปรตีนตามช้อนที่เลือกในข้อ 1.5) เป็นปริมาณคงที่ ถ้าใหญ่กว่าเป้ามื้อเกิน 10% อาหารช่วยลดไม่ได้ → เตือนล่วงหน้า */
+function shakeFitWarn(){
+  const per=perOf(+week.value); if(!per) return '';
+  const slots=SLOTSET[+meals.value]||SLOTSET[3];
+  const baseMap={};
+  if(per.mode==='bk2'){ baseMap['เช้า']='bk'; baseMap['เย็น']='bk'; }
+  else if(per.mode==='bk1'){ baseMap['เช้า']='bk'; baseMap['เย็น']='flav'; }
+  else { baseMap[breakslot.value]='flav'; }
+  const sc=allocScoops(readBlends());
+  const sK=sc.reduce((a,b)=>a+b.kcal*b.q,0);
+  const out=[];
+  slots.forEach(s=>{
+    const mode=baseMap[s]; if(!mode) return;
+    const tK=+((document.getElementById('k_'+s)||{}).value||0); if(!(tK>0)) return;
+    const K=(mode==='bk'?PRODS.bodykey.kcal:0)+sK;
+    const e=(K-tK)/tK;
+    if(e>KTOL+0.0005) out.push(`มื้อ${SLOTTH[s]||s}: ${mode==='bk'?'บอดี้คีย์ + โปรตีน':'โปรตีน'} ≈ ${r0(K)} kcal เกินเป้ามื้อ ${tK} kcal (+${Math.round(e*100)}%)`);
+  });
+  return out.length?`<br><span style="color:var(--warn)">⚠️ ${out.join(' · ')} — อาหารช่วยลดแคลอรี่ไม่ได้ ให้ลดจำนวนช้อนโปรตีนในข้อ 1.5 หรือเพิ่มเป้ามื้อนั้น</span>`:'';
+}
+function distUI(){
+  const slots=SLOTSET[+meals.value]||SLOTSET[3];
+  const R=modelRatios(dmodel.value,slots.length), M=MEAL_MODELS[dmodel.value]||MEAL_MODELS.fat;
+  const f=a=>slots.map((s,i)=>`${SLOTTH[s]} ${Math.round(a[i]*10)/10}%`).join(' · ');
+  document.getElementById('distnote').innerHTML=
+    `โมเดล: <b>${M.name}</b> · ${slots.length} มื้อ${slots.length===2?' (คิดจากสัดส่วนเช้า/เย็นของโมเดล 3 มื้อ)':''}<br>แคลอรี่: ${f(R.k)}<br>โปรตีน: ${f(R.p)}`;
 }
 function sumRows(){
   const slots=SLOTSET[+meals.value]||SLOTSET[3];
@@ -2206,11 +2417,11 @@ function sumRows(){
   const dk=sk-(+kcal.value), dp=sp-(+prot.value);
   msum.innerHTML=`รวมรายมื้อ: <b>${sk} kcal</b> / โปรตีน <b>${sp} ก.</b> ·
    เทียบเป้าหมายรายวัน: <span style="color:${Math.abs(dk)>50?'var(--warn)':'var(--acc)'}">${dk>0?'+':''}${dk} kcal</span> ·
-   <span style="color:${dp<0?'var(--warn)':'var(--acc)'}">${dp>0?'+':''}${dp} ก.</span>`;
+   <span style="color:${dp<0?'var(--warn)':'var(--acc)'}">${dp>0?'+':''}${dp} ก.</span>${shakeFitWarn()}`;
 }
 function save(){
   if(BOOTING||!PID) return;
-  const d={schema:SCHEMA,w:week.value,sd:sdate.value,k:kcal.value,p:prot.value,m:meals.value,v:vis.value,
+  const d={schema:SCHEMA,w:week.value,sd:sdate.value,k:kcal.value,p:prot.value,m:meals.value,gm:dmodel.value,v:vis.value,
     pt1:pt1.value,ps1:ps1.value,pt2:pt2.value,ps2:ps2.value,pt3:pt3.value,ps3:ps3.value,
     af:document.getElementById('autop').checked,
     dm:dm.value,ds:dmstr.value,s:style.value,b:breakslot.value,pm:pmode.value,
@@ -2220,9 +2431,10 @@ function save(){
   document.querySelectorAll('#mrows input').forEach(i=>d.rows[i.id]=i.value);
   const nd=JSON.parse(JSON.stringify(d));
   if(DATA[PID]&&stable(DATA[PID])===stable(nd)) return;   /* ไม่เปลี่ยนแปลง = ไม่ส่งขึ้นคลาวด์ */
-  DATA[PID]=nd; markDirty(PID); histMark();
+  DATA[PID]=nd; markDirty(PID);
 }
 function upd(){
+  mealsUI();
   const p=perOf(+week.value)||PERIODS[0];
   pinfo.innerHTML=`<span class="pill p-acc">Period ${p.id} · ${p.name}</span> ${p.desc}`;
   breakwrap.className=p.mode==='one'?'':'hide';
@@ -2259,6 +2471,7 @@ function upd(){
     : style.value==='fish' ? 'เน้นปลา อาหารทะเล ไข่ และพืช'
     : 'เลือกได้ทุกหมวดอาหาร';
   buildRows();
+  distUI();
 }
 
 /* ================= INIT ================= */
@@ -2270,8 +2483,8 @@ function upd(){
   buildBirthLoc();
   ['week','vis','breakslot','style','sdate','pt1','ps1','pt2','ps2','pt3','ps3','dm','dmstr','autop'].forEach(id=>
     document.getElementById(id).addEventListener('change',()=>{ upd(); run(); }));
-  /* เปลี่ยนเป้ารายวันหรือจำนวนมื้อ → กระจายเป้ารายมื้อให้ตรงอัตโนมัติ */
-  ['kcal','prot','meals'].forEach(id=>
+  /* เปลี่ยนเป้ารายวันหรือโมเดล → คำนวณจำนวนมื้อใหม่ แล้วกระจายเป้ารายมื้อให้ตรงอัตโนมัติ */
+  ['kcal','prot','dmodel'].forEach(id=>
     document.getElementById(id).addEventListener('change',()=>{ upd(); redistribute(); run(); }));
   ['bdate','btime','bprov','blon','btz','bdst'].forEach(id=>{
     const el=document.getElementById(id);

@@ -1020,27 +1020,74 @@ function tenGod(dm,t){
 const W_S={year:.8,month:1.3,hour:.8}, W_B={year:1.0,month:2.2,day:1.5,hour:1.0};
 let CH=null;
 
+/* เกณฑ์วิเคราะห์ดวงพิเศษ (ปรับค่าได้ที่เดียว) — ผ่านการสแกนความไวของเกณฑ์กับดวงจำลองหลายหมื่นชุด */
+const ASET={folSup:22,folFlow:75,folMax:40,fakeSup:24,fakeFlow:78,fakeMax:45,domSup:80,domDs:6,domPow:8,domWea:18,huaT:25,huaCtrl:12};
+const FIVE_HE={"甲己":"ดิน","乙庚":"ทอง","丙辛":"น้ำ","丁壬":"ไม้","戊癸":"ไฟ"};   // 天干五合 → ธาตุที่ได้หากเปลี่ยนธาตุสำเร็จ
+const SAN_HE=[["申","子","辰","น้ำ"],["寅","午","戌","ไฟ"],["巳","酉","丑","ทอง"],["亥","卯","未","ไม้"]];   // 三合 (กลางคือกิ่งเจ้าธาตุ)
+const SAN_HUI=[["寅","卯","辰","ไม้"],["巳","午","未","ไฟ"],["申","酉","戌","ทอง"],["亥","子","丑","น้ำ"]]; // 三會 (รวมทิศ)
 function analyse(P){
   const sc={"ไม้":0,"ไฟ":0,"ดิน":0,"ทอง":0,"น้ำ":0};
   ["year","month","hour"].forEach(k=>sc[P[k].sEl]+=W_S[k]);
   sc[P.day.sEl]+=1.0;
   ["year","month","day","hour"].forEach(k=>P[k].hidden.forEach(h=>sc[h.el]+=W_B[k]*h.w/100));
+  // ===== 三會 / 三合 / 半合 ในดวงเกิด: กิ่งมารวมกลุ่ม เสริมพลังธาตุนั้น (ถูกกิ่งอื่นปะทะ → ลดครึ่งหนึ่ง) =====
+  const BR=["year","month","day","hour"].map(k=>P[k].branch),groups=[];
+  const clashed=bs=>bs.some(b=>BR.some((c,i)=>!bs.includes(c)&&CLASH[b]===c));
+  SAN_HUI.forEach(g=>{const bs=g.slice(0,3);if(bs.every(b=>BR.includes(b))){const br=clashed(bs);groups.push({el:g[3],type:"hui",w:1.6*(br?.5:1),broken:br});}});
+  SAN_HE.forEach(g=>{const has=g.slice(0,3).filter(b=>BR.includes(b));
+   if(has.length===3){const br=clashed(has);groups.push({el:g[3],type:"he",w:1.3*(br?.5:1),broken:br});}
+   else if(has.length===2&&has.includes(g[1])&&has.includes(P.month.branch)){const br=clashed(has);groups.push({el:g[3],type:"half",w:.5*(br?.5:1),broken:br});}});
+  groups.forEach(g=>{g.tou=P.day.sEl===g.el||["year","month","hour"].some(v=>P[v].sEl===g.el);if(!g.tou)g.w*=.65;sc[g.el]+=g.w;});
   const tot=Object.values(sc).reduce((a,b)=>a+b,0);
   const pc=e=>+(sc[e]/tot*100).toFixed(1);
   const dm=P.day.sEl;
   const res=Object.keys(PRODUCE).find(k=>PRODUCE[k]===dm);
   const out=PRODUCE[dm], wea=CONTROL[dm], pow=Object.keys(CONTROL).find(k=>CONTROL[k]===dm);
-  const support=+(pc(dm)+pc(res)).toFixed(1);
+  const SEAS={"寅":"ไม้","卯":"ไม้","巳":"ไฟ","午":"ไฟ","申":"ทอง","酉":"ทอง","亥":"น้ำ","子":"น้ำ","辰":"ดิน","戌":"ดิน","丑":"ดิน","未":"ดิน"};
+  const se=SEAS[P.month.branch];
+  // 得令 (ได้ฤกษ์ฤดู): ธาตุประจำตัวเกิดในฤดูที่หนุนหรือกด ปรับพลังหนุน ±6
+  const ds=se===dm?6:PRODUCE[se]===dm?3:PRODUCE[dm]===se?0:CONTROL[dm]===se?-3:-6;
+  // ===== 通根 (ราก) / 透干 (ก้านที่โผล่) / 化氣 (ก้านรวมกลายธาตุ) / 從格 / 專旺 =====
+  const vis=["year","month","hour"],ALLK=["year","month","day","hour"];
+  const pcE=e=>sc[e]/tot*100;
+  const rootedEl=e=>ALLK.some(k=>P[k].hidden.some(h=>h.el===e&&h.w>=10));   // มีรากอย่างน้อยระดับเศษ (餘氣)
+  const realRoot=e=>ALLK.some(k=>P[k].hidden.some(h=>h.el===e&&h.w>=30));   // รากแท้ (本氣/中氣)
+  let adj=0;
+  vis.forEach(k=>{const e=P[k].sEl;if((e===dm||e===res)&&!rootedEl(e))adj-=.4*W_S[k]/tot*100;});   // ก้านลอย ไม่มีราก = พลังหลอก ลด 40%
+  ALLK.forEach(k=>P[k].hidden.forEach(h=>{if((h.el===dm||h.el===res)&&h.w>=30&&vis.some(v=>P[v].stem===h.s))adj+=.25*W_B[k]*h.w/100/tot*100;})); // ราก+โผล่ก้าน = เสริม
+  adj=Math.max(-8,Math.min(6,adj));
+  let combo=null;
+  const partners=["month","hour"].filter(k=>FIVE_HE[P.day.stem+P[k].stem]||FIVE_HE[P[k].stem+P.day.stem]);
+  if(partners.length){const k=partners[0],T=FIVE_HE[P.day.stem+P[k].stem]||FIVE_HE[P[k].stem+P.day.stem];
+   combo={pos:k,stem:P[k].stem,T,state:"bind"};   // ค่าเริ่มต้น = 合而不化 (จับคู่แต่ไม่กลายธาตุ)
+   const ctrl=Object.keys(CONTROL).find(x=>CONTROL[x]===T),genT=Object.keys(PRODUCE).find(x=>PRODUCE[x]===T);
+   if(partners.length===1&&T!==dm&&(se===T||PRODUCE[se]===T)&&!realRoot(dm)&&!vis.some(v=>P[v].sEl===ctrl)&&(pcE(ctrl)-(ctrl===dm?100/tot:0))<=ASET.huaCtrl&&pcE(T)>=ASET.huaT) /* ตัดน้ำหนักก้านวันของตัวเองออก: 甲/癸 คือธาตุข่มของธาตุที่ได้อยู่แล้ว */{combo.state="hua";combo.genT=genT;combo.ctrl=ctrl;}
+  }
+  const support=+Math.max(0,Math.min(100,pc(dm)+pc(res)+ds+adj+(combo&&combo.state==="bind"?-3:0))).toFixed(1);
+  const flow=pc(out)+pc(wea)+pc(pow),flowMax=Math.max(pc(out),pc(wea),pc(pow));
+  const helpers=vis.filter(v=>P[v].sEl===dm||P[v].sEl===res).length;
+  const folReal=support<=ASET.folSup&&ds<=0&&!realRoot(dm)&&!realRoot(res)&&helpers===0&&flow>=ASET.folFlow&&flowMax>=ASET.folMax;
+  const folFalse=!folReal&&support<=ASET.fakeSup&&ds<=0&&!realRoot(dm)&&helpers<=1&&flow>=ASET.fakeFlow&&flowMax>=ASET.fakeMax;   // 假從: มีรากอ่อนมาก
+  const fol=folReal||folFalse,hua=!!(combo&&combo.state==="hua");
+  const dom=!hua&&!fol&&support>=ASET.domSup&&(ds>=ASET.domDs||groups.some(g=>g.el===dm&&!g.broken))&&pc(pow)<=ASET.domPow&&!vis.some(v=>P[v].sEl===pow)&&pc(wea)<=ASET.domWea;
   let status,fav,unfav;
-  if(support>55){status={t:"💪 ดิถีแกร่ง (Strong)",c:"#b91c1c",k:"strong"};fav=[out,wea,pow];unfav=[dm,res];}
+  if(hua){status={t:"🌀 ดิถีเปลี่ยนธาตุ เป็นธาตุ"+combo.T+" (化氣格)",c:"#7c3aed",k:"hua"};fav=[combo.T,combo.genT,PRODUCE[combo.T]];unfav=[combo.ctrl,dm].filter((x,i,a)=>!fav.includes(x)&&a.indexOf(x)===i);}
+  else if(fol){status={t:folReal?"🌊 ดิถีตามกระแส (從格)":"🌊 ดิถีตามกระแส แบบรากอ่อน (假從)",c:"#0e7490",k:"follow"};fav=[out,wea,pow];unfav=[dm,res];}
+  else if(dom){status={t:"🔥 ดิถีรวมพลัง (專旺)",c:"#9a3412",k:"dom"};fav=[dm,res,out];unfav=[wea,pow];}
+  else if(support>55){status={t:"💪 ดิถีแกร่ง (Strong)",c:"#b91c1c",k:"strong"};fav=[out,wea,pow];unfav=[dm,res];}
   else if(support<45){status={t:"🌱 ดิถีอ่อน (Weak)",c:"#1d4ed8",k:"weak"};fav=[res,dm];unfav=[out,wea,pow];}
   else{status={t:"⚖️ ดิถีสมดุล (Balanced)",c:"#15803d",k:"bal"};
        const so=Object.keys(sc).sort((a,b)=>sc[a]-sc[b]);fav=[so[0],so[1]];unfav=[so[4]];}
+  // 調候: เกิดหน้าหนาวต้องการไฟอุ่น เกิดหน้าร้อนต้องการน้ำเย็น (เดือนสุดขั้ว 子/午 มีน้ำหนักสูงกว่า)
+  const TJ={"亥":["ไฟ",1],"子":["ไฟ",2],"丑":["ไฟ",1.5],"巳":["น้ำ",1],"午":["น้ำ",2],"未":["น้ำ",1.5]},tj=TJ[P.month.branch];
+  if(tj){const el=tj[0],w=tj[1],sp=["follow","hua","dom"].includes(status.k),conflict=(sp||status.k==="weak"||status.k==="bal")&&!fav.includes(el)&&unfav.includes(el);
+    if(!conflict||(w>=2&&!sp)){fav=fav.filter(x=>x!==el);if(w>=2)fav.unshift(el);else fav.push(el);unfav=unfav.filter(x=>x!==el);}}
+  const season={el:se,ds,tj:tj?tj[0]:null,tjw:tj?tj[1]:0};
   const cat={"เพื่อน":0,"แสดงออก":0,"ทรัพย์":0,"อำนาจ":0,"ทรัพยากร":0};
   ["year","month","hour"].forEach(k=>cat[tenGod(P.day.si,P[k].si).c]+=W_S[k]);
   ["year","month","day","hour"].forEach(k=>P[k].hidden.forEach(h=>cat[tenGod(P.day.si,sIdx(h.s)).c]+=W_B[k]*h.w/100));
   const ctot=Object.values(cat).reduce((a,b)=>a+b,0);
-  return {sc,pc,tot,dm,res,out,wea,pow,support,status,fav,unfav,cat,ctot,dmIdx:P.day.si,P};
+  return {sc,pc,tot,dm,res,out,wea,pow,support,status,fav,unfav,cat,ctot,season,combo,groups,dmIdx:P.day.si,P};
 }
 
 const DX_EL=["ไม้","ไฟ","ดิน","ทอง","น้ำ"];
@@ -1487,7 +1534,7 @@ function buildStory(P,A){
   let t='';
   t+=`<p><b>1) ตัวคุณคือใครในภาษา BaZi</b><br>ธาตุประจำตัว (ดิถี) คือ <b>${dmS} ${P.day.yy}${A.dm}</b> ${DM_STORY[dmS]}<br>คุณเกิดในเดือนนักษัตร <b>${seas}</b> ซึ่งเป็นฤดูของธาตุ<b>${P.month.bEl}</b> ฤดูนี้คือ "สนามแข่ง" ที่กำหนดว่าพลังประจำตัวจะได้เปรียบหรือเสียเปรียบตั้งแต่ต้น</p>`;
   t+=`<p><b>2) พลังของคุณแกร่งหรืออ่อน</b><br>พลังฝ่ายหนุนตัวคุณอยู่ที่ <b>${A.support}%</b> จัดเป็น <b>${A.status.t}</b><br>`+
-   (A.status.k==='strong'?`แปลว่าคุณมีพลังงานสูง ลุยงานหนักได้ แต่พลังที่ล้นต้อง "มีทางระบาย" ไม่เช่นนั้นจะดื้อ ใจร้อน หรือหมดไฟ`
+   (A.status.k==='hua'?`แปลว่าธาตุประจำตัวของคุณ "ถูกกลืน" ไปเป็นธาตุ${A.combo.T} ให้ใช้ชีวิตตามธาตุใหม่ ไม่ควรยึดธาตุเดิม`:A.status.k==='follow'?`แปลว่าดวงคุณ "ไหลตามกระแส" ยิ่งฝืนยิ่งเหนื่อย ไปกับโอกาสและสภาพแวดล้อมจะไปได้ไกลกว่า ไม่ควรเสริมพลังตัวเองเพิ่ม`:A.status.k==='dom'?`แปลว่าพลังตัวเองรวมตัวสูงมาก ใช้ความถนัดเฉพาะทางให้สุด ไม่ควรฝืนไปทางตรงข้ามธรรมชาติ`:A.status.k==='strong'?`แปลว่าคุณมีพลังงานสูง ลุยงานหนักได้ แต่พลังที่ล้นต้อง "มีทางระบาย" ไม่เช่นนั้นจะดื้อ ใจร้อน หรือหมดไฟ`
     :A.status.k==='weak'?`แปลว่าพลังค่อนข้างบาง ไวต่อสภาพแวดล้อม กุญแจคือ "เติมก่อนใช้" พักผ่อนให้พอและหาผู้สนับสนุน`
     :`แปลว่าดวงคุณสมดุล ปรับตัวได้ทั้งรุกและรับ ต้องเลือกจังหวะให้เป็น`)+`</p>`;
   t+=`<p><b>3) ธาตุที่ควรเติม และธาตุที่ควรลด</b><br>ธาตุให้คุณคือ ${A.fav.map(e=>`${EL_EMO[e]}<b>${e}</b>`).join(' และ ')} — ใช้สี<b>${A.fav.map(e=>EL_COLORNAME[e]).join(' / ')}</b><br>ธาตุที่ควรลดคือ ${A.unfav.map(e=>`${EL_EMO[e]}<b>${e}</b>`).join(' และ ')}<br>โภชนาการที่เข้ากับคุณที่สุดคือ ${FOOD[A.fav[0]]}</p>`;
@@ -1714,6 +1761,8 @@ const MF_TK_W=[{family:.5,work:.2,wish:.15},{health:.6,life:.3},{work:.6,wish:.4
  {life:-.6,work:-.5,money:-.5,love:-.4,luck:-.6,wish:-.5,health:-.3,family:-.3}];
 const MF_WD_PL=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
 let MF_BP=null,MF_LP=null,MF_BD=null;
+/* ปรับฐานคะแนนแต่ละด้านให้เฉลี่ยประชากร ~55 (จำลองดวง 120 ชุด × 4 เดือน) กันด้านสุขภาพต่ำ/ด้านเป้าหมายสูงเกินจริงสำหรับทุกคน — คะแนนจึงสะท้อนความต่างเฉพาะบุคคล */
+const MF_OFF={life:4,work:-2,money:10,love:6,luck:-8,wish:-10,health:15,family:0};
 function mfBirthPlanet(){try{const b=MF_BD;if(!b)return null;
  const wd=new Date(new Date(b.y,b.m-1,b.d,b.h,b.mi).getTime()-6*3600*1000).getDay(); // วันตามโหราศาสตร์เริ่ม 06:00
  return (wd===3&&(b.h>=18||b.h<6))?'ราหู':MF_WD_PL[wd];}catch(e){return null;}}
@@ -1781,10 +1830,18 @@ function mfGodAdd(S,k,f,w,g){const t=MF_GODW[k];if(!t)return;
   else if(key==='kidM'){if(g!=='M')continue;dom='family';}
   else if(key==='kidF'){if(g!=='F')continue;dom='family';}
   S[dom]+=(t[key][0]*f+t[key][1])*w;}}
-function mfRel(N,b){return{
+const MF_TRI={"申":0,"子":0,"辰":0,"寅":1,"午":1,"戌":1,"巳":2,"酉":2,"丑":2,"亥":3,"卯":3,"未":3},MF_TRI_EL=["น้ำ","ไฟ","ทอง","ไม้"];
+function mfHalf(a,b){return a!==b&&MF_TRI[a]===MF_TRI[b]&&("子午卯酉".includes(a)||"子午卯酉".includes(b));}
+function mfXing(a,b){const P=[["子","卯"],["寅","巳"],["巳","申"],["申","寅"],["丑","戌"],["戌","未"],["未","丑"]];return P.some(x=>(x[0]===a&&x[1]===b)||(x[0]===b&&x[1]===a))||(a===b&&"辰午酉亥".includes(a));}
+function mfComplete(b,N){const nb=["year","month","day","hour"].map(k=>N[k].branch);
+ for(const g of SAN_HE.concat(SAN_HUI)){const r=g.slice(0,3);if(!r.includes(b)||nb.includes(b))continue;
+  if(r.filter(x=>x!==b).every(x=>nb.includes(x)))return{el:g[3],w:SAN_HUI.includes(g)?.7:.55};}
+ return null;}   // วันที่กิ่งจรมาครบกลุ่ม 三合/三會 กับกิ่งในดวงเกิด
+const mfHe=(a,b)=>!!(FIVE_HE[a+b]||FIVE_HE[b+a]);
+function mfRel(N,b,st){return{
  clashD:CLASH[b]===N.day.branch,clashY:CLASH[b]===N.year.branch,clashM:CLASH[b]===N.month.branch,clashH:CLASH[b]===N.hour.branch,
  combD:COMBINE[b]===N.day.branch,combY:COMBINE[b]===N.year.branch,combM:COMBINE[b]===N.month.branch,
- harmD:HARM[b]===N.day.branch,fuD:b===N.day.branch,
+ harmD:HARM[b]===N.day.branch,fuD:b===N.day.branch,halfD:mfHalf(b,N.day.branch),xingD:mfXing(b,N.day.branch),fullG:mfComplete(b,N),heDM:!!st&&mfHe(st,N.day.stem),heM:!!st&&mfHe(st,N.month.stem),heY:!!st&&mfHe(st,N.year.stem),heH:!!st&&mfHe(st,N.hour.stem),
  peach:MF_PEACH[N.day.branch]===b||MF_PEACH[N.year.branch]===b,
  horse:MF_HORSE[N.day.branch]===b||MF_HORSE[N.year.branch]===b,
  noble:(MF_NOBLE[N.day.stem]||[]).includes(b),
@@ -1793,6 +1850,13 @@ function mfRelApply(S,R,sv,x){
  if(R.clashD){S.health-=1*x;S.love-=.9*x;S.money-=.3*x;S.life-=.3*x;}
  if(R.harmD){S.health-=.4*x;S.love-=.5*x;}
  if(R.fuD){S.life-=.2*x;S.love-=.3*x;S.health-=.2*x;}
+ if(R.halfD){const f=mfFv(CH,MF_TRI_EL[MF_TRI[CH.P.day.branch]]);S.life+=.4*f*x;S.wish+=.25*f*x;S.love+=.2*f*x;} // 半三合: รวมพลังธาตุ ดีหรือร้ายตามธาตุที่ได้
+ if(R.xingD){S.health-=.3*x;S.love-=.25*x;}
+ if(R.heDM){S.love+=.4*x;S.wish+=.15*x;S.life-=.1*x;}   // ก้านรวมกัน = จับคู่/ร่วมมือ/ผูกพัน (ไม่ใช่การเปลี่ยนธาตุ)
+ if(R.heM)S.work+=.3*x;
+ if(R.heY)S.family+=.25*x;
+ if(R.heH)S.family+=.2*x;
+ if(R.fullG){const f=mfFv(CH,R.fullG.el);S.life+=R.fullG.w*f*x;S.wish+=R.fullG.w*.5*f*x;}
  if(R.clashH){S.health-=.3*x;S.family-=.4*x;}
  if(R.clashY)S.family-=.8*x;
  if(R.combY)S.family+=.6*x;
@@ -1803,11 +1867,11 @@ function mfRelApply(S,R,sv,x){
  if(R.horse){S.work+=.15*x;S.wish+=.1*x;S.health-=.1*x;} // 驛馬 = การเคลื่อนไหว ไม่ใช่โชคดีโดยตรง: งานเดินแต่เหนื่อยขึ้น
  if(R.noble){S.luck+=.8*x;S.wish+=.5*x;S.work+=.2*x;}
  if(R.wench)S.wish+=.5*x;}
-function mfRelTxt(R){const L={clashD:'วันปะทะตัวคุณ',clashY:'วันปะทะปีเกิด',clashM:'วันปะทะเดือนเกิด',combD:'วันเข้ากับตัวคุณ',combY:'วันเข้ากับปีเกิด',fuD:'วันพลังซ้ำกับตัวคุณ',peach:'วันเสน่ห์เด่น',noble:'วันมีผู้ใหญ่ช่วย',horse:'วันเคลื่อนไหว/เดินทาง'};
+function mfRelTxt(R){const L={clashD:'วันปะทะตัวคุณ',clashY:'วันปะทะปีเกิด',clashM:'วันปะทะเดือนเกิด',combD:'วันเข้ากับตัวคุณ',combY:'วันเข้ากับปีเกิด',fuD:'วันพลังซ้ำกับตัวคุณ',halfD:'วันรวมพลังกับตัวคุณ',fullG:'วันครบกลุ่มพลังธาตุ',heDM:'วันก้านรวมกับตัวคุณ',heM:'วันก้านรวมกับเสาเดือนเกิด',heY:'วันก้านรวมกับเสาปีเกิด',heH:'วันก้านรวมกับเสายามเกิด',xingD:'วันกระทบกระทั่งกับตัวคุณ',peach:'วันเสน่ห์เด่น',noble:'วันมีผู้ใหญ่ช่วย',horse:'วันเคลื่อนไหว/เดินทาง'};
  return Object.keys(L).filter(k=>R[k]).map(k=>L[k]).join(' · ');}
 function mfPillarS(A,pil,g){const S=mfZero(),mh=pil.hidden[0],k1=mfGK(A,pil.si),k2=mfGK(A,sIdx(mh.s));
  mfGodAdd(S,k1,mfFv(A,pil.sEl),1,g);mfGodAdd(S,k2,mfFv(A,mh.el),k2===k1?.4:.8,g);
- const R=mfRel(A.P,pil.branch);mfRelApply(S,R,50,.6);
+ const R=mfRel(A.P,pil.branch,pil.stem);mfRelApply(S,R,50,.6);
  S.life+=(mfFv(A,pil.sEl)+mfFv(A,mh.el))/2*.8;
  return {S,k1,k2,R};}
 function mfLv(s){return s>=72?{e:'🌟',t:'ดีเด่น',c:'#15803d'}:s>=60?{e:'🟢',t:'ดี',c:'#16a34a'}:s>=47?{e:'🟡',t:'ทรงตัว',c:'#ca8a04'}:s>=35?{e:'🟠',t:'ต้องระวัง',c:'#ea580c'}:{e:'🔴',t:'หนัก ต้องประคอง',c:'#b91c1c'};}
@@ -1835,7 +1899,8 @@ function mfText(k,X){
   const tag=e=>isF(e)?'ธาตุที่หนุนคุณ':isU(e)?'ธาตุที่ทำให้เหนื่อย':'ธาตุกลาง ๆ';
   const elb=e=>`${EL_EMO[e]}<b>ธาตุ${e}</b> (${tag(e)})`;
   const body=e=>(((EL_MEAN[e]||'').split('ร่างกาย:')[1]||'').trim())||('อวัยวะที่เกี่ยวกับธาตุ'+e);
-  const stTxt=st==='strong'?'พลังตัวเองค่อนแข็ง':st==='weak'?'พลังตัวเองค่อนบาง ชอบมีแรงหนุน':'พลังตัวเองสมดุล';
+  const sS=st==='strong'||st==='follow';
+  const stTxt=st==='hua'?'ธาตุประจำตัวเปลี่ยนไปตามธาตุ'+(A.combo?A.combo.T:''):st==='follow'?'ดวงตามกระแส ยิ่งไปตามโอกาสยิ่งดี':st==='dom'?'พลังรวมตัวสูงมาก ใช้ความถนัดเฉพาะทาง':st==='strong'?'พลังตัวเองค่อนแข็ง':st==='weak'?'พลังตัวเองค่อนบาง ชอบมีแรงหนุน':'พลังตัวเองสมดุล';
   const tkw=r=>{if(!X.bp)return '';const p=MF_TK_CYC[(MF_TK_CYC.indexOf(X.bp)+r)%8];return p==='ราหู'?'พุธกลางคืน':'วัน'+p;};
   const cn='font-family:var(--cn)';
   switch(k){
@@ -1850,6 +1915,12 @@ function mfText(k,X){
    t.push('พลังประจำเดือน (ตามศาสตร์จีน): '+X.mList.map(o=>{const f=(mfFv(A,o.p.sEl)+mfFv(A,o.p.hidden[0].el))/2,rl=mfRelTxt(o.x.R);
     return `<b style="${cn}">${o.p.stem}${o.p.branch}</b>${o.from>1?' (ตั้งแต่วันที่ '+o.from+')':''} ${f>.5?'หนุนธาตุที่ดีต่อคุณ':f<0?'เติมธาตุที่ทำให้เหนื่อย ต้องประคอง':'กลาง ๆ'}${rl?' · '+rl:''}`;}).join(' → '));
    if(X.lu)t.push(`ภาพใหญ่ช่วง 10 ปีนี้ (<b style="${cn}">${X.lu.it.stem}${X.lu.it.branch}</b>) `+(X.lu.f>.3?'เป็นแรงหนุนอยู่เบื้องหลังทุกเดือน':X.lu.f<-.3?'ทำให้ต้องออกแรงมากกว่าปกติ เดือนที่ดีจึงยิ่งควรรีบใช้':'ไม่ได้ดึงขึ้นหรือกดลง'));
+   if(A.groups&&A.groups.length)t.push(`ในดวงเกิดมีกิ่งมารวมกลุ่มพลัง ${A.groups.map(g=>'ธาตุ'+g.el+(g.type==='hui'?' (รวมทิศ)':g.type==='he'?' (รวมสามเส้า)':' (รวมครึ่งกลุ่ม)')+(g.broken?' แต่ถูกปะทะ แรงลดลง':'')+(g.tou?'':' (ธาตุนี้ยังไม่โผล่ที่ก้าน แรงจึงลดลงอีกเล็กน้อย)')).join(' · ')} ${A.groups.every(g=>g.broken)?'จึงยังช่วยเสริมธาตุนี้ได้บ้างแต่ไม่เต็มที่':'ทำให้ธาตุนี้แรงกว่าที่เห็นจากก้านและกิ่งเดี่ยว ๆ'}`);
+   if(cnt.fullG)t.push(`เดือนนี้มี ${cnt.fullG} วันที่กิ่งของวันมาครบกลุ่มพลังกับดวงเกิด ธาตุนั้นพุ่งแรงชั่วคราว (ถ้าเป็นธาตุที่หนุนคุณถือเป็นโอกาส)`);
+   if(A.combo&&A.combo.state==='bind')t.push(`ธาตุประจำตัวของคุณถูก "จับคู่ผูกมัด" กับก้าน${A.combo.pos==='month'?'เสาเดือน':'เสายามเกิด'} (${A.combo.stem}) แต่ไม่ได้เปลี่ยนธาตุ จึงมักเกรงใจ ตัดสินใจเด็ดขาดยากกว่าปกติ พลังตัวเองลดลงเล็กน้อย`);
+   if(A.season){const S0=A.season,de=Object.keys(X.elSum).reduce((a,b)=>X.elSum[a]>=X.elSum[b]?a:b);
+    t.push(`คุณเกิดในเดือนที่ธาตุ${S0.el}เป็นใหญ่ — `+(S0.ds>=6?'ธาตุประจำตัวได้ฤดูหนุนเต็มที่':S0.ds>=3?'ธาตุประจำตัวได้ฤดูหนุน':S0.ds<=-6?'ฤดูเกิดกดพลังตัวเองค่อนข้างมาก':S0.ds<=-3?'ฤดูเกิดกดพลังตัวเองเล็กน้อย':'ฤดูเกิดไม่หนุนไม่กด')+
+     (S0.tj?` · ดวงนี้ต้องการ${EL_EMO[S0.tj]}ธาตุ${S0.tj} ปรับสมดุลอากาศ (${S0.tjw>=2?'สำคัญมาก':'ช่วยเสริม'}) เดือนนี้ธาตุเด่นคือ${de} → `+(de===S0.tj?'ได้ธาตุที่ดวงคุณขาดพอดี':'ยังไม่ได้ธาตุนี้มาเติมมากนัก ลองเสริมด้วยสีและกิจวัตร'):''));}
    if(X.bp)t.push(`ตามทักษา คุณเกิดวัน${X.bp==='ราหู'?'พุธกลางคืน':X.bp} → วันศรี (เงิน เสน่ห์) คือ${tkw(3)} · วันมนตรี (ผู้ใหญ่ช่วย) คือ${tkw(6)} · วันกาลกิณี (เลี่ยงเรื่องใหญ่) คือ${tkw(7)}`);
    if(X.lk&&X.TR){
     const lr=X.TR.rows.find(r=>r.pl.k===MF_LORD[X.lk.idx]);
@@ -1868,7 +1939,8 @@ function mfText(k,X){
    else if(G('傷官')>=3)t.push(`มีวันไอเดียพุ่ง ${G('傷官')} วัน เหมาะนำเสนอผลงานหรืองานสร้างสรรค์`);
    if(G('正印')+G('偏印')>=5&&isF(A.res))t.push('มีผู้ใหญ่หรือความรู้คอยหนุนหลัง ช่วยรับแรงกดดันไปได้ส่วนหนึ่ง');
    if(st==='weak'&&n>=7&&isU(e))t.push('พลังตัวเองบางแต่งานเข้าเยอะ เสี่ยงล้า เลือกรับเฉพาะงานที่จัดการไหว');
-   if(st==='strong'&&n>=5&&isF(e))t.push('พลังตัวเองแข็ง รับงานใหญ่หรือบทบาทบริหารได้เต็มที่');
+   if(sS&&n>=5&&isF(e))t.push('พลังตัวเองแข็ง รับงานใหญ่หรือบทบาทบริหารได้เต็มที่');
+   if(cnt.heM)t.push(`มี ${cnt.heM} วันที่ก้านของวันรวมกับเสาเดือนเกิด (เสาการงาน) มักได้พันธมิตรหรือข้อตกลงในที่ทำงาน`);
    if(cnt.clashM)t.push(`มีวันปะทะกับเสาเดือนเกิด (เสาหน้าที่การงาน) ${cnt.clashM} วัน ระวังการเปลี่ยนแปลงกะทันหันในที่ทำงาน`);
    if(cnt.horse)t.push(`มีวันเคลื่อนไหว/เดินทาง ${cnt.horse} วัน งานเดินเร็วแต่เหนื่อยขึ้น เหมาะออกพบลูกค้าหรืองานนอกสถานที่`);
    if(X.bp)tp.push(`ยื่นงานสำคัญหรือขอตำแหน่งใน${tkw(2)} (วันเดช) หรือ${tkw(6)} (วันมนตรี) และเลี่ยง${tkw(7)}`);
@@ -1877,7 +1949,7 @@ function mfText(k,X){
    t.push(`เดือนนี้มีวัน "เงิน" ${n} วัน (ลาภลอย ${G('偏財')} · เงินประจำ ${G('正財')}) ซึ่งเป็น${elb(e)} — `+(isF(e)?'เงินเข้าจริงและจับต้องได้ ปิดการขาย ต่อรอง หรือทวงเงินค้างได้ผล':isU(e)?'เงินเข้ามาแต่พ่วงภาระและรายจ่าย เน้นบริหารมากกว่าขยาย':'การเงินเดินตามปกติ'));
    t.push(N('偏財')+N('正財')>=12?'ดวงเดิมคุณมี "ดาวเงิน" ชัด จับเงินเก่งตามธรรมชาติ':'ดวงเดิมคุณมี "ดาวเงิน" ไม่มาก เดือนที่เงินเด่นจึงเป็นโอกาสชั่วคราว รีบใช้และเก็บเป็นก้อน');
    if(st==='weak'&&n>=7)t.push('พลังตัวเองบาง เจอเงินเยอะเกินไปจะกลายเป็นภาระ (เงินเข้าแต่แบกไม่ไหว) รับเฉพาะที่จัดการไหว');
-   if(st==='strong'&&isF(e)&&n>=5)t.push('พลังตัวเองแข็งพอแบกเงินก้อนใหญ่ เป็นจังหวะดีขยายรายได้');
+   if(sS&&isF(e)&&n>=5)t.push('พลังตัวเองแข็งพอแบกเงินก้อนใหญ่ เป็นจังหวะดีขยายรายได้');
    if(fd>=6&&fr>=28)t.push(`ดวงคุณมีพลัง "เพื่อน/คู่แข่ง" มากอยู่แล้ว และเดือนนี้มีวันคนใกล้ตัวมาแบ่งเงิน ${fd} วัน ระวังเงินรั่ว`);
    else if(fd>=6)t.push(`มีวันที่คนใกล้ตัวมาขอแบ่ง ${fd} วัน ระวังการให้ยืมหรือออกค่าใช้จ่ายแทน`);
    if(G('食神')+G('傷官')>=5&&isF(e))t.push('ฝีมือและไอเดียของคุณแปลงเป็นรายได้ได้จริง ขายผลงานหรือบริการได้ดี');
@@ -1888,6 +1960,7 @@ function mfText(k,X){
    t.push(`พื้นดวงเรื่องคู่ของคุณ (ช่องคู่ครองในดวงเกิด) เป็น${elb(pe)} → `+(isF(pe)?'ความสัมพันธ์มีแรงเกื้อกูลเป็นพื้นฐาน':isU(pe)?'มีแรงเสียดทานเป็นพื้น ควรสื่อสารตรงไปตรงมากว่าคนทั่วไป':'ไม่มีแรงหนุนหรือกดเป็นพิเศษ'));
    if(N(gk[0])+N(gk[1])<8)t.push('ในดวงเดิมมี "ดาวคู่" ค่อนข้างน้อย ความรักมักมาเมื่อคุณออกไปพบผู้คน ไม่ค่อยมาหาเอง');
    if(cnt.peach)t.push(`มีวันเสน่ห์เด่น ${cnt.peach} วัน เหมาะพบปะผู้คน`+(isU(e)?' แต่ระวังความสัมพันธ์คลุมเครือ':''));
+   if(cnt.heDM)t.push(`มี ${cnt.heDM} วันที่ก้านของวันรวมกับตัวคุณ มักมีเหตุให้ได้ใกล้ชิด ร่วมมือ หรือผูกพันกับใครบางคน (เป็นการจับคู่ชั่วคราว ไม่ได้เปลี่ยนนิสัยหรือธาตุของคุณ)`);
    if(cnt.combD)t.push(`มีวันเข้ากับช่องคู่ครอง ${cnt.combD} วัน เหมาะปรับความเข้าใจหรือนัดสำคัญ`);
    if(cnt.clashD||cnt.harmD)t.push(`มีวันปะทะช่องคู่ครอง ${cnt.clashD} วัน${cnt.harmD?` และวันกระทบกระทั่งเบา ๆ ${cnt.harmD} วัน`:''} เลี่ยงคุยเรื่องอ่อนไหวในวันนั้น`);
    if(cnt.fuD)t.push(`มีวันที่พลังซ้ำกับตัวคุณ ${cnt.fuD} วัน อารมณ์อาจวนติดอยู่กับเรื่องเดิม`);
@@ -1907,7 +1980,7 @@ function mfText(k,X){
    t.push(`วันมีผู้อุปถัมภ์/ความรู้ ${G('正印')} วัน · วันงาน/ตำแหน่ง ${G('正官')} วัน · วันดาวปัญญา ${cnt.wench} วัน · วันมีผู้ใหญ่ช่วย ${cnt.noble} วัน`);
    t.push((isF(A.res)||isF(A.pow))?'ธาตุของผู้สนับสนุนหรือตำแหน่งเป็นธาตุที่หนุนคุณ เป้าหมายที่ต้องมีคนรับรอง (สอบ ยื่นขอ อนุมัติ) มีโอกาสสำเร็จสูง':'เป้าหมายจะสำเร็จจากแรงของตัวเองมากกว่ารอคนอนุมัติ แตกเป้าให้เล็กและวัดผลได้');
    if(st==='weak'&&isF(A.res))t.push('พลังตัวเองบาง ต้องการผู้ใหญ่หรือความรู้หนุน ขอคำแนะนำก่อนตัดสินใจจะได้ผลกว่า');
-   if(st==='strong'&&isU(A.res))t.push('พลังตัวเองแข็ง ไม่ต้องรอคนช่วยมาก ลงมือเองได้เลย');
+   if(sS&&isU(A.res))t.push('พลังตัวเองแข็ง ไม่ต้องรอคนช่วยมาก ลงมือเองได้เลย');
    if(cnt.wench)t.push('วันดาวปัญญาเหมาะกับการสอบ การเรียน การเขียน และเอกสารที่ต้องใช้ความรู้');
    if(X.bp)tp.push(`ยื่นเป้าหมายใหญ่ใน${tkw(2)} (วันเดช) หรือ${tkw(5)} (วันอุตสาหะ)`);
    break;}
@@ -1927,6 +2000,7 @@ function mfText(k,X){
    if(isF(kEl))t.push('ลูกหลานหรือลูกทีมให้ความร่วมมือดี มอบหมายงานได้');
    else if(isU(kEl))t.push('ลูกหลานหรือลูกทีมต้องใช้แรงดูแลมากกว่าปกติ');
    if(cnt.clashY)t.push(`มีวันปะทะปีเกิด ${cnt.clashY} วัน ระวังความเห็นไม่ตรงกันในครอบครัวใหญ่`);
+   if(cnt.heY||cnt.heH)t.push(`มีวันที่ก้านรวมกับเสาปีเกิด ${cnt.heY} วัน และเสายามเกิด ${cnt.heH} วัน เหมาะติดต่อญาติผู้ใหญ่และดูแลลูกหลาน`);
    if(cnt.combY)t.push(`มีวันเข้ากับปีเกิด ${cnt.combY} วัน เหมาะรวมญาติหรือทำบุญครอบครัว`);
    if(cnt.clashH)t.push(`มีวันปะทะเสายามเกิด (เรื่องลูก/ทีม) ${cnt.clashH} วัน ดูแลลูกหลานและทีมใกล้ชิดเป็นพิเศษ`);
    if(X.bp)tp.push(`นัดรวมญาติหรือทำบุญครอบครัวใน${tkw(0)} (วันบริวาร) หรือ${tkw(4)} (วันมูละ)`);
@@ -1963,14 +2037,14 @@ function mfRender(){
   const A=CH,g=((document.getElementById('gender')||{}).value==='F')?'F':'M',loc=currentLatLon(),todayISO=toISO(new Date());
   MF_BP=mfBirthPlanet();
   const tot=mfZero(),days=[],cat={},god={},elSum={"ไม้":0,"ไฟ":0,"ดิน":0,"ทอง":0,"น้ำ":0};
-  const cnt={clashD:0,clashY:0,clashM:0,clashH:0,combD:0,combY:0,combM:0,harmD:0,fuD:0,peach:0,horse:0,noble:0,wench:0,unfavDom:0,favDom:0};
+  const cnt={clashD:0,clashY:0,clashM:0,clashH:0,combD:0,combY:0,combM:0,harmD:0,fuD:0,halfD:0,xingD:0,fullG:0,heDM:0,heM:0,heY:0,heH:0,peach:0,horse:0,noble:0,wench:0,unfavDom:0,favDom:0};
   const mPil={},yPil={};
   for(let d=1;d<=nd;d++){
    const Q=getPillars(y,m,d,12,0,loc.lon,TZ_FIXED),dp=Q.day,ev=evaluateDay(dp),mh=dp.hidden[0];
    const g1=tenGod(A.dmIdx,dp.si),g2=tenGod(A.dmIdx,sIdx(mh.s)),k1=g1.n.split(' ')[0],k2=g2.n.split(' ')[0];
    const S=mfZero();
    mfGodAdd(S,k1,mfFv(A,dp.sEl),1,g);mfGodAdd(S,k2,mfFv(A,mh.el),k2===k1?.4:.8,g);
-   const R=mfRel(A.P,dp.branch);mfRelApply(S,R,ev.sv,1);
+   const R=mfRel(A.P,dp.branch,dp.stem);mfRelApply(S,R,ev.sv,1);
    const dow=new Date(y,m-1,d).getDay(),rl=mfRoleOf(MF_WD_PL[dow]);
    if(rl>=0){const w=MF_TK_W[rl];for(const kk in w)S[kk]+=w[kk];}
    S.life+=(ev.sv-50)/25;
@@ -1992,7 +2066,7 @@ function mfRender(){
   // พลังรอบ 10 ปี (大運) ที่คุณกำลังเดินอยู่ = ฉากหลังของทุกเดือน
   let lu=null;
   try{if(MF_LP&&MF_BD){const age=(new Date(y,m-1,15)-new Date(MF_BD.y,MF_BD.m-1,MF_BD.d))/(365.25*864e5),it=MF_LP.list.find(i=>age>=i.ageStart&&age<i.ageEnd);
-   if(it){const f=(mfFv(A,it.sEl)*1.2+mfFv(A,it.bEl)*.8)/2;mfGodAdd(luS,mfGK(A,it.si),mfFv(A,it.sEl),1,g);luS.life+=f*.8;mfRelApply(luS,mfRel(A.P,it.branch),50,.5);lu={it,f};}}}catch(e){lu=null;}
+   if(it){const f=(mfFv(A,it.sEl)*1.2+mfFv(A,it.bEl)*.8)/2;mfGodAdd(luS,mfGK(A,it.si),mfFv(A,it.sEl),1,g);luS.life+=f*.8;mfRelApply(luS,mfRel(A.P,it.branch,it.stem),50,.5);lu={it,f};}}}catch(e){lu=null;}
   const lk=MF_LK&&typeof MF_LK.idx==='number'?MF_LK:null,TR=lk?mfTransit(y,m,nd,lk):null;
   // น้ำหนักตามลำดับความสำคัญ: เดือนจร > วันจร > ปีจร > ดวงโคจร 10 ปี (เดิมเสาเดือนมีน้ำหนักเพียง ~17% ของวันเดียว)
   const sc={};
@@ -2000,7 +2074,7 @@ function mfRender(){
    const raw=.6*tot[k]/nd+.6*monS[k]+.3*yrS[k]+.25*luS[k];
    const bz=50+45*Math.tanh(raw*(k==='life'?.9:.85));
    const s=TR?(.65*bz+.35*(50+45*Math.tanh(TR.T[k]*.7))):bz;
-   sc[k]=Math.max(5,Math.min(95,Math.round(s)));});
+   sc[k]=Math.max(5,Math.min(95,Math.round(s+MF_OFF[k])));});
   const X={A,g,cat,god,cnt,days,elSum,mList,yList,nd,lk,TR,nat:mfNatGods(A),lu,bp:MF_BP};
   const cards=MF_DOMS.map(([k,ic,n])=>{const s=sc[k],T=MF_TIP[k],r=mfText(k,X);
    const base=s>=60?T.g:s<47?T.b:[T.g[0],T.b[0]];

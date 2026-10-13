@@ -6,9 +6,10 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#8b0000">
 <title>🏛️ BaZi Precision Navigator</title>
+<!-- แก้ไขรอบนี้: ดู CHANGELOG ท้ายไฟล์ -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
@@ -84,6 +85,8 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
 .topbar{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1f1f1f;color:#fff;padding:11px 20px;border-radius:30px;font-size:14px;opacity:0;pointer-events:none;transition:.28s;z-index:10000;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:88vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.cn{font-family:var(--cn)}
+.fix ol{counter-reset:none}
 @media(max-width:900px){.grid4{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
 @media(max-width:860px){
   .rtable thead{display:none}
@@ -226,7 +229,7 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
       <div class="fld d2 m2"><label>🌏 จังหวัดเกิด</label><select id="province" onchange="applyProvince();updateConfirm()"></select></div>
       <div class="fld d1 m1"><label>📆 วันที่</label><input type="number" id="bd" value="1" min="1" max="31" oninput="updateConfirm()"></div>
       <div class="fld d1 m1"><label>📅 เดือน</label><input type="number" id="bm" value="1" min="1" max="12" oninput="updateConfirm()"></div>
-      <div class="fld d1 m1"><label>🗓️ ปี ค.ศ.</label><input type="number" id="by" value="2000" oninput="updateConfirm()"></div>
+      <div class="fld d1 m1"><label>🗓️ ปี ค.ศ.</label><input type="number" id="by" value="2000" min="1900" max="2100" step="1" oninput="updateConfirm()"></div>
       <div class="fld d1 m1"><label>⏰ เวลาตกฟาก (24 ชม.)</label><input type="text" id="bt" value="09:00" inputmode="numeric" maxlength="5" placeholder="ชม:นาที เช่น 14:30" autocomplete="off" oninput="fmtTimeInput(this);updateConfirm()" onblur="normTimeInput(this);updateConfirm()"></div>
       <div class="fld d1 m2"><label>🚻 เพศกำเนิด</label><select id="gender" onchange="updateConfirm()"><option value="M">ชาย</option><option value="F">หญิง</option></select></div>
       <div class="fld d1 m1"><label>📍 ละติจูด</label><input type="text" id="lat" readonly></div>
@@ -631,12 +634,14 @@ function saveActiveProfile(){
   renderProfiles();
 }
 function switchProfile(id){
+  persistNow();
   const ps=getProfiles(),p=ps.find(x=>x.id===id);if(!p)return;
   setActiveId(id);applyFields(p);renderProfiles();calculateBazi();toast('👥 เปลี่ยนเป็นดวงของ '+p.name);
 }
 function limitHit(){if(getProfiles().length>=MAX_PROFILES){toast('⚠️ จำนวนดวงครบเพดาน '+MAX_PROFILES+' ดวงแล้ว');return true;}return false;}
 function addProfile(){
   if(limitHit())return;
+  persistNow();
   const n=clean(prompt('ตั้งชื่อดวงใหม่ (เช่น คุณแม่ / ลูกชาย)','')||'');if(!n)return;
   const ps=getProfiles();if(ps.some(x=>x.name.toLowerCase()===n.toLowerCase())){toast('⚠️ มีชื่อนี้อยู่แล้ว');return;}
   const p=Object.assign({id:newId(),name:n},DEFAULT_FIELDS);
@@ -836,12 +841,12 @@ function initProvince(){
   sel.value=0;applyProvince();
 }
 function applyProvince(){
-  const p=PROVINCES[+document.getElementById('province'].value]||PROVINCES[0];
+  const p=PROVINCES[+document.getElementById('province').value]||PROVINCES[0];
   document.getElementById('lat').value=p[1].toFixed(4)+'° N';
   document.getElementById('lon').value=p[2].toFixed(4)+'° E';
 }
 function currentLatLon(){
-  const p=PROVINCES[+document.getElementById('province'].value]||PROVINCES[0];
+  const p=PROVINCES[+document.getElementById('province').value]||PROVINCES[0];
   return {lat:p[1],lon:p[2],name:p[0]};
 }
 
@@ -887,7 +892,7 @@ function jdn(y,m,d,h){
   return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5+h/24;
 }
 function sunLon(j){
-  const d=j-2451545.0;
+  const d=j-2451543.5; // FIX: สูตร Schlyter นับ d จาก 2000-Jan-0.0 (JD 2451543.5) ไม่ใช่ J2000 — เดิมคลาด ~36 ชม.
   const w=282.9404+4.70935e-5*d, M=mod(356.0470+0.9856002585*d,360), e=0.016709-1.151e-9*d;
   const E=M+(180/Math.PI)*e*Math.sin(M*Math.PI/180);
   const xv=Math.cos(E*Math.PI/180)-e, yv=Math.sin(E*Math.PI/180)*Math.sqrt(1-e*e);
@@ -907,8 +912,8 @@ function getPillars(y,mo,d,hr,mi,lon,tz){
   const jUT=jdn(y,mo,d,clock-tz);
   const corr=timeCorr(y,mo,d,clock,lon,tz,tmode);
   const solarH=clock+corr;
-  let dayShift=0;
-  if(solarH>=23)dayShift=1; else if(solarH<0)dayShift=-1;
+  // FIX: ตัดวัน 23:00 (เวลาสุริยะ) — solarH<0 คือ 23:xx ของวันก่อนหน้า ซึ่งนับเป็นวันนี้อยู่แล้ว จึงไม่ต้องถอยวัน (เดิมถอยผิด)
+  const dayShift=solarH>=23?1:0;
   const di=mod(Math.floor(jdn(y,mo,d,12)+0.5)+49+dayShift,60);
   const dS=di%10, dB=di%12;
   const sl=sunLon(jUT);
@@ -988,8 +993,9 @@ function calcLuckPillars(P,jUT,gender){
   const boundary=findTermBoundary(jUT,forward);
   const daysDiff=forward?(boundary-jUT):(jUT-boundary);
   const startAgeDec=daysDiff/3;
-  const startYears=Math.floor(startAgeDec);
-  const startMonths=Math.round((startAgeDec-startYears)*12);
+  let startYears=Math.floor(startAgeDec);
+  let startMonths=Math.round((startAgeDec-startYears)*12);
+  if(startMonths>=12){startYears+=1;startMonths-=12;} // FIX: เดิมอาจได้ "12 เดือน"
   const dir=forward?1:-1,list=[];
   for(let n=1;n<=9;n++){
     const si=mod(P.month.si+dir*n,10), bi=mod(P.month.bi+dir*n,12);
@@ -1046,19 +1052,6 @@ function dxBridge(a,b){
   if(CONTROL[b]===a)return PRODUCE[b];
   return null;
 }
-const DX_GOD10={
- "比肩":{g:[/* ... */]},
- "劫財":{g:[/* ... */]},
- "食神":{g:[/* ... */]},
- "傷官":{g:[/* ... */]},
- "偏財":{g:[/* ... */]},
- "正財":{g:[/* ... */]},
- "七殺":{g:[/* ... */]},
- "正官":{g:[/* ... */]},
- "偏印":{g:[/* ... */]},
- "正印":{g:[/* ... */]}
-};
-// NOTE: for brevity in this single-file assembly, we include concise default activity mappings if needed or full objects.
 const DX_GOD10_FULL={
  "比肩":{g:["🤝 ทำงานเป็นทีม แบ่งหน้าที่ให้ชัด","🏃 ออกกำลังกาย เล่นกีฬา","💬 คุยงานกับเพื่อนร่วมงานระดับเดียวกัน"],b:["💸 ให้ยืมเงิน/ค้ำประกัน","📄 ลงทุนร่วมโดยไม่มีสัญญา","🙉 ดื้อดึงไม่ฟังความเห็นคนอื่น"]},
  "劫財":{g:["🏆 แข่งขัน ทำยอด ประกวดผลงาน","🌐 ขยายเครือข่าย ออกงานสังคม","🦁 งานที่ต้องใช้ความกล้าและความเร็ว"],b:["🛍️ ใช้จ่ายตามเพื่อน ช้อปปิ้งเกินงบ","📉 ลงทุนเสี่ยงสูง เก็งกำไรระยะสั้น","⚔️ ปะทะคารมเรื่องผลประโยชน์"]},
@@ -1206,12 +1199,26 @@ function lfLagna(LK){
   const sg=h=>LF_SIGNS[(LK.idx+h-1)%12];
   return {idx:LK.idx,sign:LF_SIGNS[LK.idx],lordL:LF_SIGNS[LK.idx].r,sg,lord:h=>sg(h).r};
 }
-function lfCtx(P,A,LK,LP,y,m,d){
+/* ===== 9 มิติชีวิต: BaZi × ลัคนา × ดวงโคจร 大運 (เขียนใหม่ — เดิมไม่ได้ใช้ข้อมูลลัคนา/大運 ในการคิดคะแนนเลย) ===== */
+// ธาตุจีนของดาวเคราะห์ตามชื่อ 五星: อังคาร=火 พุธ=水 พฤหัสบดี=木 ศุกร์=金 เสาร์=土 · อาทิตย์=太陽(ไฟ) จันทร์=太陰(น้ำ)
+const LF_PL_EL={'อาทิตย์':'ไฟ','จันทร์':'น้ำ','อังคาร':'ไฟ','พุธ':'น้ำ','พฤหัสบดี':'ไม้','ศุกร์':'ทอง','เสาร์':'ดิน'};
+// หัวข้อชีวิต → ภพ (เรือน) หลัก/รอง ตามแนวโหราศาสตร์ไทย
+const LF_TOPIC_H={life:[1],work:[10],money:[2,11],love:[7],health:[1,6],study:[5,9],luck:[5,11],family:[4,3],crew:[11,6]};
+const LF_CAT_TOPIC={'อำนาจ':['work'],'ทรัพย์':['money'],'แสดงออก':['luck'],'ทรัพยากร':['study','family','health'],'เพื่อน':['crew']};
+const LF_CAREER={'อำนาจ':'องค์กรที่มีโครงสร้างชัด ราชการ กฎหมาย หรือบทบาทบริหารที่ต้องรับผิดชอบสูง',
+ 'แสดงออก':'งานสร้างสรรค์ สื่อ การสอน งานนำเสนอ หรืองานที่ได้ใช้ไอเดียและการสื่อสาร',
+ 'ทรัพย์':'งานธุรกิจ การค้า การเงิน การขาย หรือบริหารทรัพย์สิน',
+ 'ทรัพยากร':'งานวิชาการ วิจัย ที่ปรึกษา การศึกษา หรืองานที่อาศัยความเชี่ยวชาญเฉพาะทาง',
+ 'เพื่อน':'งานที่ต้องร่วมมือเป็นทีม หุ้นส่วน เครือข่าย หรือธุรกิจครอบครัว'};
+const lfFv=(A,e)=>A.fav.includes(e)?1:A.unfav.includes(e)?-1:0;
+const lfFvTag=v=>v>0?'ธาตุให้คุณ':v<0?'ธาตุให้โทษ':'ธาตุกลาง';
+
+function lfCtx(P,A,LK,LP,y,m,d,gender){
   const g={};LF_GOD.forEach(k=>g[k]=0);
-  const add=(si,w)=>{g[tenGod(P.day.si,si].n.split(' ')[0]]+=w;};
+  const add=(si,w)=>{g[tenGod(P.day.si,si).n.split(' ')[0]]+=w;};
   ['year','month','hour'].forEach(k=>add(P[k].si,W_S[k]));
   ['year','month','day','hour'].forEach(k=>P[k].hidden.forEach(h=>add(sIdx(h.s),W_B[k]*h.w/100)));
-  const tot=LF_GOD.reduce((a,k)=>a+g[k],0);LF_GOD.forEach(k=>g[k]=g[k]/tot*100);
+  const tot=LF_GOD.reduce((a,k)=>a+g[k],0)||1;LF_GOD.forEach(k=>g[k]=g[k]/tot*100);
   const fr=g['比肩']+g['劫財'],out=g['食神']+g['傷官'],wea=g['偏財']+g['正財'],pow=g['七殺']+g['正官'],res=g['偏印']+g['正印'];
   const st=A.status.k,sup=A.support,K=['year','month','day','hour'];
   const fl={
@@ -1219,41 +1226,187 @@ function lfCtx(P,A,LK,LP,y,m,d){
     bj:fr>=28&&wea<=22,cd:wea>=26&&st==='weak',xs:g['偏印']>=10&&g['食神']>=8
   };
   const cl=(a,b)=>CLASH[P[a].branch]===P[b].branch;
+  const cm=(a,b)=>COMBINE[P[a].branch]===P[b].branch;
   const dayClash=K.some(k=>k!=='day'&&cl('day',k));
-  const dayCombine=K.some(k=>k!=='day'&&COMBINE[P.day.branch]===P[k].branch);
-  let luck=null;
-  if(LP){const age=(Date.now()-new Date(y,m-1,d).getTime())/(365.25*24*3600*1000);
-    const it=LP.list.find(i=>age>=i.ageStart&&age<i.ageEnd);if(it)luck={it:it,god:tenGod(P.day.si,it.si)};}
-  return {P,A,g,fr,out,wea,pow,res,st,sup,fl,dayClash,dayCombine,luck,L:lfLagna(LK),LK,
+  const dayCombine=K.some(k=>k!=='day'&&cm('day',k));
+  let luck=null,age=null;
+  if(LP){
+    age=(Date.now()-new Date(y,m-1,d).getTime())/(365.25*24*3600*1000);
+    const it=LP.list.find(i=>age>=i.ageStart&&age<i.ageEnd);
+    if(it)luck={it:it,god:tenGod(P.day.si,it.si)};
+  }
+  const pcs=Object.keys(A.sc).map(e=>A.pc(e));
+  return {P,A,g,fr,out,wea,pow,res,st,sup,fl,dayClash,dayCombine,cl,cm,luck,age,LP,gender:gender==='F'?'F':'M',
+    L:lfLagna(LK),LK,minPc:Math.min(...pcs),maxPc:Math.max(...pcs),
     fire:A.pc('ไฟ'),water:A.pc('น้ำ'),wood:A.pc('ไม้'),earth:A.pc('ดิน'),metal:A.pc('ทอง')};
 }
-function buildLife(P,A,LK,LP,y,m,d){
-  const X=lfCtx(P,A,LK,LP,y,m,d);
-  const mk=(title,ic,sc,desc)=>({title,ic,sc:lfCl(sc),desc});
-  return {L:X.L,topics:[
-   mk('🌟 ภาพรวมและวาสนาชีวิต','🌟',X.sup+(X.fl.gy?10:0)-(X.fl.bj?8:0),`ดิถี ${X.A.dm} (${X.A.status.t}) พลังหนุน ${X.sup}% · ลัคนาราศี${X.L.sign.n} เจ้าเรือน${X.L.lordL}`),
-   mk('💼 การงานและอาชีพ','💼',50+(X.pow-20)*1.2+(X.fl.gy?12:0)-(X.fl.sg?10:0),`พลังอำนาจ ${X.pow.toFixed(1)}% · 正官 ${X.g['正官'].toFixed(1)}% · 七殺 ${X.g['七殺'].toFixed(1)}%`),
-   mk('💰 การเงินและความมั่งคั่ง','💰',50+(X.wea-22)*1.2+(X.fl.ssc?12:0)-(X.fl.cd?12:0)-(X.fl.bj?10:0),`พลังทรัพย์ ${X.wea.toFixed(1)}% · 偏財 ${X.g['偏財'].toFixed(1)}% · 正財 ${X.g['正財'].toFixed(1)}%`),
-   mk('💞 ความรักและคู่ครอง','💞',50+(X.wea-20)*.8+(X.pow-20)*.8-(X.dayClash?15:0)+(X.dayCombine?12:0),`เรือนปัตนิและธาตุคู่ครองสอดคล้องกับโครงสร้างดวง`),
-   mk('🩺 สุขภาพและความสมดุล','🩺',60+(X.sup>45&&X.sup<65?15:0)-(X.water<10||X.fire<10?10:0)-(X.dayClash?10:0),`สมดุลธาตุทั้ง 5 และธาตุแฝง`),
-   mk('📚 การศึกษา ปัญญา และสิ่งศักดิ์สิทธิ์','📚',50+(X.res-20)*1.2+(X.fl.gy?8:0),`พลังทรัพยากร ${X.res.toFixed(1)}% · 偏印 ${X.g['偏印'].toFixed(1)}% · 正印 ${X.g['正印'].toFixed(1)}%`),
-   mk('🎯 โชคลาภและการเสี่ยง','🎯',45+(X.out-18)*1.2+(X.wea-22)*.5-(X.fl.cd?8:0),`พลังแสดงออก ${X.out.toFixed(1)}% และพลังทรัพย์`),
-   mk('🏡 ครอบครัวและญาติมิตร','🏡',50+(X.res-20)*.8-(X.fl.bj?10:0),`เสาปีและเสาเดือนสอดคล้องกับญาติมิตร`),
-   mk('🤝 บริวาร ลูกน้อง และมิตรสหาย','🤝',50+(X.fr-25)*1.2-(X.fl.bj?12:0),`พลังเพื่อนฝูง/比劫 ${X.fr.toFixed(1)}%`)
-  ]};
+// วิเคราะห์ 1 ภพ: ราศี → เจ้าเรือน → ธาตุจีนของดาว → ตรงกับธาตุให้คุณของ BaZi หรือไม่ → เป็นมิตร/ศัตรูกับเจ้าลัคนา
+function lfHouse(X,h){
+  const L=X.L,A=X.A,sg=L.sg(h),lord=sg.r,el=LF_PL_EL[lord]||'ดิน',fv=lfFv(A,el),rel=lfRel(L.lordL,lord);
+  const pts=fv*7+(h===1?0:(rel===2?5:rel*4));
+  const relTxt=h===1?'เจ้าลัคนา — ตัวแทนของคุณเอง':rel===2?'เป็นดาวเดียวกับเจ้าลัคนา ผูกกับตัวตนโดยตรง':
+    rel===1?'เป็นมิตรกับเจ้าลัคนา เรื่องนี้เดินคล่อง':rel===-1?'เป็นศัตรูกับเจ้าลัคนา เรื่องนี้มีแรงเสียดทาน':'เป็นกลางกับเจ้าลัคนา';
+  return {h,name:LF_HOUSE[h],sign:sg.n,lord,el,fv,rel,pts,relTxt};
 }
-function lifeOverviewHTML(L){
-  return `<div style="text-align:center;margin-bottom:10px"><span style="font-size:38px">${L.sign.symbol||'🪐'}</span><br>`+
+const lfHouseTxt=o=>`เรือน${o.name} (ภพ ${o.h}) ตกราศี${o.sign} · เจ้าเรือนคือดาว${o.lord} ธาตุจีน ${EL_EMO[o.el]}${o.el} (${lfFvTag(o.fv)}) · ${o.relTxt}`;
+
+// ผลของดวงโคจร 10 ปีที่กำลังเดินอยู่ต่อแต่ละหัวข้อ
+function lfLuckAdj(X,key){
+  if(!X.luck)return 0;
+  const it=X.luck.it,A=X.A,fS=lfFv(A,it.sEl),fB=lfFv(A,it.bEl),f=(fS*1.2+fB*.8)/2;
+  let adj=key==='life'?f*6:0;
+  const tp=(LF_CAT_TOPIC[X.luck.god.c]||[]).slice();
+  if(X.luck.god.c===(X.gender==='F'?'อำนาจ':'ทรัพย์'))tp.push('love');
+  if(tp.includes(key))adj+=fS>0?6:fS<0?-5:2;
+  return adj;
+}
+function lfVerdict(base,avg){
+  const b=base>=58?1:base<=42?-1:0,l=avg>=4?1:avg<=-4?-1:0;
+  if(b>0&&l>0)return '✅ <b>สองระบบชี้ตรงกัน</b> — เรื่องนี้เป็นจุดแข็งของคุณ ลงแรงได้เต็มที่';
+  if(b<0&&l<0)return '⚠️ <b>สองระบบเตือนตรงกัน</b> — เรื่องนี้ควรวางแผนรับมือล่วงหน้า อย่าประมาท';
+  if(b>0&&l<0)return '🔀 BaZi หนุนแต่ลัคนาแสดงแรงเสียดทาน — ศักยภาพมี ต้องใช้ความอดทนและเลือกจังหวะ';
+  if(b<0&&l>0)return '🔀 ลัคนาหนุนแต่ BaZi แสดงแรงกด — โอกาสมี ต้องเสริมธาตุให้คุณและเลือกวันดี';
+  return '➖ สองระบบให้สัญญาณกลาง ๆ — ผลขึ้นกับจังหวะดวงจรและการวางแผนของคุณเอง';
+}
+function lfTopic(X,key,base){
+  const hs=LF_TOPIC_H[key].map(h=>lfHouse(X,h));
+  const avg=hs.reduce((a,o)=>a+o.pts,0)/hs.length,la=lfLuckAdj(X,key);
+  return {key,base,hs,avg,la,sc:lfCl(base+avg+la)};
+}
+function lfDescribe(t,X){
+  const A=X.A,P=X.P,L=X.L,g=X.g,f1=v=>v.toFixed(1),H=[],E=[];
+  const elTag=e=>`${EL_EMO[e]}${e} (${lfFvTag(lfFv(A,e))})`;
+  const topCat=Object.keys(A.cat).reduce((a,b)=>A.cat[a]>=A.cat[b]?a:b);
+  let lead='';
+  switch(t.key){
+  case 'life':{
+    const el=LF_PL_EL[L.lordL]||'ดิน',fv=lfFv(A,el);
+    lead=`ดิถี <b class="cn">${P.day.stem}</b> ${A.dm} (${A.status.t}) พลังหนุน ${A.support}% · ลัคนาราศี${L.sign.n} เจ้าเรือนดาว${L.lordL} ธาตุจีน ${elTag(el)}`;
+    E.push(fv>0?'เจ้าลัคนาเป็นธาตุให้คุณ — บุคลิกที่แสดงออกต่อโลก "หนุน" สิ่งที่ดวงต้องการ ใช้ตัวตนได้เป็นธรรมชาติ'
+      :fv<0?'เจ้าลัคนาเป็นธาตุให้โทษ — บุคลิกที่แสดงออกกับสิ่งที่ดวงต้องการ "ขัดกัน" จะเหนื่อยเมื่อฝืนบทบาทที่คนคาดหวัง ให้ชดเชยด้วยธาตุให้คุณในชีวิตประจำวัน'
+      :'เจ้าลัคนาเป็นธาตุกลาง — ตัวตนภายนอกไม่หนุนไม่ขัดดวงแกนใน');
+    if(X.fl.gy)E.push('โครงสร้างมี 官印相生 (อำนาจ+ทรัพยากรหนุนกัน) เป็นแต้มบวกด้านวาสนา');
+    if(X.fl.bj)E.push('หมวดเพื่อน/คู่แข่งหนาแน่นขณะทรัพย์บาง ต้องระวังการแย่งโอกาสและเงินรั่ว');
+    break;}
+  case 'work':{
+    lead=`พลังอำนาจ ${f1(X.pow)}% (正官 ${f1(g['正官'])}% · 七殺 ${f1(g['七殺'])}%) · หมวดเด่นของดวงคือ <b>${topCat}</b> → เหมาะกับ${LF_CAREER[topCat]}`;
+    const m=RASHI_DESC[X.LK.idx].match(/เหมาะกับ[^<]*$/);
+    if(m)E.push(`จากลัคนาราศี${L.sign.n}: ${m[0]}`);
+    if(X.fl.sg)E.push('มี 傷官見官 (วาจาตรงชนผู้มีอำนาจ) ระวังการโต้แย้งกับหัวหน้า ใช้ข้อมูลและลายลักษณ์อักษรแทนอารมณ์');
+    if(X.fl.gy)E.push('มี 官印相生 ผู้ใหญ่และระบบมักเปิดทางให้เมื่อทำงานเป็นระบบ');
+    break;}
+  case 'money':{
+    lead=`พลังทรัพย์ ${f1(X.wea)}% (偏財 ${f1(g['偏財'])}% · 正財 ${f1(g['正財'])}%) · ดิถี${A.status.t.replace(/^\S+\s+/,'')} · ทรัพย์เป็น${elTag(A.wea)}`;
+    if(X.st==='weak'&&X.wea>=26)E.push('ทรัพย์มากแต่ดิถีอ่อน (財多身弱) — โอกาสเยอะแต่แบกไม่ไหว ควรมีพันธมิตรหรือระบบช่วยจัดการ');
+    else if(X.st==='strong'&&X.wea<=15)E.push('ดิถีแกร่งแต่ทรัพย์บาง — แรงมีแต่ต้องหาช่องทางแปลงเป็นรายได้ ใช้ธาตุแสดงออก (ไอเดีย/ผลงาน) เป็นสะพาน');
+    if(X.fl.bj)E.push('比劫 (เพื่อน/คู่แข่ง) แย่งทรัพย์ — แยกบัญชี งดค้ำประกัน ทำสัญญาทุกครั้ง');
+    if(X.fl.ssc)E.push('食傷生財 (ผลงานแปลงเป็นเงิน) — รายได้เติบโตจากทักษะและความคิดสร้างสรรค์');
+    break;}
+  case 'love':{
+    const star=X.gender==='M'?X.wea:X.pow,sn=X.gender==='M'?'ดาวภรรยา (ทรัพย์)':'ดาวสามี (อำนาจ)';
+    const db=P.day.branch,mh=P.day.hidden[0],fvB=lfFv(A,P.day.bEl);
+    lead=`${sn} ${f1(star)}% · เรือนคู่ครองใน BaZi คือกิ่งวัน <b class="cn">${db}</b> ${P.day.animal} (ธาตุ${elTag(P.day.bEl)}) ซ่อน ${mh.s} ${mh.el}`;
+    E.push(fvB>0?'กิ่งวันเป็นธาตุให้คุณ — คู่ครองมักเป็นกำลังหนุนที่ทำให้ชีวิตมั่นคงขึ้น'
+      :fvB<0?'กิ่งวันเป็นธาตุให้โทษ — ความสัมพันธ์ใกล้ชิดมักมาพร้อมแรงกดดัน ต้องสื่อสารตรงและตั้งขอบเขตชัด':'กิ่งวันเป็นธาตุกลาง — ความสัมพันธ์ขึ้นกับการดูแลกันมากกว่าชะตา');
+    if(X.dayClash)E.push('กิ่งวันชงกับเสาอื่นในดวง — เรื่องคู่ครองมีความเปลี่ยนแปลงหรือระยะห่างเป็นช่วง ๆ');
+    if(X.dayCombine)E.push('กิ่งวัน合กับเสาอื่น — มีเสน่ห์ดึงดูดและมักมีคนเกี่ยวข้องในชีวิตคู่หลายทาง');
+    if(X.gender==='F'&&X.fl.sg)E.push('傷官ชนดาวสามี — ระวังคำพูดแรงกับคู่');
+    if(X.gender==='M'&&X.fl.bj)E.push('比劫แย่งดาวภรรยา — ระวังมือที่สามและการแข่งขันด้านหัวใจ');
+    break;}
+  case 'health':{
+    const els=Object.keys(A.sc).sort((a,b)=>A.sc[a]-A.sc[b]),low=els[0],high=els[4];
+    const body=e=>(((EL_MEAN[e]||'').split('ร่างกาย:')[1]||'').trim());
+    lead=`ธาตุอ่อนสุด ${EL_EMO[low]}${low} ${f1(A.pc(low))}% → ดูแล <b>${body(low)}</b> · ธาตุล้นสุด ${EL_EMO[high]}${high} ${f1(A.pc(high))}% → ระวังภาวะ "${EL_HIGH[high]}"`;
+    if(X.dayClash)E.push('กิ่งวันชงในดวง — ช่วงเปลี่ยนผ่านมักเหนื่อยล้าง่าย ระวังอุบัติเหตุและการพักผ่อนไม่พอ');
+    E.push('<span class="small">อวัยวะตามทฤษฎีธาตุจีนเป็นแนวทางดูแลตัวเองเท่านั้น ไม่ใช่การวินิจฉัยโรค ควรตรวจสุขภาพกับแพทย์</span>');
+    break;}
+  case 'study':{
+    lead=`พลังทรัพยากร ${f1(X.res)}% (正印 ${f1(g['正印'])}% · 偏印 ${f1(g['偏印'])}%) · ทรัพยากรเป็น${elTag(A.res)}`;
+    if(X.fl.xs)E.push('偏印ปะทะ食神 — ความคิดลึกแต่ขาดสมาธิลงมือ ใช้การตั้งเดดไลน์ช่วย');
+    if(X.fl.gy)E.push('มี 官印相生 — เหมาะสอบแข่งขัน ใบรับรอง หรือเส้นทางที่มีผู้ใหญ่รับรอง');
+    break;}
+  case 'luck':{
+    lead=`พลังแสดงออก ${f1(X.out)}% (食神 ${f1(g['食神'])}% · 傷官 ${f1(g['傷官'])}%) · พลังทรัพย์ ${f1(X.wea)}%`;
+    E.push('โชคตามแนวนี้คือ "โอกาสจากผลงาน คอนเนกชัน และจังหวะ" ไม่ใช่การรับประกันผลจากการเสี่ยงโชค — ไม่แนะนำให้พึ่งพนันหรือเก็งกำไรเกินตัว');
+    if(X.fl.cd)E.push('財多身弱 — ลาภที่มาเร็วมักมาพร้อมภาระ ควรตั้งเพดานความเสี่ยงล่วงหน้า');
+    break;}
+  case 'family':{
+    const yc=X.cl('day','year'),ym=X.cm('day','year'),mc=X.cl('day','month'),mm=X.cm('day','month');
+    lead=`พลังทรัพยากร (ผู้ใหญ่/มารดา) ${f1(X.res)}% เป็น${elTag(A.res)} · เสาปี ${P.year.stem}${P.year.branch} (บรรพบุรุษ/ผู้ใหญ่) · เสาเดือน ${P.month.stem}${P.month.branch} (บิดามารดา/พี่น้อง)`;
+    if(yc)E.push('กิ่งวันชงกิ่งปี — ความเห็นต่างกับผู้ใหญ่หรือวงตระกูลตั้งแต่เด็ก');
+    if(ym)E.push('กิ่งวัน合กิ่งปี — ผูกพันกับผู้ใหญ่และรากเหง้าครอบครัว');
+    if(mc)E.push('กิ่งวันชงกิ่งเดือน — สัมพันธ์กับบิดามารดา/พี่น้องมีจังหวะห่างหรือขัดแย้งง่าย');
+    if(mm)E.push('กิ่งวัน合กิ่งเดือน — ได้แรงสนับสนุนจากบิดามารดา/พี่น้อง');
+    if(X.fl.bj)E.push('เรื่องเงินในครอบครัวควรชัดเจน เลี่ยงการกู้ยืมกันเอง');
+    break;}
+  case 'crew':{
+    const hs=P.hour.sEl,fvh=lfFv(A,hs);
+    lead=`พลังเพื่อน/比劫 ${f1(X.fr)}% (${elTag(A.dm)}) · เสาเวลา ${P.hour.stem}${P.hour.branch} (ลูกน้อง/ลูกหลาน) ก้าน ${elTag(hs)}`;
+    E.push(fvh>0?'เสาเวลาเป็นธาตุให้คุณ — ลูกน้อง ลูกหลาน หรือทีมมักให้แรงหนุนกลับมา':fvh<0?'เสาเวลาเป็นธาตุให้โทษ — ต้องใช้พลังดูแลลูกน้อง/ลูกหลานมากกว่าปกติ มอบหมายงานแบบชัดเจน':'เสาเวลาเป็นธาตุกลาง — ความสัมพันธ์กับทีมขึ้นกับวิธีบริหารของคุณ');
+    break;}
+  }
+  t.hs.forEach(o=>H.push(`<div class="small" style="margin:3px 0">🔯 ${lfHouseTxt(o)}</div>`));
+  let luckLine='';
+  if(X.luck&&t.la!==0){
+    const it=X.luck.it;
+    luckLine=`<div class="small" style="margin:3px 0">🌀 ดวงโคจรปัจจุบัน <b class="cn">${it.stem}${it.branch}</b> (อายุ ${Math.floor(it.ageStart)}–${Math.floor(it.ageEnd)} ปี) ก้าน ${X.luck.god.n} ธาตุ ${elTag(it.sEl)} → ${t.la>0?'<b style="color:#15803d">หนุน</b>':'<b style="color:#b91c1c">กดดัน</b>'}เรื่องนี้ในทศวรรษนี้</div>`;
+  }
+  return `<p>${lead}</p>`+E.map(x=>'<p>'+x+'</p>').join('')+H.join('')+luckLine+`<p style="margin-top:8px">${lfVerdict(t.base,t.avg)}</p>`;
+}
+function buildLife(P,A,LK,LP,y,m,d,gender){
+  const X=lfCtx(P,A,LK,LP,y,m,d,gender),F=X.fl,star=X.gender==='M'?X.wea:X.pow;
+  const spBranch=lfFv(A,P.day.bEl)*6;
+  const base={
+    life:X.sup+(F.gy?10:0)-(F.bj?8:0),
+    work:50+(X.pow-20)*1.2+(F.gy?12:0)-(F.sg?10:0),
+    money:50+(X.wea-22)*1.2+(F.ssc?12:0)-(F.cd?12:0)-(F.bj?10:0),
+    love:50+(star-18)*1.0+spBranch-(X.dayClash?15:0)+(X.dayCombine?12:0),
+    health:58+(X.st==='bal'?12:0)-(X.minPc<6?8:0)-(X.maxPc>38?6:0)-(X.dayClash?8:0),
+    study:50+(X.res-20)*1.2+(F.gy?8:0),
+    luck:45+(X.out-18)*1.2+(X.wea-22)*.5-(F.cd?8:0),
+    family:50+(X.res-20)*.8-(F.bj?10:0)+((X.cm('day','year')||X.cm('day','month'))?6:0)-((X.cl('day','year')||X.cl('day','month'))?8:0),
+    crew:50+(X.fr-25)*1.2-(F.bj?12:0)+lfFv(A,P.hour.sEl)*4
+  };
+  const META=[['life','🌟','🌟 ภาพรวมและวาสนาชีวิต'],['work','💼','💼 การงานและอาชีพ'],['money','💰','💰 การเงินและความมั่งคั่ง'],
+   ['love','💞','💞 ความรักและคู่ครอง'],['health','🩺','🩺 สุขภาพและความสมดุล'],['study','📚','📚 การศึกษา ปัญญา และสิ่งศักดิ์สิทธิ์'],
+   ['luck','🎯','🎯 โชคลาภและการเสี่ยง'],['family','🏡','🏡 ครอบครัวและญาติมิตร'],['crew','🤝','🤝 บริวาร ลูกน้อง และมิตรสหาย']];
+  const topics=META.map(([k,ic,title])=>{const t=lfTopic(X,k,base[k]);return {key:k,ic,title,sc:t.sc,desc:lfDescribe(t,X),t};});
+  return {X,L:X.L,topics};
+}
+function lifeOverviewHTML(LF){
+  const X=LF.X,L=LF.L,A=X.A,el=LF_PL_EL[L.lordL]||'ดิน',fv=lfFv(A,el),sym=RASHI[X.LK.idx][1];
+  const hs=[];for(let h=1;h<=12;h++)hs.push(lfHouse(X,h));
+  const good=hs.filter(o=>o.fv>0),bad=hs.filter(o=>o.fv<0);
+  const list=a=>a.length?a.map(o=>`ภพ ${o.h} ${o.name} <span class="small">(${MF_HOUSE[o.h].t})</span>`).join(' · '):'—';
+  let h=`<div style="text-align:center;margin-bottom:10px"><span style="font-size:38px">${sym}</span><br>`+
    `<b style="font-size:18px;color:var(--primary)">ลัคนาราศี${L.sign.n} · เจ้าเรือนดาว${L.lordL}</b><br>`+
-   `<span class="small">ธาตุ${L.sign.el} · ประเภท${L.sign.q}</span></div>`;
+   `<span class="small">ธาตุราศี${L.sign.el} · ประเภท${L.sign.q} · ธาตุจีนของเจ้าลัคนา ${elEmoTag(A,el)}</span></div>`;
+  h+=`<div class="tip">🌉 <b>จุดเชื่อม BaZi × ลัคนา</b><br>`+
+   `• แกนในคือดิถี <b class="cn">${X.P.day.stem}</b> ${A.dm} (${A.status.t}) ธาตุให้คุณ ${A.fav.map(e=>EL_EMO[e]+e).join(' · ')} — `+
+   (fv>0?'เจ้าลัคนาเป็นธาตุให้คุณ บุคลิกภายนอกหนุนสิ่งที่ดวงต้องการ':fv<0?'เจ้าลัคนาเป็นธาตุให้โทษ บุคลิกภายนอกกับสิ่งที่ดวงต้องการขัดกัน ต้องชดเชยด้วยธาตุให้คุณ':'เจ้าลัคนาเป็นธาตุกลาง ไม่หนุนไม่ขัด')+`<br>`+
+   `• ภพที่เจ้าเรือนเป็นธาตุให้คุณ (เดินคล่อง): ${list(good)}<br>`+
+   `• ภพที่เจ้าเรือนเป็นธาตุให้โทษ (ต้องระวัง): ${list(bad)}<br>`+
+   (X.luck?`• ดวงโคจรปัจจุบัน <b class="cn">${X.luck.it.stem}${X.luck.it.branch}</b> (อายุ ${Math.floor(X.luck.it.ageStart)}–${Math.floor(X.luck.it.ageEnd)} ปี) ก้าน ${X.luck.god.n} ${EL_EMO[X.luck.it.sEl]}${X.luck.it.sEl} (${lfFvTag(lfFv(A,X.luck.it.sEl))})`
+    :(X.age!==null&&X.age<X.LP.list[0].ageStart?'• ยังไม่เข้าดวงโคจรแรก ใช้เสาเดือนเกิดเป็นพลังพื้นฐาน':''))+
+   `<br><span class="small">หมายเหตุ: ธาตุจีนของดาวใช้ตามชื่อ 五星 (อังคาร=ไฟ พุธ=น้ำ พฤหัสบดี=ไม้ ศุกร์=ทอง เสาร์=ดิน อาทิตย์=ไฟ จันทร์=น้ำ) เป็นการเทียบเคียงสองศาสตร์ ไม่ใช่กฎดั้งเดิมของศาสตร์ใดศาสตร์หนึ่ง · ใช้ระบบเรือนตามราศี (Whole Sign) · ยังไม่ได้คำนวณตำแหน่งดาวกำเนิด</span></div>`;
+  h+='<div class="tbwrap"><table class="rtable"><thead><tr><th>ภพ</th><th>ราศี</th><th>เจ้าเรือน</th><th>ธาตุจีน</th><th>ผลต่อดวง</th></tr></thead><tbody>';
+  hs.forEach(o=>{
+    h+=`<tr><td data-label="ภพ"><div><b>${o.h} ${o.name}</b> <span class="small">${MF_HOUSE[o.h].t}</span></div></td>`+
+     `<td data-label="ราศี"><div>${o.sign}</div></td><td data-label="เจ้าเรือน"><div>${o.lord}</div></td>`+
+     `<td data-label="ธาตุจีน"><div>${EL_EMO[o.el]} ${o.el}</div></td>`+
+     `<td data-label="ผลต่อดวง"><div>${o.fv>0?'✅ ธาตุให้คุณ':o.fv<0?'⚠️ ธาตุให้โทษ':'➖ กลาง'} · <span class="small">${o.h===1?'เจ้าลัคนา':o.rel===2?'ดาวเดียวกับเจ้าลัคนา':o.rel===1?'มิตรกับเจ้าลัคนา':o.rel===-1?'ศัตรูกับเจ้าลัคนา':'กลางกับเจ้าลัคนา'}</span></div></td></tr>`;});
+  h+='</tbody></table></div>';
+  return h;
 }
+const elEmoTag=(A,e)=>`${EL_EMO[e]}${e} (${lfFvTag(lfFv(A,e))})`;
 function lifeCardHTML(o){const L=mfLv(o.sc);
-  return `<div class="lcard"><div class="lhead"><span>${o.ic} ${o.title}</span><em style="color:${L.c}">${L.e} ${L.sc}/100 (${L.t})</em></div>`+
-   `<div class="bar"><i style="width:${o.sc}%;background:${L.c}"></i></div><p>${o.desc}</p></div>";}
-function renderLifeReading(P,A,LK,LP,y,m,d){
+  return `<div class="lcard"><div class="lhead"><span>${o.title}</span><em style="color:${L.c};font-style:normal">${L.e} ${o.sc}/100 (${L.t})</em></div>`+
+   `<div class="bar"><i style="width:${o.sc}%;background:${L.c}"></i></div>${o.desc}</div>`;}
+function renderLifeReading(P,A,LK,LP,y,m,d,gender){
   try{
-    LIFE=buildLife(P,A,LK,LP,y,m,d);
-    document.getElementById('lifeBox').innerHTML=lifeOverviewHTML(LIFE.L)+LIFE.topics.map(lifeCardHTML).join('');
+    LIFE=buildLife(P,A,LK,LP,y,m,d,gender);
+    document.getElementById('lifeBox').innerHTML=lifeOverviewHTML(LIFE)+LIFE.topics.map(lifeCardHTML).join('')+
+     '<div class="small" style="margin-top:10px">⚠️ คะแนนเป็นตัวชี้วัดเชิงเปรียบเทียบภายในดวงของคุณ ไม่ใช่คำทำนายตายตัว · ด้านสุขภาพไม่ใช้แทนคำวินิจฉัยของแพทย์ · ด้านการเงิน/โชคลาภไม่ใช่คำแนะนำการลงทุน</div>';
   }catch(e){
     console.error('life reading failed',e);LIFE=null;
     document.getElementById('lifeBox').innerHTML='<div class="small">⚠️ ไม่สามารถสร้างการวิเคราะห์ 9 มิติได้ในขณะนี้</div>';
@@ -1272,11 +1425,10 @@ function updateConfirm(){
   const el=document.getElementById('confirmLine');
   const cur=activeProfile();
   const who=cur?`👥 <b>${esc(cur.name)}</b> · `:'';
-  if(!y||m<1||m>12||d<1||d>31){el.innerHTML=who+'⚠️ กรุณากรอกวันเดือนปีให้ถูกต้อง';return;}
-  const dt=new Date(y,m-1,d);
-  if(!(dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d)){
-    el.innerHTML=who+'⚠️ ไม่มีวันที่นี้ในปฏิทิน กรุณาตรวจสอบอีกครั้ง';return;}
-  if(!tm){el.innerHTML=who+'⚠️ กรุณากรอกเวลาตกฟากให้ถูกต้อง (ชม:นาที แบบ 24 ชม. เช่น 14:30)';return;}
+  const B=readBirth();
+  if(!B.ok){el.innerHTML=who+'⚠️ '+esc(B.err);return;}
+  const dt=B.dt;
+  persistFieldsSoon();
   const loc=currentLatLon();
   const genderTxt=document.getElementById('gender').value==='M'?'ชาย':'หญิง';
   const tmode=getTimeMode(), cl=h+mi/60, cr=timeCorr(y,m,d,cl,loc.lon,TZ_FIXED,tmode);
@@ -1310,8 +1462,11 @@ function buildElemFix(A,eTop){
   let h=`<div class="fix"><b>🛠️ แนวทางปรับแก้เฉพาะบุคคล · สมดุลธาตุ</b>`;
   h+=`<div class="fixhead">① เติมพลัง ${EL_EMO[add]}<b>ธาตุ${add}</b>`+(add2&&add2!==add?` (เสริมรองด้วย ${EL_EMO[add2]}ธาตุ${add2})`:'')+`</div>`;
   h+=fixList([B.wear,B.eat,B.act,B.env,B.merit]);
-  h+=`<div class="fixhead">② ลดทอน ${EL_EMO[cut]}<b>ธาตุ${cut}</b> ที่มากเกินสมดุล</div>`;
-  h+=fixList([D.wear,D.eat,D.act,D.env]);
+  // FIX: เดิมข้อความ "ลดทอน…ที่มากเกินสมดุล" ใช้กับดิถีอ่อนไม่ได้ และบรรทัดการแต่งกายเป็นข้อความตายตัวที่อาจแนะนำให้เพิ่มธาตุให้โทษ
+  const cutTxt=A.status.k==='weak'?'ที่ไม่ควรเสริมเพิ่ม (เป็นธาตุให้โทษของดวงอ่อน)':A.status.k==='strong'?'ที่ล้นอยู่แล้ว':'ที่มีมากสุดในดวง';
+  const favCol=A.fav.map(e=>EL_COLORNAME[e]).join(' / ');
+  h+=`<div class="fixhead">② ลดทอน ${EL_EMO[cut]}<b>ธาตุ${cut}</b> ${cutTxt}</div>`;
+  h+=fixList([`👕 <b>การแต่งกาย</b> — ลดโทน ${EL_COLORNAME[cut]} · เน้นโทนธาตุให้คุณ: ${favCol}`,D.eat,D.act,D.env]);
   h+=`<div class="fixnote">⏱️ ทำต่อเนื่องอย่างน้อย 30 วันจึงจะเห็นผล</div></div>`;
   return h;
 }
@@ -1366,15 +1521,15 @@ function renderLuckPillars(lp,y,m,d){
      `<td data-label="สิบเทพ"><div class="small">${god.n}</div></td></tr>`;
   });
   h+='</tbody></table></div>';
+  if(todayAge<lp.list[0].ageStart)h+=`<div class="tip">⏳ ขณะนี้ยังไม่เข้าดวงโคจรแรก (เริ่มเมื่ออายุ ${lp.startYears} ปี ${lp.startMonths} เดือน) — ช่วงก่อนหน้าใช้พลังของเสาเดือนเกิดเป็นพื้นฐาน</div>`;
   h+=`<div class="tip">📖 <b>ดวงโคจร 10 ปี (大運)</b> คือกระแสพลังงานระยะยาวที่ซ้อนทับดวงกำเนิด แถบสีเหลืองคือช่วงอายุปัจจุบันของคุณ</div>`;
   document.getElementById('luckBox').innerHTML=h;
 }
 function calculateBazi(){
   const loc=currentLatLon();
-  const tm=parseTimeStr(document.getElementById('bt').value);
-  if(!tm){toast('⚠️ กรุณากรอกเวลาตกฟากให้ถูกต้อง เช่น 14:30 (24 ชม.)');return;}
-  const g=id=>+document.getElementById(id).value;
-  const y=g('by'),m=g('bm'),d=g('bd'),h=tm.h,mi=tm.m;
+  const B=readBirth(); // FIX: เดิมไม่ตรวจวันที่ (เช่น 31 ก.พ.) ปีนอกช่วง หรือปี พ.ศ. ที่กรอกผิดช่อง
+  if(!B.ok){toast('⚠️ '+B.err);return;}
+  const y=B.y,m=B.m,d=B.d,h=B.h,mi=B.mi;
   const P=getPillars(y,m,d,h,mi,loc.lon,TZ_FIXED);
   CH=analyse(P);
   pillarHTML(0,P.hour,P.day.si,false);
@@ -1420,16 +1575,16 @@ function calculateBazi(){
   const gender=document.getElementById('gender').value;
   const LPR=calcLuckPillars(P,jUT,gender);
   renderLuckPillars(LPR, y,m,d);
-  renderLifeReading(P,CH,LKR,LPR,y,m,d);
+  renderLifeReading(P,CH,LKR,LPR,y,m,d,gender);
 
   const nav=document.getElementById('navDate');
   if(!nav.value)nav.value=toISO(new Date());
   loadNavigator();
   saveActiveProfile();
-  try{MF_LK=mfNatalLagna();mfRender();}catch(e){console.warn('mfRender auto failed',e);}
+  try{MF_LK=LKR;mfRender();}catch(e){console.warn('mfRender auto failed',e);} // FIX: ใช้ลัคนาที่เพิ่งคำนวณ ไม่อ่านซ้ำจากช่องกรอก (กันค่าไม่ตรงกัน)
 }
 
-parseLocal=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c,12,0,0,0);};
+const parseLocal=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c,12,0,0,0);};
 let NAV_TOUCHED=false;
 function onNavChange(){NAV_TOUCHED=true;loadNavigator();}
 function setToday(){NAV_TOUCHED=false;document.getElementById('navDate').value=toISO(new Date());loadNavigator();}
@@ -1784,7 +1939,7 @@ function mfRender(){
  const sc={};
  MF_DOMS.forEach(([k])=>{
   const bz=50+45*Math.tanh(tot[k]/nd*(k==='life'?1.2:1.5));
-  let s=TR?.68*bz+.32*(50+45*Math.tanh(TR.T[k]*.7)):bz;
+  let s=TR?(.68*bz+.32*(50+45*Math.tanh(TR.T[k]*.7))):bz;
   sc[k]=Math.max(5,Math.min(95,Math.round(s)));});
  const X={A,g,cat,god,cnt,days,elSum,mList,nd,lk,TR};
  const cards=MF_DOMS.map(([k,ic,n])=>{const s=sc[k],T=MF_TIP[k];
@@ -1834,6 +1989,171 @@ function mfRender(){
   (trt?`<h3 style="margin-top:18px">🔭 ดาวจรไทยเทียบลัคนากำเนิด</h3>`+trt:'')+note;
  MF_LAST={title:TH_MON[m-1]+' '+y,hero,cards,cal,trt};
  }catch(err){console.error('mfRender failed',err);box.innerHTML='<div class="err" style="text-align:center">⚠️ คำนวณดวงรายเดือนไม่สำเร็จ</div>';}
+}
+
+/* ============================================================
+   SECTION 5 : ฟังก์ชันที่ถูกเรียกใช้แต่ไฟล์เดิมไม่ได้นิยามไว้ (เติมให้ครบ)
+   ============================================================ */
+function dots(arr){
+  return (arr||[]).map(e=>(EL_COLOR[e]||[]).map(c=>`<span class="dot" style="background:${c}" title="${esc(EL_COLORNAME[e]||e)}"></span>`).join('')).join(' ');
+}
+function fixList(items){
+  return '<ol>'+(items||[]).filter(Boolean).map(x=>'<li>'+x+'</li>').join('')+'</ol>';
+}
+
+/* ---------- ตรวจข้อมูลวันเกิดแบบรวมศูนย์ ---------- */
+const YEAR_MIN=1900, YEAR_MAX=2100;
+function readBirth(){
+  const gv=id=>document.getElementById(id).value;
+  const y=Number(gv('by')), m=Number(gv('bm')), d=Number(gv('bd'));
+  if(!gv('by')||!gv('bm')||!gv('bd')||![y,m,d].every(Number.isInteger))return {ok:false,err:'กรุณากรอกวัน เดือน ปี เป็นจำนวนเต็ม'};
+  if(y>=2400&&y<=2700)return {ok:false,err:`ปี ${y} ดูเหมือนเป็น พ.ศ. — ช่องนี้ต้องเป็น ค.ศ. (ลอง ${y-543})`};
+  if(y<YEAR_MIN||y>YEAR_MAX)return {ok:false,err:`รองรับปี ค.ศ. ${YEAR_MIN}–${YEAR_MAX} เท่านั้น`};
+  if(m<1||m>12||d<1||d>31)return {ok:false,err:'กรุณากรอกวันเดือนปีให้ถูกต้อง'};
+  const dt=new Date(y,m-1,d);
+  if(!(dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d))return {ok:false,err:'ไม่มีวันที่นี้ในปฏิทิน กรุณาตรวจสอบอีกครั้ง'};
+  const tm=parseTimeStr(gv('bt'));
+  if(!tm)return {ok:false,err:'กรุณากรอกเวลาตกฟากให้ถูกต้อง (ชม:นาที แบบ 24 ชม. เช่น 14:30)'};
+  return {ok:true,y,m,d,h:tm.h,mi:tm.m,dt};
+}
+
+/* ---------- บันทึกค่าที่แก้ในฟอร์มอัตโนมัติ (เดิมบันทึกเฉพาะตอนกดวิเคราะห์ → สลับดวงแล้วข้อมูลที่แก้หาย) ---------- */
+let FIELD_T=null;
+function persistNow(){
+  clearTimeout(FIELD_T);FIELD_T=null;
+  if(!ROLE||!readBirth().ok)return;
+  const ps=getProfiles(),i=ps.findIndex(x=>x.id===getActiveId());if(i<0)return;
+  const o=pickFields(fieldsObj());
+  if(stable(o)===stable(pickFields(ps[i])))return;
+  Object.assign(ps[i],o);setProfiles(ps);
+}
+function persistFieldsSoon(){clearTimeout(FIELD_T);FIELD_T=setTimeout(persistNow,800);}
+
+/* ---------- ส่งออก PDF ---------- */
+function exportPDF(){
+  if(!CH){toast('⚠️ กด “วิเคราะห์ดวงชะตา” ก่อนส่งออก');return;}
+  if(typeof html2pdf==='undefined'){toast('⚠️ โหลดตัวสร้าง PDF ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรช');return;}
+  const cur=activeProfile(),name=cur?cur.name:'ดวง',B=readBirth();
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:fixed;left:0;top:0;width:780px;background:#fff;padding:14px;z-index:-9999;color:#2c2c2c;font-family:var(--th)';
+  wrap.innerHTML=`<h2 style="margin:0 0 4px">🏛️ BaZi Precision Navigator</h2>`+
+    `<div class="small" style="text-align:center;margin-bottom:10px">ดวงของ <b>${esc(name)}</b>`+(B.ok?` · ${B.d} ${TH_MON[B.m-1]} ค.ศ. ${B.y} เวลา ${String(B.h).padStart(2,'0')}:${String(B.mi).padStart(2,'0')} น. · ${esc(currentLatLon().name)}`:'')+
+    ` · สร้างเมื่อ ${new Date().toLocaleDateString('th-TH')}</div>`;
+  const pane=document.getElementById('tbxStatic');
+  const cards=pane?[...pane.children]:[...document.querySelectorAll('#app > .card')].slice(1,5);
+  cards.forEach(c=>wrap.appendChild(c.cloneNode(true)));
+  const mf=document.getElementById('mfBox');
+  if(mf&&MF_LAST){const mc=document.createElement('div');mc.className='card';mc.innerHTML='<h2>🌙 พยากรณ์ดวงรายเดือน · '+esc(MF_LAST.title)+'</h2>';mc.appendChild(mf.cloneNode(true));wrap.appendChild(mc);}
+  wrap.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
+  wrap.querySelectorAll('[onclick]').forEach(e=>e.removeAttribute('onclick'));
+  wrap.insertAdjacentHTML('beforeend','<div class="small" style="margin-top:8px">⚠️ เป็นเครื่องมือวางแผนชีวิต ไม่ใช่คำทำนายตายตัว · ไม่ใช้แทนคำวินิจฉัยทางการแพทย์ · ไม่ใช่คำแนะนำการลงทุน</div>');
+  document.body.appendChild(wrap);
+  toast('📄 กำลังสร้าง PDF…');
+  const fn='BaZi_'+String(name).replace(/[^a-z0-9ก-๙_-]/gi,'_')+'_'+toISO(new Date())+'.pdf';
+  html2pdf().set({margin:[8,8,10,8],filename:fn,image:{type:'jpeg',quality:.92},
+    html2canvas:{scale:1.5,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+    pagebreak:{mode:['css','legacy'],avoid:['.pillar','.lcard','.mfdom','.fix','tr']}})
+   .from(wrap).save().then(()=>toast('✅ ส่งออก PDF แล้ว'))
+   .catch(e=>{console.error(e);toast('⚠️ สร้าง PDF ไม่สำเร็จ');})
+   .finally(()=>wrap.remove());
+}
+
+/* ---------- ส่งออกไลน์ ---------- */
+function buildShareText(){
+  const P=CH.P,A=CH,cur=activeProfile(),pil=k=>P[k].stem+P[k].branch,t=[];
+  t.push('🏛️ BaZi Precision Navigator'+(cur?' · '+cur.name:''));
+  t.push(`🥢 เสาเวลา ${pil('hour')} | เสาวัน ${pil('day')} | เสาเดือน ${pil('month')} | เสาปี ${pil('year')}`);
+  t.push(`👑 ดิถี ${P.day.stem} ${A.dm} · ${A.status.t.replace(/^\S+\s+/,'')} (พลังหนุน ${A.support}%)`);
+  t.push(`💎 ธาตุให้คุณ: ${A.fav.join(' · ')}  🚫 ธาตุให้โทษ: ${A.unfav.join(' · ')}`);
+  if(LIFE&&LIFE.X){
+    t.push(`🔯 ลัคนาราศี${LIFE.L.sign.n} เจ้าเรือนดาว${LIFE.L.lordL}`);
+    const s=[...LIFE.topics].sort((a,b)=>b.sc-a.sc);
+    t.push('✅ เด่น: '+s.slice(0,2).map(x=>x.ic+x.title.replace(/^\S+\s+/,'')).join(' · '));
+    t.push('⚠️ ประคอง: '+s.slice(-2).map(x=>x.ic+x.title.replace(/^\S+\s+/,'')).join(' · '));
+  }
+  t.push('⚠️ เป็นแนวทางวางแผนชีวิต ไม่ใช่คำทำนายตายตัว');
+  return t.join('\n');
+}
+function exportLine(){
+  if(!CH){toast('⚠️ กด “วิเคราะห์ดวงชะตา” ก่อนส่งออก');return;}
+  const text=buildShareText();
+  if(navigator.share){navigator.share({title:'BaZi Precision Navigator',text}).catch(()=>{});return;}
+  try{if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(text).catch(()=>{});}catch(e){}
+  window.open('https://line.me/R/msg/text/?'+encodeURIComponent(text.slice(0,350)),'_blank','noopener');
+  toast('💬 คัดลอกสรุปแล้ว (ฉบับเต็มอยู่ในคลิปบอร์ด) กำลังเปิดไลน์…');
+}
+
+/* ---------- แผงแอดมิน ----------
+   ⚠️ ชื่อ RPC ด้านล่างเป็นการตั้งชื่อให้เข้ากับชุด bz_* เดิม — ไฟล์ supabase_setup.sql ไม่ได้แนบมา
+   ถ้าในฐานข้อมูลของคุณตั้งชื่อต่างกัน ให้แก้เฉพาะตารางนี้ */
+const ADMIN_RPC={list:'bz_admin_list',create:'bz_admin_create',reset:'bz_admin_reset',status:'bz_admin_set_status',remove:'bz_admin_delete'};
+let KEYS=[];
+const kName=u=>String(u.username??u.name??u.user??'');
+const kExp=u=>u.expires??u.exp??u.expires_at??'';
+const kSusp=u=>u.status==='suspended'||u.suspended===true;
+function csvCell(v){let s=String(v??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
+async function renderKeyList(){
+  const box=document.getElementById('keyList');if(!box)return;
+  box.innerHTML='<div class="small" style="margin-top:10px">⏳ กำลังโหลดรายชื่อผู้ใช้…</div>';
+  try{
+    const r=await rpc(ADMIN_RPC.list,{p_token:TOKEN});
+    KEYS=Array.isArray(r)?r:((r&&(r.users||r.keys))||[]);
+    if(!KEYS.length){box.innerHTML='<div class="small" style="margin-top:10px">ยังไม่มีผู้ใช้งาน</div>';return;}
+    let h='<div class="tbwrap"><table class="rtable"><thead><tr><th>ผู้ใช้</th><th>หมายเหตุ</th><th>หมดอายุ</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>';
+    KEYS.forEach((u,i)=>{
+      const sp=kSusp(u);
+      h+=`<tr><td data-label="ผู้ใช้"><div><b>${esc(kName(u))}</b></div></td>`+
+        `<td data-label="หมายเหตุ"><div>${esc(u.note||'')}</div></td>`+
+        `<td data-label="หมดอายุ"><div>${esc(String(kExp(u)).slice(0,10))||'—'}</div></td>`+
+        `<td data-label="สถานะ"><div>${sp?'<span class="badge" style="background:#b91c1c">ระงับ</span>':'<span class="badge" style="background:#15803d">ใช้งาน</span>'}</div></td>`+
+        `<td data-label="จัดการ"><div><button class="mini ghost" onclick="keyAction(${i},'reset')">🔄 รีเซ็ตรหัส</button> `+
+        `<button class="mini ghost" onclick="keyAction(${i},'status')">${sp?'▶️ เปิดใช้':'⏸️ ระงับ'}</button> `+
+        `<button class="mini ghost" onclick="keyAction(${i},'remove')">🗑️ ลบ</button></div></td></tr>`;
+    });
+    box.innerHTML=h+'</tbody></table></div>';
+  }catch(e){box.innerHTML='<div class="err" style="margin-top:10px">⚠️ โหลดรายชื่อไม่สำเร็จ: '+esc(e.message)+'</div>';}
+}
+async function genKey(){
+  const u=clean(document.getElementById('agUser').value);
+  const out=document.getElementById('keyResult');
+  if(!/^[A-Za-z0-9ก-๙_.\-]{2,30}$/.test(u)){toast('⚠️ ชื่อผู้ใช้ 2–30 ตัว (ตัวอักษร ตัวเลข _ . -)');return;}
+  const note=clean(document.getElementById('agNote').value),exp=document.getElementById('agExp').value||null;
+  try{
+    const r=await rpc(ADMIN_RPC.create,{p_token:TOKEN,p_user:u,p_note:note,p_exp:exp});
+    if(r&&r.ok===false){out.innerHTML='<div class="err">❌ '+esc(r.code==='exists'?'มีชื่อผู้ใช้นี้อยู่แล้ว':(r.message||'สร้างรหัสไม่สำเร็จ'))+'</div>';return;}
+    const pin=r&&(r.pin||r.key);
+    out.innerHTML=pin?`<div class="small" style="margin-top:10px">รหัสของ <b>${esc(u)}</b> — แสดงครั้งเดียว จดไว้ก่อนปิดหน้านี้</div><div class="keyout">${esc(pin)}</div>`:'<div class="ok">✅ สร้างผู้ใช้แล้ว</div>';
+    document.getElementById('agUser').value='';document.getElementById('agNote').value='';document.getElementById('agExp').value='';
+    renderKeyList();
+  }catch(e){out.innerHTML='<div class="err">⚠️ '+esc(e.message)+'</div>';}
+}
+async function keyAction(i,act){
+  const u=KEYS[i];if(!u)return;const nm=kName(u),out=document.getElementById('keyResult');
+  try{
+    if(act==='reset'){
+      if(!confirm('รีเซ็ตรหัสของ "'+nm+'" ? รหัสเดิมจะใช้ไม่ได้ทันที'))return;
+      const r=await rpc(ADMIN_RPC.reset,{p_token:TOKEN,p_user:nm});
+      const pin=r&&(r.pin||r.key);
+      out.innerHTML=pin?`<div class="small" style="margin-top:10px">รหัสใหม่ของ <b>${esc(nm)}</b> — แสดงครั้งเดียว</div><div class="keyout">${esc(pin)}</div>`:'<div class="ok">✅ รีเซ็ตแล้ว</div>';
+    }else if(act==='status'){
+      await rpc(ADMIN_RPC.status,{p_token:TOKEN,p_user:nm,p_suspended:!kSusp(u)});
+      toast(kSusp(u)?'▶️ เปิดใช้งาน '+nm:'⏸️ ระงับ '+nm);
+    }else if(act==='remove'){
+      if(!confirm('ลบผู้ใช้ "'+nm+'" และดวงที่บันทึกไว้ทั้งหมด? ย้อนกลับไม่ได้'))return;
+      await rpc(ADMIN_RPC.remove,{p_token:TOKEN,p_user:nm});toast('🗑️ ลบ '+nm+' แล้ว');
+    }
+    renderKeyList();
+  }catch(e){out.innerHTML='<div class="err">⚠️ '+esc(e.message)+'</div>';}
+}
+function exportKeys(){
+  if(!KEYS.length){toast('⚠️ ยังไม่มีรายชื่อให้ส่งออก');return;}
+  const head=['username','note','expires','status','created','profiles'];
+  const rows=KEYS.map(u=>[kName(u),u.note,kExp(u),kSusp(u)?'suspended':'active',u.created_at??u.created,u.profiles??u.profile_count]);
+  const csv='\ufeff'+[head,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='bazi_users_'+toISO(new Date())+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  toast('📤 ส่งออกรายชื่อ (ไม่รวมรหัสผ่าน) แล้ว');
 }
 
 function tbxTop(el){if(!el)return null;let c=el;while(c.parentElement&&c.parentElement.id!=='app')c=c.parentElement;return c.parentElement?c:null;}
@@ -1900,5 +2220,21 @@ document.addEventListener('copy',e=>{const t=(e.target.tagName||'').toUpperCase(
   await restoreSession();
 })();
 </script>
+<!--
+CHANGELOG (รอบตรวจสอบนี้)
+[ร้ายแรง]
+1. SyntaxError 4 จุด (วงเล็บ/เครื่องหมายผิดใน applyProvince, currentLatLon, lfCtx, lifeCardHTML) → สคริปต์ทั้งไฟล์ไม่ทำงาน
+2. sunLon() ใช้ epoch ผิด คลาด ~36 ชม. → เสาเดือน/ปี/ดวงโคจรของคนเกิดใกล้ต้นเดือนจีน (節) ผิด ตอนนี้คลาด < 15 นาที
+3. ฟังก์ชันที่ถูกเรียกแต่ไม่มีนิยาม: dots, fixList, exportPDF, exportLine, renderKeyList, genKey, exportKeys
+[ตรรกะ]
+4. ตัดวันเมื่อเวลาสุริยะ <00:00 ถอยวันผิด (ต้องไม่ถอย เพราะ 23:xx นับเป็นวันถัดไปอยู่แล้ว)
+5. ดวงโคจรเริ่มที่ "X ปี 12 เดือน" ได้ → ทดเป็นปี
+6. หน้า 9 มิติ: แสดง "undefined/100", ไม่มีสัญลักษณ์ราศี, และไม่เคยใช้ลัคนา/大運 คำนวณจริง → เขียนใหม่ให้เชื่อม BaZi×ลัคนา×大運
+7. ไม่ตรวจวันที่ไม่มีจริง/ปีนอกช่วง/ปี พ.ศ. กรอกผิดช่อง
+8. แก้ฟอร์มแล้วสลับดวง ข้อมูลที่แก้หาย → บันทึกอัตโนมัติ
+9. คำแนะนำ "ลดทอนธาตุ" ขัดกับธาตุให้คุณในดวงอ่อน
+10. ดวงรายเดือนอ่านลัคนาจากช่องกรอกซ้ำ → ใช้ค่าที่คำนวณไว้แล้ว
+[อื่น ๆ] ลบโค้ดค้าง DX_GOD10, parseLocal รั่วเป็น global, ฟอนต์ Noto Serif TC, CSV กัน formula injection
+-->
 </body>
 </html>

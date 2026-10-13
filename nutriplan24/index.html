@@ -182,6 +182,24 @@ body.isadmin .adminonly{display:block!important}
   body.pcompact .tl,body.pcompact .elrow{padding:5px 0;font-size:8pt}
   body.pcompact .tl b,body.pcompact .elrow b{min-width:95px;font-size:7.5pt}
 }
+.pdfdoc{width:760px;background:#fff;color:#111;padding:6px;font-family:'Segoe UI','Sarabun',system-ui,sans-serif;--line:#ccc;--mut:#555;--txt:#111}
+.pdfdoc .pdfhead{margin-bottom:10px;page-break-after:always;break-after:page}
+.pdfdoc .pdft{font-size:24px;font-weight:700;margin-bottom:4px}
+.pdfdoc .pdfs{font-size:13px;color:#333;margin-bottom:3px}
+.pdfdoc .card{background:#fff;border:1px solid #bbb;border-radius:8px;padding:12px;margin:10px 0 0;color:#111}
+.pdfdoc .card h2 i,.pdfdoc .dayttl i{background:#111}
+.pdfdoc .dayblock+.dayblock{page-break-before:always;break-before:page}
+.pdfdoc .meal{background:#fff;border:1px solid #bbb;padding:9px 11px;margin-bottom:8px;page-break-inside:avoid;break-inside:avoid}
+.pdfdoc .stat{gap:8px;margin-bottom:10px;grid-template-columns:repeat(4,1fr)}
+.pdfdoc .stat div{background:#f5f6f8;border:1px solid #ccc;padding:8px}
+.pdfdoc .stat b{font-size:17px}
+.pdfdoc .bar{display:none}
+.pdfdoc .pill{background:#fff;border:1px solid #999;color:#111}
+.pdfdoc table{font-size:12px}
+.pdfdoc td{padding:4px;border-bottom:1px solid #ddd}
+.pdfdoc th,.pdfdoc .note,.pdfdoc .dsc,.pdfdoc .stat small{color:#555}
+.pdfdoc .tl{border-bottom:1px solid #ddd;padding:7px 0;page-break-inside:avoid}
+.pdfdoc .tl b{color:#0b5d8a}
 .hrow{display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:7px 0;font-size:12.5px}
 .hrow .hd{flex:1;min-width:0}.hrow .hd small{display:block;color:var(--mut);font-size:11px;margin-top:2px}
 .hrow .hw{min-width:74px;text-align:right;font-weight:700}
@@ -351,6 +369,8 @@ body.isadmin .adminonly{display:block!important}
     </select>
     <button class="btn2" onclick="window.print()">🖨️ พิมพ์แผนครบ 7 วัน / บันทึกเป็น PDF</button>
     <button class="btnline" onclick="openLine()">💬 ส่งแผนเข้า LINE</button>
+    <button class="btnline" data-pdfbtn onclick="sharePdfLine('all')">📄 ส่ง PDF ผ่าน LINE (ครบ 7 วัน)</button>
+    <div id="pdfst" class="note"></div>
   </div>
 
   <div class="card">
@@ -444,6 +464,7 @@ body.isadmin .adminonly{display:block!important}
       <button class="btn2" style="margin-top:10px" onclick="copyLine()">📋 คัดลอกข้อความ</button>
       <button class="btnline" style="margin-top:10px" onclick="shareLine()">เปิด LINE เพื่อส่ง</button>
     </div>
+    <button class="btnline" data-pdfbtn onclick="sharePdfLine()">📄 ส่ง PDF ผ่าน LINE (ตามขอบเขตที่เลือกด้านบน)</button>
     <button class="btn2" onclick="document.getElementById('lmodal').classList.add('hide')">ปิดหน้าต่าง</button>
     <div class="note" id="lnote"></div>
   </div>
@@ -1868,7 +1889,7 @@ function dayBlock(p,idx){
     ${box}`;
 
   p.meals.forEach(m=>{
-    const okK=Math.abs(m.K-m.tK)<=m.tK*KTOL+0.5, okP=m.P>=m.tP-1.5, sup=suppFor(m.slot,m.type,m.topped);
+    const okK=Math.abs(m.K-m.tK)<=m.tK*KTOL+0.5, okP=m.P>=m.tP-1.5;
     const tag=m.type==='shake'
       ? `<span class="pill p-acc">🥤 ${m.bk?'บอดี้คีย์ + โปรตีน':'โปรตีน'}${m.topped?' + อาหารปกติ':''}</span>`
       : '<span class="pill p-blue">🍽️ อาหารปกติ</span>';
@@ -1893,7 +1914,7 @@ function dayBlock(p,idx){
       h+=`<tr><td>${PRODNAMES.has(i.n)?'🥤 ':''}${esc(i.n)}${eltag}${i.d?`<span class="dsc">${esc(i.d)}</span>`:''}${lockBtn}</td>
         <td>${r1(i.q)} ${esc(i.u)}</td><td>${r0(i.kcal)}</td><td>${r1(i.p)} ก.</td><td>${r1(i.c)} ก.</td></tr>`;
     });
-    h+=`</table>${sup.length?`<div class="supp">💊 ${esc(sup.join(' | '))}</div>`:''}</div>`;
+    h+=`</table></div>`;
   });
   return h+`</div>`;
 }
@@ -1913,21 +1934,27 @@ function baziCard(){
   </div>`;
 }
 
-function suppTable(){
+/* อาหารเสริมกินเหมือนกันทุกวัน → แสดงครั้งเดียวก่อนวันแรก (หน้าจอ/พิมพ์/PDF/LINE) */
+function suppRows(){
   const present=new Set(CFG.slots.map(s=>s.slot));
-  let rows='',orphan=[];
+  const rows=[],orphan=[];
   TIMES.forEach(([slot,w])=>{
     const list=SUPPS.filter(s=>SON.has(s.id)&&(s.at||[]).some(a=>a[0]===slot&&a[1]===w))
       .map(s=>{const a=s.at.find(a=>a[0]===slot&&a[1]===w);return s.n+(a[2]?' '+a[2]:'');});
     if(!list.length) return;
     if(!present.has(slot)){ orphan.push(`${w}อาหาร${slot}: ${list.join(' · ')}`); return; }
-    rows+=`<div class="tl"><b>${SLOTICON[slot]||''} ${w}อาหาร${slot}</b><span>💊 ${esc(list.join(' · '))}</span></div>`;
+    rows.push([`${SLOTICON[slot]||''} ${w}อาหาร${slot}`,list.join(' · ')]);
   });
   const nm=SUPPS.filter(s=>SON.has(s.id)&&s.normal).map(s=>s.n+(s.dose?' '+s.dose:''));
-  if(nm.length) rows+=`<div class="tl"><b>🍽️ หลังมื้อที่มีอาหารปกติ</b><span>💊 ${esc(nm.join(' · '))}</span></div>`;
-  if(orphan.length) rows+=`<div class="tl"><b>⚠️ ไม่มีมื้อรองรับ</b><span>${esc(orphan.join(' / '))}</span></div>`;
-  if(!rows) rows=`<div class="tl"><b>—</b><span>ยังไม่ได้เลือกอาหารเสริมในแผงด้านซ้าย</span></div>`;
-  return `<div class="card"><h2><i></i>💊 ตารางอาหารเสริมประจำวันของ ${esc(CFG.who)}</h2>${rows}
+  if(nm.length) rows.push(['🍽️ หลังมื้อที่มีอาหารปกติ',nm.join(' · ')]);
+  return {rows,orphan};
+}
+function suppTable(){
+  const {rows,orphan}=suppRows();
+  let h=rows.map(([l,t])=>`<div class="tl"><b>${esc(l)}</b><span>💊 ${esc(t)}</span></div>`).join('');
+  if(orphan.length) h+=`<div class="tl"><b>⚠️ ไม่มีมื้อรองรับ</b><span>${esc(orphan.join(' / '))}</span></div>`;
+  if(!h) h=`<div class="tl"><b>—</b><span>ยังไม่ได้เลือกอาหารเสริมในแผงด้านซ้าย</span></div>`;
+  return `<div class="card"><h2><i></i>💊 อาหารเสริม — ทานเหมือนกันทุกวัน (${esc(CFG.who)})</h2>${h}
     <div class="note">ค่าพลังงาน โปรตีน และคาร์บของผลิตภัณฑ์อ้างอิงตามที่ผู้ใช้ระบุ ค่าของเมนูอาหารเป็นค่าประมาณจากปริมาณเสิร์ฟมาตรฐาน ·
     เครื่องมือนี้ใช้ช่วยคำนวณเชิงโภชนาการทั่วไป ไม่ใช่คำแนะนำทางการแพทย์ ผู้มีโรคประจำตัว ตั้งครรภ์ ให้นมบุตร หรือใช้ยาประจำ ควรปรึกษาแพทย์หรือนักกำหนดอาหารก่อนเริ่มโปรแกรม</div></div>`;
 }
@@ -1938,9 +1965,9 @@ function renderAll(day){
     <div class="tabs">${DAYS.map((d,i)=>{const lv=dayStatus(d,CFG).level;const ic=lv==='pass'?'✅':lv==='warn'?'⚠️':'⛔';
       return `<div class="tab ${i===day?'on':''}" id="tab${i}" onclick="showDay(${i})">${ic} ${thMid(addDay(CFG.start,i))}</div>`;}).join('')}</div>
     <div class="note" id="pmnote"></div></div>`;
+  h+=suppTable();
   h+=DAYS.map((p,i)=>dayBlock(p,i)).join('');
   if(CFG.style==='bazi') h+=baziCard();
-  h+=suppTable();
   out.innerHTML=h;
   DAYS.forEach((_,k)=>{document.getElementById('day'+k).classList.toggle('dhide',k!==day);});
   pmNote();
@@ -1974,15 +2001,22 @@ function lineText(){
   t.push(`👤 ผู้รับแผน: ${c.who}`);
   t.push(`🎯 เป้าหมาย ${c.kcal} kcal · โปรตีนขั้นต่ำ ${c.prot} ก./วัน · คาร์บรวมไม่เกิน ${r0(c.carbG)} ก.`);
   if(c.bazi) t.push(`☯️ ดวงจีน (ประเมินเบื้องต้น) ดิถี ${c.bzprofile.cn} ${c.bzprofile.yy}${ELN[c.bzprofile.el]} · เสริมธาตุ ${c.bazi.fav.map(e=>ELN[e]).join(' ')}`);
+  const DASH='┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄';
+  const sr=suppRows();
+  if(sr.rows.length||sr.orphan.length){
+    t.push(''); t.push(DASH);
+    t.push('💊 อาหารเสริม (ทานเหมือนกันทุกวัน)');
+    sr.rows.forEach(([l,x])=>t.push(`${l}: ${x}`));
+    sr.orphan.forEach(x=>t.push(`⚠️ ไม่มีมื้อรองรับ ${x}`));
+  }
   idx.forEach(i=>{
     const p=DAYS[i];
-    t.push('');
+    t.push(''); t.push(DASH);
     t.push(`📅 ${thFull(addDay(c.start,i))}`);
     t.push(`📊 รวม ${r0(p.K)} kcal · โปรตีน ${r0(p.P)} ก. · คาร์บ ${r0(p.C)} ก.`);
     p.meals.forEach(m=>{
       t.push(`${SLOTICON[m.slot]||'🍽️'} [มื้อ${m.slot}] ${r0(m.K)} kcal · โปรตีน ${r1(m.P)} ก. · คาร์บ ${r1(m.C)} ก.`);
       m.items.forEach(x=>t.push(`   • ${x.n} ${r1(x.q)} ${x.u}${x.d?` (${x.d})`:''}`));
-      suppFor(m.slot,m.type,m.topped).forEach(s=>t.push(`   💊 ${s}`));
     });
   });
   t.push('');
@@ -2004,6 +2038,85 @@ function copyLine(){
     ()=>{try{document.execCommand('copy');lnote.innerHTML='✅ คัดลอกข้อความเรียบร้อยแล้ว';}catch(e){lnote.innerHTML='คัดลอกอัตโนมัติไม่ได้ กรุณากดค้างเพื่อคัดลอกเอง';}});
 }
 function shareLine(){ window.open('https://line.me/R/msg/text/?'+encodeURIComponent(document.getElementById('ltext').value),'_blank'); }
+
+/* ================= ส่ง PDF ผ่าน LINE =================
+   สร้าง PDF ในเบราว์เซอร์ (html2pdf.js โหลดจาก cdnjs ตอนกดครั้งแรก) แล้วเปิดหน้าแชร์ของเครื่อง (Web Share) ให้เลือก LINE
+   ถ้าเครื่อง/เบราว์เซอร์ไม่รองรับการแชร์ไฟล์ (เช่นคอมพิวเตอร์) จะดาวน์โหลดไฟล์ให้ แล้วแนบในแชท LINE เอง
+   (LINE ไม่มีลิงก์ที่แนบไฟล์ให้อัตโนมัติจากหน้าเว็บ) */
+let PDFFILE=null;
+const H2P_URL='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+function loadH2P(){
+  if(window.html2pdf) return Promise.resolve();
+  return new Promise((ok,ng)=>{
+    const sc=document.createElement('script'); sc.src=H2P_URL; sc.onload=ok;
+    sc.onerror=()=>ng(new Error('โหลดตัวสร้าง PDF ไม่สำเร็จ — ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'));
+    document.head.appendChild(sc);
+  });
+}
+function pdfMsg(h){ ['lnote','pdfst'].forEach(id=>{const e=document.getElementById(id); if(e) e.innerHTML=h;}); }
+function pdfBtns(msg){
+  const canShare=!!(PDFFILE&&navigator.canShare&&navigator.canShare({files:[PDFFILE]}));
+  return `${msg}${canShare?`<button type="button" class="btnline" onclick="pdfShareAgain()">📤 เลือก LINE เพื่อส่งไฟล์ PDF</button>`:''}
+    <button type="button" class="btn2" onclick="pdfDownload()">⬇️ ดาวน์โหลดไฟล์ PDF</button>`;
+}
+function pdfDownload(){
+  if(!PDFFILE) return;
+  const u=URL.createObjectURL(PDFFILE), a=document.createElement('a');
+  a.href=u; a.download=PDFFILE.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),30000);
+}
+async function pdfShareAgain(){
+  if(!PDFFILE) return;
+  try{ await navigator.share({files:[PDFFILE],title:'NutriPlan 24'}); pdfMsg('✅ เปิดหน้าส่งแล้ว — เลือก LINE แล้วเลือกแชทที่ต้องการ'); }
+  catch(e){ if(e&&e.name==='AbortError') pdfMsg(pdfBtns('ยกเลิกการส่ง ')); else pdfMsg(pdfBtns('เปิดหน้าแชร์ไม่สำเร็จ ลองดาวน์โหลดแล้วแนบใน LINE เอง ')); }
+}
+function buildPdfNode(scope){
+  const c=CFG, idx=scope==='all'?DAYS.map((_,i)=>i):[CURDAY];
+  const root=document.createElement('div'); root.className='pdfdoc';
+  let h=`<div class="pdfhead"><div class="pdft">🥗 NutriPlan 24</div>
+    <div class="pdfs">ผู้รับแผน: <b>${esc(c.who)}</b> · Week ${c.week} · Period ${c.per.id} ${esc(c.per.name)}</div>
+    <div class="pdfs">เป้าหมาย ${c.kcal} kcal · โปรตีนขั้นต่ำ ${c.prot} ก./วัน · คาร์บรวมไม่เกิน ${r0(c.carbG)} ก. · ${c.slots.length} มื้อ/วัน</div>
+    ${suppTable()}</div>`;
+  idx.forEach(i=>{ h+=dayBlock(DAYS[i],i); });
+  root.innerHTML=h;
+  root.querySelectorAll('.dhide').forEach(e=>e.classList.remove('dhide'));
+  root.querySelectorAll('.noprint,.mbtn,.box').forEach(e=>e.remove());
+  root.querySelectorAll('.pbreak').forEach(e=>e.classList.remove('pbreak'));
+  return root;
+}
+async function sharePdfLine(forceScope){
+  if(!DAYS.length) run();
+  if(!DAYS.length||!CFG) return;
+  const scope=forceScope||document.getElementById('lscope').value;
+  const btns=document.querySelectorAll('[data-pdfbtn]');
+  btns.forEach(b=>b.disabled=true);
+  pdfMsg('⏳ กำลังสร้างไฟล์ PDF… (ครั้งแรกต้องโหลดตัวสร้าง PDF ใช้เวลาสักครู่)');
+  try{
+    await loadH2P();
+    const dt=addDay(CFG.start,CURDAY), pad=n=>String(n).padStart(2,'0');
+    const who=String(CFG.who||'plan').replace(/[\\\/:*?"<>|\s]+/g,'_').slice(0,30);
+    const name=`NutriPlan24_${who}_W${CFG.week}${scope==='all'?'_7days':`_${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}`}.pdf`;
+    const opt={margin:[8,8,10,8],filename:name,image:{type:'jpeg',quality:0.92},
+      html2canvas:{scale:1.6,useCORS:true,backgroundColor:'#ffffff',logging:false},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+      pagebreak:{mode:['css','legacy'],avoid:['.meal','.tl','.stat']}};
+    const blob=await html2pdf().set(opt).from(buildPdfNode(scope)).outputPdf('blob');
+    PDFFILE=new File([blob],name,{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[PDFFILE]})){
+      try{
+        await navigator.share({files:[PDFFILE],title:'NutriPlan 24'});
+        pdfMsg('✅ เปิดหน้าส่งแล้ว — เลือก LINE แล้วเลือกแชทที่ต้องการ');
+      }catch(e){
+        if(e&&e.name==='AbortError') pdfMsg(pdfBtns('ยกเลิกการส่ง '));
+        else pdfMsg(pdfBtns('✅ สร้าง PDF เสร็จแล้ว กดปุ่มด้านล่างเพื่อเลือก LINE '));   /* เบราว์เซอร์ขอให้กดซ้ำอีกครั้งหลังสร้างไฟล์เสร็จ */
+      }
+    }else{
+      pdfDownload();
+      pdfMsg(pdfBtns('✅ บันทึกไฟล์ PDF แล้ว — เบราว์เซอร์นี้ส่งไฟล์เข้า LINE โดยตรงไม่ได้ ให้เปิด LINE แล้วแนบไฟล์ (หรือเปิดหน้านี้ในมือถือเพื่อส่งได้ทันที) '));
+    }
+  }catch(e){ pdfMsg('⚠️ สร้าง PDF ไม่สำเร็จ: '+esc((e&&e.message)||String(e))); }
+  finally{ btns.forEach(b=>b.disabled=false); }
+}
 
 /* ================= อาหารเสริม UI ================= */
 function timeLabel(s){

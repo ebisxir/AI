@@ -160,6 +160,33 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
   .mfgrid{grid-template-columns:1fr}.mfc{min-height:50px;font-size:10.5px}.mfc .cn{font-size:11px}.tbbar button{flex:1 0 118px;font-size:13.5px}
 }
 </style>
+<!-- ไอคอนสำหรับเพิ่มลงหน้าจอโฮมมือถือ (Apple / iOS) -->
+<link rel="apple-touch-icon" href="https://example.com/your-icon-180x180.png">
+
+<!-- ไอคอนมาตรฐานสำหรับ Android / Chrome / PWA -->
+<link rel="icon" type="image/png" sizes="192x192" href="bazi.png">
+
+<!-- ไฟล์ Manifest ช่วยให้มือถือมองเห็นเว็บเราเป็นแอป (Web App Manifest แบบฝังในตัว) -->
+<link rel="manifest" href='data:application/manifest+json,{
+  "name": "NutriPlan 24",
+  "short_name": "NutriPlan",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "icons": [
+    {
+      "src": "https://example.com/your-icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://example.com/your-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}'>
 </head>
 <body oncontextmenu="return false" ondragstart="return false">
 

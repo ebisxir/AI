@@ -2229,7 +2229,7 @@ function exportLine(){
 
 /* ---------- แผงแอดมิน ----------
    ชื่อฟังก์ชันและพารามิเตอร์ตรงกับ supabase_setup.sql (bz_admin_issue / bz_admin_set_active / bz_admin_delete_user …) */
-const ADMIN_RPC={list:'bz_admin_list',create:'bz_admin_issue',reset:'bz_admin_reset',status:'bz_admin_set_active',remove:'bz_admin_delete_user'};
+const ADMIN_RPC={list:'bz_admin_list',create:'bz_admin_issue',reset:'bz_admin_reset',status:'bz_admin_set_active',remove:'bz_admin_delete_user',extend:'bz_admin_extend'};
 let KEYS=[];
 const kName=u=>String(u.username??u.name??u.user??'');
 const kExp=u=>u.expire??u.expires??u.exp??u.expires_at??'';
@@ -2247,9 +2247,9 @@ async function renderKeyList(){
       const sp=kSusp(u);
       h+=`<tr><td data-label="ผู้ใช้"><div><b>${esc(kName(u))}</b></div></td>`+
         `<td data-label="หมายเหตุ"><div>${esc(u.note||'')}</div></td>`+
-        `<td data-label="หมดอายุ"><div>${esc(String(kExp(u)).slice(0,10))||'—'}</div></td>`+
+        `<td data-label="หมดอายุ"><div>${esc(String(kExp(u)).slice(0,10))||'ไม่มีกำหนด'}${expBadge(u)}</div></td>`+
         `<td data-label="สถานะ"><div>${sp?'<span class="badge" style="background:#b91c1c">ระงับ</span>':'<span class="badge" style="background:#15803d">ใช้งาน</span>'}${u.locked?' <span class="badge" style="background:#b45309">🔒 ล็อกชั่วคราว</span>':''}</div></td>`+
-        `<td data-label="จัดการ"><div><button class="mini ghost" onclick="keyAction(${i},'reset')">🔄 รีเซ็ตรหัส</button> `+
+        `<td data-label="จัดการ"><div><button class="mini" onclick="keyAction(${i},'renew')">📅 ต่ออายุ</button> <button class="mini ghost" onclick="keyAction(${i},'reset')">🔄 รีเซ็ตรหัส</button> `+
         `<button class="mini ghost" onclick="keyAction(${i},'status')">${sp?'▶️ เปิดใช้':'⏸️ ระงับ'}</button> `+
         `<button class="mini ghost" onclick="keyAction(${i},'remove')">🗑️ ลบ</button></div></td></tr>`;
     });
@@ -2302,6 +2302,7 @@ async function genKey(){
 async function keyAction(i,act){
   const u=KEYS[i];if(!u)return;const nm=kName(u),out=document.getElementById('keyResult');
   try{
+    if(act==='renew'){openRenew(i);return;}
     if(act==='reset'){
       if(!confirm('รีเซ็ตรหัสของ "'+nm+'" ? รหัสเดิมจะใช้ไม่ได้ทันที'))return;
       const r=await rpc(ADMIN_RPC.reset,{p_token:TOKEN,p_user:nm});
@@ -2318,6 +2319,38 @@ async function keyAction(i,act){
     renderKeyList();
   }catch(e){out.innerHTML='<div class="err">⚠️ '+esc(e.message)+'</div>';}
 }
+/* ---------- ต่ออายุผู้ใช้ ---------- */
+function expBadge(u){const e=String(kExp(u)).slice(0,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(e))return '';const t=toISO(new Date());
+  if(e<t)return ' <span class="badge" style="background:#b91c1c">หมดอายุแล้ว</span>';
+  const d=Math.round((Date.parse(e)-Date.parse(t))/864e5);return d<=7?' <span class="badge" style="background:#b45309">เหลือ '+d+' วัน</span>':'';}
+function openRenew(i){
+  const u=KEYS[i];if(!u)return;const nm=kName(u),cur=String(kExp(u)).slice(0,10),out=document.getElementById('keyResult');
+  const q=d=>`<button class="mini" onclick="doRenew(${i},{days:${d}})">+${d>=365?'1 ปี':d+' วัน'}</button>`;
+  out.innerHTML=`<div class="small" style="margin-top:10px"><b>📅 ต่ออายุ ${esc(nm)}</b> — ปัจจุบัน: ${cur?esc(thDate(cur))+' (พ.ศ.)':'ไม่มีกำหนด'}${expBadge(u)}</div>`+
+   `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">${q(30)}${q(90)}${q(180)}${q(365)}</div>`+
+   `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input type="date" id="rnDate" min="${toISO(new Date())}" style="max-width:190px"> <button class="mini ghost" onclick="doRenewDate(${i})">ตั้งเป็นวันที่นี้</button> <button class="mini ghost" onclick="doRenew(${i},{unlimited:true})">♾️ ไม่มีกำหนด</button></div>`+
+   `<div class="small" style="margin-top:6px">"+วัน" นับต่อจากวันหมดอายุเดิมถ้ายังไม่หมด หรือนับจากวันนี้ถ้าหมดอายุแล้ว/ยังไม่มีกำหนด</div>`;
+}
+function doRenewDate(i){const v=(document.getElementById('rnDate')||{}).value;if(!v){toast('⚠️ เลือกวันที่ก่อน');return;}return doRenew(i,{date:v});}
+let LAST_NOTICE=null;
+async function doRenew(i,opt){
+  const u=KEYS[i];if(!u)return;const nm=kName(u),out=document.getElementById('keyResult');
+  try{
+    const r=await rpc(ADMIN_RPC.extend,{p_token:TOKEN,p_user:nm,p_days:opt.days,p_expire:opt.date,p_unlimited:opt.unlimited});
+    if(r&&r.ok===false){const m={notfound:'ไม่พบผู้ใช้นี้',baddate:'วันที่ต้องไม่ย้อนหลัง และไม่เกิน 10 ปีจากวันนี้',baddays:'จำนวนวันต้องอยู่ระหว่าง 1–3650',bad:'ข้อมูลไม่ครบ'}[r.code]||'ต่ออายุไม่สำเร็จ';out.innerHTML='<div class="err" style="margin-top:10px">❌ '+esc(m)+'</div>';return;}
+    const exp=r&&r.expire?String(r.expire).slice(0,10):'';LAST_NOTICE={name:nm,exp};
+    out.innerHTML=`<div class="ok" style="margin-top:10px">✅ ต่ออายุ <b>${esc(nm)}</b> แล้ว — ใช้ได้ถึง <b>${exp?esc(thDate(exp))+' (พ.ศ.)':'ไม่มีกำหนด'}</b></div>`+
+     (r&&r.active===false?'<div class="small" style="margin-top:6px">⚠️ ผู้ใช้นี้ยังถูก "ระงับ" อยู่ ต่ออายุแล้วแต่ยังเข้าใช้งานไม่ได้ จนกว่าจะกด ▶️ เปิดใช้</div>':'')+
+     `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="mini" onclick="sendNoticeLine()">💬 แจ้งผู้ใช้ทางไลน์</button><button class="mini ghost" onclick="copyNotice()">📋 คัดลอกข้อความ</button></div>`;
+    renderKeyList();
+  }catch(e){out.innerHTML='<div class="err" style="margin-top:10px">⚠️ '+esc(e.message)+'</div>';}
+}
+function noticeText(){
+  const I=LAST_NOTICE;if(!I)return '';let url='';try{if(/^https?:/.test(location.origin))url=location.origin+location.pathname;}catch(e){}
+  return ['✅ ต่ออายุการใช้งาน BaZi Precision Navigator แล้ว','ชื่อผู้ใช้: '+I.name,'ใช้ได้ถึง: '+(I.exp?thDate(I.exp)+' (พ.ศ.)':'ไม่มีกำหนด'),url?'เข้าใช้งานที่: '+url:'','(ใช้รหัสผ่านเดิมของคุณได้ตามปกติ)'].filter(Boolean).join('\n');
+}
+function sendNoticeLine(){const t=noticeText();if(!t)return;window.open('https://line.me/R/msg/text/?'+encodeURIComponent(t),'_blank','noopener');toast('💬 กำลังเปิดไลน์ เลือกแชทของผู้ใช้เพื่อส่ง');}
+function copyNotice(){const t=noticeText();if(!t)return;copyText(t).then(ok=>toast(ok?'📋 คัดลอกข้อความแล้ว':'⚠️ คัดลอกไม่ได้'));}
 function exportKeys(){
   if(!KEYS.length){toast('⚠️ ยังไม่มีรายชื่อให้ส่งออก');return;}
   const head=['username','note','expires','status','created','profiles'];

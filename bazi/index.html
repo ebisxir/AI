@@ -2256,6 +2256,35 @@ async function renderKeyList(){
     box.innerHTML=h+'</tbody></table></div>';
   }catch(e){box.innerHTML='<div class="err" style="margin-top:10px">⚠️ โหลดรายชื่อไม่สำเร็จ: '+esc(e.message)+'</div>';}
 }
+/* ---------- ส่งรหัสผู้ใช้ทางไลน์ ---------- */
+let LAST_ISSUE=null,ISSUE_T=null;
+const thDate=s=>{const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?(+m[3])+'/'+(+m[2])+'/'+(+m[1]+543):'';};
+function issueText(){
+  const I=LAST_ISSUE;if(!I)return '';
+  let url='';try{if(/^https?:/.test(location.origin))url=location.origin+location.pathname;}catch(e){}
+  const ex=thDate(I.exp);
+  return ['🔐 ข้อมูลเข้าใช้งาน BaZi Precision Navigator','ชื่อผู้ใช้: '+I.name,'รหัสผ่าน (4 หลัก): '+I.pin,ex?'ใช้ได้ถึง: '+ex+' (พ.ศ.)':'',url?'เข้าใช้งานที่: '+url:'','⚠️ รหัสนี้ใช้เฉพาะคุณ กรุณาอย่าส่งต่อให้ผู้อื่น'].filter(Boolean).join('\n');
+}
+function showIssued(out,label,name,pin,exp){
+  LAST_ISSUE={name,pin,exp:exp||''};
+  clearTimeout(ISSUE_T);ISSUE_T=setTimeout(()=>{LAST_ISSUE=null;},15*60*1000);   // ล้างรหัสออกจากหน่วยความจำหลัง 15 นาที
+  out.innerHTML=`<div class="small" style="margin-top:10px">${label}</div><div class="keyout">${esc(pin)}</div>`+
+   `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="mini" onclick="sendIssuedLine()">💬 ส่งรหัสทางไลน์</button><button class="mini ghost" onclick="copyIssued()">📋 คัดลอกข้อความ</button></div>`+
+   `<div class="small" style="margin-top:6px">ข้อความมีรหัสผ่านจริง ควรส่งในแชทส่วนตัวกับผู้ใช้คนนั้นเท่านั้น ห้ามส่งในกลุ่ม</div>`;
+}
+function copyText(text){
+  try{if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(text).then(()=>true,()=>false);}catch(e){}
+  try{const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();const ok=document.execCommand('copy');t.remove();return Promise.resolve(!!ok);}catch(e){return Promise.resolve(false);}
+}
+function sendIssuedLine(){
+  const text=issueText();if(!text){toast('⚠️ รหัสนี้หมดเวลาแสดงแล้ว กรุณารีเซ็ตรหัสใหม่');return;}
+  window.open('https://line.me/R/msg/text/?'+encodeURIComponent(text),'_blank','noopener');
+  toast('💬 กำลังเปิดไลน์ เลือกแชทของผู้ใช้เพื่อส่ง');
+}
+function copyIssued(){
+  const text=issueText();if(!text){toast('⚠️ รหัสนี้หมดเวลาแสดงแล้ว กรุณารีเซ็ตรหัสใหม่');return;}
+  copyText(text).then(ok=>toast(ok?'📋 คัดลอกข้อความแล้ว':'⚠️ คัดลอกไม่ได้ ให้จดรหัสเอง'));
+}
 async function genKey(){
   const u=clean(document.getElementById('agUser').value);
   const out=document.getElementById('keyResult');
@@ -2265,7 +2294,7 @@ async function genKey(){
     const r=await rpc(ADMIN_RPC.create,{p_token:TOKEN,p_user:u,p_note:note,p_expire:exp});
     if(r&&r.ok===false){out.innerHTML='<div class="err">❌ '+esc(r.code==='exists'?'มีชื่อผู้ใช้นี้อยู่แล้ว':r.code==='badname'?'ชื่อผู้ใช้ไม่ถูกต้อง (ห้ามขึ้นต้นด้วย __)':(r.message||'สร้างรหัสไม่สำเร็จ'))+'</div>';return;}
     const pin=r&&(r.pin||r.key);
-    out.innerHTML=pin?`<div class="small" style="margin-top:10px">รหัสของ <b>${esc(u)}</b> — แสดงครั้งเดียว จดไว้ก่อนปิดหน้านี้</div><div class="keyout">${esc(pin)}</div>`:'<div class="ok">✅ สร้างผู้ใช้แล้ว</div>';
+    if(pin)showIssued(out,'รหัสของ <b>'+esc(u)+'</b> — แสดงครั้งเดียว จดไว้หรือส่งไลน์ก่อนปิดหน้านี้',u,pin,exp);else out.innerHTML='<div class="ok">✅ สร้างผู้ใช้แล้ว</div>';
     document.getElementById('agUser').value='';document.getElementById('agNote').value='';document.getElementById('agExp').value='';
     renderKeyList();
   }catch(e){out.innerHTML='<div class="err">⚠️ '+esc(e.message)+'</div>';}
@@ -2278,7 +2307,7 @@ async function keyAction(i,act){
       const r=await rpc(ADMIN_RPC.reset,{p_token:TOKEN,p_user:nm});
       if(r&&r.ok===false){out.innerHTML='<div class="err">❌ '+esc(r.code==='notfound'?'ไม่พบผู้ใช้นี้':'รีเซ็ตรหัสไม่สำเร็จ')+'</div>';return;}
       const pin=r&&(r.pin||r.key);
-      out.innerHTML=pin?`<div class="small" style="margin-top:10px">รหัสใหม่ของ <b>${esc(nm)}</b> — แสดงครั้งเดียว</div><div class="keyout">${esc(pin)}</div>`:'<div class="ok">✅ รีเซ็ตแล้ว</div>';
+      if(pin)showIssued(out,'รหัสใหม่ของ <b>'+esc(nm)+'</b> — แสดงครั้งเดียว',nm,pin,kExp(u));else out.innerHTML='<div class="ok">✅ รีเซ็ตแล้ว</div>';
     }else if(act==='status'){
       const rs=await rpc(ADMIN_RPC.status,{p_token:TOKEN,p_user:nm,p_active:kSusp(u)});if(rs&&rs.ok===false){toast('⚠️ ไม่พบผู้ใช้นี้');return;}
       toast(kSusp(u)?'▶️ เปิดใช้งาน '+nm:'⏸️ ระงับ '+nm);

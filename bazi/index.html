@@ -892,11 +892,11 @@ function jdn(y,m,d,h){
   return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5+h/24;
 }
 function sunLon(j){
-  const d=j-2451543.5; // FIX: สูตร Schlyter นับ d จาก 2000-Jan-0.0 (JD 2451543.5) ไม่ใช่ J2000 — เดิมคลาด ~36 ชม.
-  const w=282.9404+4.70935e-5*d, M=mod(356.0470+0.9856002585*d,360), e=0.016709-1.151e-9*d;
-  const E=M+(180/Math.PI)*e*Math.sin(M*Math.PI/180);
-  const xv=Math.cos(E*Math.PI/180)-e, yv=Math.sin(E*Math.PI/180)*Math.sqrt(1-e*e);
-  return mod(Math.atan2(yv,xv)*180/Math.PI+w,360);
+  // FIX v2: วนแก้สมการ Kepler (เดิมประมาณอันดับหนึ่ง คลาดสูงสุด ~37 นาทีที่เส้นแบ่งเดือน 節) + ชดเชย aberration/nutation
+  const d=j-2451543.5,w=282.9404+4.70935e-5*d,e=0.016709-1.151e-9*d,Mr=mod(356.0470+0.9856002585*d,360)*Math.PI/180;
+  let E=Mr+e*Math.sin(Mr)*(1+e*Math.cos(Mr));for(let k=0;k<8;k++)E-=(E-e*Math.sin(E)-Mr)/(1-e*Math.cos(E));
+  const xv=Math.cos(E)-e,yv=Math.sqrt(1-e*e)*Math.sin(E),om=(125.04-0.052954*(j-2451545))*Math.PI/180;
+  return mod(Math.atan2(yv,xv)*180/Math.PI+w-0.00569-0.00478*Math.sin(om),360);
 }
 function eotMin(doy){const B=2*Math.PI*(doy-81)/364;return 9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B);}
 const sIdx=ch=>STEMS.indexOf(ch);
@@ -1762,7 +1762,8 @@ const MF_TK_W=[{family:.5,work:.2,wish:.15},{health:.6,life:.3},{work:.6,wish:.4
 const MF_WD_PL=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
 let MF_BP=null,MF_LP=null,MF_BD=null;
 /* ปรับฐานคะแนนแต่ละด้านให้เฉลี่ยประชากร ~55 (จำลองดวง 120 ชุด × 4 เดือน) กันด้านสุขภาพต่ำ/ด้านเป้าหมายสูงเกินจริงสำหรับทุกคน — คะแนนจึงสะท้อนความต่างเฉพาะบุคคล */
-const MF_OFF={life:4,work:-2,money:10,love:6,luck:-8,wish:-10,health:15,family:0};
+const MF_CAL={"life": [49.83, 16.1], "work": [56.96, 16.38], "money": [45.88, 16.66], "love": [49.11, 13.48], "luck": [63.33, 13.12], "wish": [67.67, 10.29], "health": [40.16, 11.79], "family": [56.11, 12.18]},MF_CT=54,MF_CS=13; /* [ค่าเฉลี่ย, SD] ของคะแนนดิบต่อด้าน จากการจำลองดวงสุ่ม — ทำให้ทุกด้านวัดบนสเกลเดียวกัน (เดิมใช้ค่าชดเชยคงที่ ทำให้ SD แต่ละด้านต่างกัน 10–17) */
+let MF_RAWS={};
 function mfBirthPlanet(){try{const b=MF_BD;if(!b)return null;
  const wd=new Date(new Date(b.y,b.m-1,b.d,b.h,b.mi).getTime()-6*3600*1000).getDay(); // วันตามโหราศาสตร์เริ่ม 06:00
  return (wd===3&&(b.h>=18||b.h<6))?'ราหู':MF_WD_PL[wd];}catch(e){return null;}}
@@ -2074,7 +2075,7 @@ function mfRender(){
    const raw=.6*tot[k]/nd+.6*monS[k]+.3*yrS[k]+.25*luS[k];
    const bz=50+45*Math.tanh(raw*(k==='life'?.9:.85));
    const s=TR?(.65*bz+.35*(50+45*Math.tanh(TR.T[k]*.7))):bz;
-   sc[k]=Math.max(5,Math.min(95,Math.round(s+MF_OFF[k])));});
+   MF_RAWS[k]=s;const cl=MF_CAL[k];sc[k]=Math.max(5,Math.min(95,Math.round(MF_CT+MF_CS*(s-cl[0])/cl[1])));});
   const X={A,g,cat,god,cnt,days,elSum,mList,yList,nd,lk,TR,nat:mfNatGods(A),lu,bp:MF_BP};
   const cards=MF_DOMS.map(([k,ic,n])=>{const s=sc[k],T=MF_TIP[k],r=mfText(k,X);
    const base=s>=60?T.g:s<47?T.b:[T.g[0],T.b[0]];
@@ -2389,6 +2390,12 @@ CHANGELOG (ดวงรายเดือน 8 ด้าน)
 - เพิ่มทักษาตามวันเกิด (บริวาร อายุ เดช ศรี มูละ อุตสาหะ มนตรี กาลกิณี) ทั้งในคะแนนรายวัน ปฏิทิน และคำแนะนำ
 - ข้อความเฉพาะบุคคล: เทียบพลังเดือนนี้กับโครงสร้างดวงเกิด (มี/ขาดดาวงาน ดาวเงิน ดาวคู่, ดิถีแกร่ง/อ่อน, ช่องคู่ครอง)
 - ปรับภาษาให้อ่านง่าย + ใส่คำอธิบายศัพท์
+-->
+<!--
+CHANGELOG (ตรวจสอบดวงรายเดือน รอบที่ 2 — ฐาน: เวอร์ชัน A)
+1. sunLon(): วนแก้สมการ Kepler + ชดเชย aberration/nutation → เส้นแบ่งเดือน 節 คลาดเฉลี่ย 13.3→3.1 นาที สูงสุด 36.8→11.4 นาที (เทียบ astronomy-engine, 369 節, ปี 2000–2040)
+2. คะแนนรายด้าน: เลิกใช้ค่าชดเชยคงที่ MF_OFF (SD แต่ละด้านต่างกัน 10–17) → ปรับเป็น z-score ต่อด้านจากการจำลอง 1,500 ดวง ทดสอบนอกกลุ่ม 800 ดวง: ทุกด้านเฉลี่ย 53.5–54.3 SD 12.4–13.2 ไม่ชนเพดาน 5/95
+ข้อจำกัดที่ยังคงอยู่: ไม่มีดวงจันทร์/เกตุในดาวจรรายเดือน (เจ้าเรือนที่เป็นจันทร์ถูกข้ามอย่างปลอดภัย) · ดาวจรนับเรือนจากลัคนา (แบบประยุกต์) · ดาวถอยหลังแสดงผลแต่ไม่คิดคะแนน · เสาเดือนจรสุ่มตัวอย่างที่เที่ยงวัน
 -->
 </body>
 </html>

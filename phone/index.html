@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BaZi + ลัคนา + เลขศาสตร์ไทย</title>
+<title>AuraID</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -44,8 +44,40 @@ ul{margin:6px 0;padding-left:22px}li{margin:3px 0}
 #tmv{margin-top:10px;padding:10px 12px;border-radius:8px;background:#f1f5f4;border:1px dashed #b8c0cc;font-size:14px;line-height:1.55;overflow-wrap:anywhere}#tmv:empty{display:none}#tmv .sm{display:block;margin-top:2px}
 @media(max-width:700px){#inp .tmg{grid-template-columns:1fr}#inp .tmo{padding:12px}#tmv{font-size:13.5px}}
 @media print{body{background:#fff;padding:0}.noprint{display:none!important}.c{border:0;padding:0}.p,.dim,.b,.v,li{break-inside:avoid}h3{break-after:avoid}}
-</style></head><body><div class="w">
-<h1>🔮 BaZi + ลัคนา + เลขศาสตร์ไทย</h1>
+</style>
+
+  <!-- ไอคอนสำหรับเพิ่มลงหน้าจอโฮมมือถือ (Apple / iOS) -->
+<link rel="apple-touch-icon" href="phone.png">
+
+<!-- ไอคอนมาตรฐานสำหรับ Android / Chrome / PWA -->
+<link rel="icon" type="image/png" sizes="192x192" href="phone.png">
+
+<!-- ไฟล์ Manifest ช่วยให้มือถือมองเห็นเว็บเราเป็นแอป (Web App Manifest แบบฝังในตัว) -->
+<link rel="manifest" href='data:application/manifest+json,{
+  "name": "Precision Navigator",
+  "short_name": "Bazi",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "icons": [
+    {
+      "src": "phone.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "phone.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}'>
+
+</head>
+<body>
+<div class="w">
+<h1>🔮 AuraID</h1>
 <p class="sm noprint">แกน 1: BaZi (Day Master/ดิถี + กำลังธาตุ จากวันเดือนปีเกิดและเวลาตกฟาก) · แกน 2: ภาระความเสี่ยงคู่เลข (ศาสตร์ไทย ถ่วงตำแหน่ง) · แกน 3: ลัคนาราศีแบบไทย (ลัคนาธิบดี ↔ ดาวประจำเลข)</p>
 
 <div class="c noprint" id="inp"><h2>⚙️ 1. ข้อมูลเจ้าของดวง</h2>

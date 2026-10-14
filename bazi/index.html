@@ -202,7 +202,7 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
     <div class="form-grid">
       <div class="fld" style="grid-column:span 2"><label>👤 ชื่อผู้ใช้งาน</label><input id="agUser" placeholder="เช่น somchai" autocapitalize="off"></div>
       <div class="fld"><label>📝 หมายเหตุ</label><input id="agNote" placeholder="ไม่บังคับ"></div>
-      <div class="fld"><label>⌛ วันหมดอายุ (ไม่บังคับ)</label><input type="date" id="agExp"></div>
+      <div class="fld"><label>⌛ วันหมดอายุ (ไม่บังคับ)</label><input type="text" id="agExp" inputmode="numeric" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off"></div>
       <div class="fld"><button class="wide" onclick="genKey()">⚙️ สร้างรหัส</button></div>
       <div class="fld"><button class="wide ghost" onclick="exportKeys()">📤 ส่งออกรายชื่อ CSV</button></div>
     </div>
@@ -459,7 +459,7 @@ const LOGIN_MSG={
 };
 function loginMsg(r){
   if(r&&r.code==='locked')return '🔒 ลองผิดหลายครั้ง ระบบล็อกชั่วคราว กรุณารออีกประมาณ '+(r.minutes||15)+' นาที';
-  if(r&&r.code==='expired')return '⌛ รหัสหมดอายุเมื่อ '+(r.date||'');
+  if(r&&r.code==='expired')return '⌛ รหัสหมดอายุเมื่อ '+(fmtDMY(r.date)||'');
   return LOGIN_MSG[(r&&r.code)||'bad']||LOGIN_MSG.bad;
 }
 function setLoginBusy(b){
@@ -2181,7 +2181,7 @@ function exportPDF(){
   wrap.style.cssText='position:fixed;left:0;top:0;width:780px;background:#fff;padding:14px;z-index:-9999;color:#2c2c2c;font-family:var(--th)';
   wrap.innerHTML=`<h2 style="margin:0 0 4px">🏛️ BaZi Precision Navigator</h2>`+
     `<div class="small" style="text-align:center;margin-bottom:10px">ดวงของ <b>${esc(name)}</b>`+(B.ok?` · ${B.d} ${TH_MON[B.m-1]} ค.ศ. ${B.y} เวลา ${String(B.h).padStart(2,'0')}:${String(B.mi).padStart(2,'0')} น. · ${esc(currentLatLon().name)}`:'')+
-    ` · สร้างเมื่อ ${new Date().toLocaleDateString('th-TH')}</div>`;
+    ` · สร้างเมื่อ ${fmtDMY(new Date())}</div>`;
   const pane=document.getElementById('tbxStatic');
   const cards=pane?[...pane.children]:[...document.querySelectorAll('#app > .card')].slice(1,5);
   cards.forEach(c=>wrap.appendChild(c.cloneNode(true)));
@@ -2247,7 +2247,7 @@ async function renderKeyList(){
       const sp=kSusp(u);
       h+=`<tr><td data-label="ผู้ใช้"><div><b>${esc(kName(u))}</b></div></td>`+
         `<td data-label="หมายเหตุ"><div>${esc(u.note||'')}</div></td>`+
-        `<td data-label="หมดอายุ"><div>${esc(String(kExp(u)).slice(0,10))||'ไม่มีกำหนด'}${expBadge(u)}</div></td>`+
+        `<td data-label="หมดอายุ"><div>${esc(fmtDMY(kExp(u)))||'ไม่มีกำหนด'}${expBadge(u)}</div></td>`+
         `<td data-label="สถานะ"><div>${sp?'<span class="badge" style="background:#b91c1c">ระงับ</span>':'<span class="badge" style="background:#15803d">ใช้งาน</span>'}${u.locked?' <span class="badge" style="background:#b45309">🔒 ล็อกชั่วคราว</span>':''}</div></td>`+
         `<td data-label="จัดการ"><div><button class="mini" onclick="keyAction(${i},'renew')">📅 ต่ออายุ</button> <button class="mini ghost" onclick="keyAction(${i},'reset')">🔄 รีเซ็ตรหัส</button> `+
         `<button class="mini ghost" onclick="keyAction(${i},'status')">${sp?'▶️ เปิดใช้':'⏸️ ระงับ'}</button> `+
@@ -2258,12 +2258,27 @@ async function renderKeyList(){
 }
 /* ---------- ส่งรหัสผู้ใช้ทางไลน์ ---------- */
 let LAST_ISSUE=null,ISSUE_T=null;
-const thDate=s=>{const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?(+m[3])+'/'+(+m[2])+'/'+(+m[1]+543):'';};
+/* วันที่ทั้งแอปแสดงเป็น DD/MM/YYYY — DATE_BE=true จะแสดงปีเป็น พ.ศ. */
+const DATE_BE=false;
+const dmPad=n=>String(n).padStart(2,'0');
+function fmtDMY(s){
+  if(!s)return '';let y,m,d;const a=(typeof s==='string')&&s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(a){y=+a[1];m=+a[2];d=+a[3];}
+  else{const t=s instanceof Date?s:new Date(s);if(isNaN(t))return '';y=t.getFullYear();m=t.getMonth()+1;d=t.getDate();}
+  return dmPad(d)+'/'+dmPad(m)+'/'+(DATE_BE?y+543:y);
+}
+function parseDMY(v){   // รับ DD/MM/YYYY (ปี ค.ศ. หรือ พ.ศ. ก็ได้) → 'YYYY-MM-DD' หรือ null ถ้าวันที่ไม่มีจริง
+  const m=String(v||'').trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);if(!m)return null;
+  const d=+m[1],mo=+m[2];let y=+m[3];if(y>=2400)y-=543;
+  const t=new Date(Date.UTC(y,mo-1,d));if(t.getUTCFullYear()!==y||t.getUTCMonth()!==mo-1||t.getUTCDate()!==d)return null;
+  return y+'-'+dmPad(mo)+'-'+dmPad(d);
+}
+const thDate=s=>{const x=fmtDMY(s);return x&&DATE_BE?x+' (พ.ศ.)':x;};
 function issueText(){
   const I=LAST_ISSUE;if(!I)return '';
   let url='';try{if(/^https?:/.test(location.origin))url=location.origin+location.pathname;}catch(e){}
   const ex=thDate(I.exp);
-  return ['🔐 ข้อมูลเข้าใช้งาน BaZi Precision Navigator','ชื่อผู้ใช้: '+I.name,'รหัสผ่าน (4 หลัก): '+I.pin,ex?'ใช้ได้ถึง: '+ex+' (พ.ศ.)':'',url?'เข้าใช้งานที่: '+url:'','⚠️ รหัสนี้ใช้เฉพาะคุณ กรุณาอย่าส่งต่อให้ผู้อื่น'].filter(Boolean).join('\n');
+  return ['🔐 ข้อมูลเข้าใช้งาน BaZi Precision Navigator','ชื่อผู้ใช้: '+I.name,'รหัสผ่าน (4 หลัก): '+I.pin,ex?'ใช้ได้ถึง: '+ex:'',url?'เข้าใช้งานที่: '+url:'','⚠️ รหัสนี้ใช้เฉพาะคุณ กรุณาอย่าส่งต่อให้ผู้อื่น'].filter(Boolean).join('\n');
 }
 function showIssued(out,label,name,pin,exp){
   LAST_ISSUE={name,pin,exp:exp||''};
@@ -2289,7 +2304,10 @@ async function genKey(){
   const u=clean(document.getElementById('agUser').value);
   const out=document.getElementById('keyResult');
   if(!/^[A-Za-z0-9ก-๙_.\-]{2,30}$/.test(u)){toast('⚠️ ชื่อผู้ใช้ 2–30 ตัว (ตัวอักษร ตัวเลข _ . -)');return;}
-  const note=clean(document.getElementById('agNote').value),exp=document.getElementById('agExp').value||null;
+  const note=clean(document.getElementById('agNote').value),expRaw=String(document.getElementById('agExp').value||'').trim();
+  let exp=null;
+  if(expRaw){exp=parseDMY(expRaw);if(!exp){toast('⚠️ วันหมดอายุไม่ถูกต้อง ใช้รูปแบบ DD/MM/YYYY เช่น 31/12/'+new Date().getFullYear());return;}
+    if(exp<toISO(new Date())){toast('⚠️ วันหมดอายุต้องไม่ย้อนหลัง');return;}}
   try{
     const r=await rpc(ADMIN_RPC.create,{p_token:TOKEN,p_user:u,p_note:note,p_expire:exp});
     if(r&&r.ok===false){out.innerHTML='<div class="err">❌ '+esc(r.code==='exists'?'มีชื่อผู้ใช้นี้อยู่แล้ว':r.code==='badname'?'ชื่อผู้ใช้ไม่ถูกต้อง (ห้ามขึ้นต้นด้วย __)':(r.message||'สร้างรหัสไม่สำเร็จ'))+'</div>';return;}
@@ -2326,12 +2344,12 @@ function expBadge(u){const e=String(kExp(u)).slice(0,10);if(!/^\d{4}-\d{2}-\d{2}
 function openRenew(i){
   const u=KEYS[i];if(!u)return;const nm=kName(u),cur=String(kExp(u)).slice(0,10),out=document.getElementById('keyResult');
   const q=d=>`<button class="mini" onclick="doRenew(${i},{days:${d}})">+${d>=365?'1 ปี':d+' วัน'}</button>`;
-  out.innerHTML=`<div class="small" style="margin-top:10px"><b>📅 ต่ออายุ ${esc(nm)}</b> — ปัจจุบัน: ${cur?esc(thDate(cur))+' (พ.ศ.)':'ไม่มีกำหนด'}${expBadge(u)}</div>`+
+  out.innerHTML=`<div class="small" style="margin-top:10px"><b>📅 ต่ออายุ ${esc(nm)}</b> — ปัจจุบัน: ${cur?esc(thDate(cur)):'ไม่มีกำหนด'}${expBadge(u)}</div>`+
    `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">${q(30)}${q(90)}${q(180)}${q(365)}</div>`+
-   `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input type="date" id="rnDate" min="${toISO(new Date())}" style="max-width:190px"> <button class="mini ghost" onclick="doRenewDate(${i})">ตั้งเป็นวันที่นี้</button> <button class="mini ghost" onclick="doRenew(${i},{unlimited:true})">♾️ ไม่มีกำหนด</button></div>`+
+   `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input type="text" id="rnDate" inputmode="numeric" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" style="max-width:190px"> <button class="mini ghost" onclick="doRenewDate(${i})">ตั้งเป็นวันที่นี้</button> <button class="mini ghost" onclick="doRenew(${i},{unlimited:true})">♾️ ไม่มีกำหนด</button></div>`+
    `<div class="small" style="margin-top:6px">"+วัน" นับต่อจากวันหมดอายุเดิมถ้ายังไม่หมด หรือนับจากวันนี้ถ้าหมดอายุแล้ว/ยังไม่มีกำหนด</div>`;
 }
-function doRenewDate(i){const v=(document.getElementById('rnDate')||{}).value;if(!v){toast('⚠️ เลือกวันที่ก่อน');return;}return doRenew(i,{date:v});}
+function doRenewDate(i){const raw=String((document.getElementById('rnDate')||{}).value||'').trim();if(!raw){toast('⚠️ กรอกวันที่ก่อน (DD/MM/YYYY)');return;}const iso=parseDMY(raw);if(!iso){toast('⚠️ วันที่ไม่ถูกต้อง ใช้รูปแบบ DD/MM/YYYY');return;}return doRenew(i,{date:iso});}
 let LAST_NOTICE=null;
 async function doRenew(i,opt){
   const u=KEYS[i];if(!u)return;const nm=kName(u),out=document.getElementById('keyResult');
@@ -2339,7 +2357,7 @@ async function doRenew(i,opt){
     const r=await rpc(ADMIN_RPC.extend,{p_token:TOKEN,p_user:nm,p_days:opt.days,p_expire:opt.date,p_unlimited:opt.unlimited});
     if(r&&r.ok===false){const m={notfound:'ไม่พบผู้ใช้นี้',baddate:'วันที่ต้องไม่ย้อนหลัง และไม่เกิน 10 ปีจากวันนี้',baddays:'จำนวนวันต้องอยู่ระหว่าง 1–3650',bad:'ข้อมูลไม่ครบ'}[r.code]||'ต่ออายุไม่สำเร็จ';out.innerHTML='<div class="err" style="margin-top:10px">❌ '+esc(m)+'</div>';return;}
     const exp=r&&r.expire?String(r.expire).slice(0,10):'';LAST_NOTICE={name:nm,exp};
-    out.innerHTML=`<div class="ok" style="margin-top:10px">✅ ต่ออายุ <b>${esc(nm)}</b> แล้ว — ใช้ได้ถึง <b>${exp?esc(thDate(exp))+' (พ.ศ.)':'ไม่มีกำหนด'}</b></div>`+
+    out.innerHTML=`<div class="ok" style="margin-top:10px">✅ ต่ออายุ <b>${esc(nm)}</b> แล้ว — ใช้ได้ถึง <b>${exp?esc(thDate(exp)):'ไม่มีกำหนด'}</b></div>`+
      (r&&r.active===false?'<div class="small" style="margin-top:6px">⚠️ ผู้ใช้นี้ยังถูก "ระงับ" อยู่ ต่ออายุแล้วแต่ยังเข้าใช้งานไม่ได้ จนกว่าจะกด ▶️ เปิดใช้</div>':'')+
      `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="mini" onclick="sendNoticeLine()">💬 แจ้งผู้ใช้ทางไลน์</button><button class="mini ghost" onclick="copyNotice()">📋 คัดลอกข้อความ</button></div>`;
     renderKeyList();
@@ -2347,14 +2365,14 @@ async function doRenew(i,opt){
 }
 function noticeText(){
   const I=LAST_NOTICE;if(!I)return '';let url='';try{if(/^https?:/.test(location.origin))url=location.origin+location.pathname;}catch(e){}
-  return ['✅ ต่ออายุการใช้งาน BaZi Precision Navigator แล้ว','ชื่อผู้ใช้: '+I.name,'ใช้ได้ถึง: '+(I.exp?thDate(I.exp)+' (พ.ศ.)':'ไม่มีกำหนด'),url?'เข้าใช้งานที่: '+url:'','(ใช้รหัสผ่านเดิมของคุณได้ตามปกติ)'].filter(Boolean).join('\n');
+  return ['✅ ต่ออายุการใช้งาน BaZi Precision Navigator แล้ว','ชื่อผู้ใช้: '+I.name,'ใช้ได้ถึง: '+(I.exp?thDate(I.exp):'ไม่มีกำหนด'),url?'เข้าใช้งานที่: '+url:'','(ใช้รหัสผ่านเดิมของคุณได้ตามปกติ)'].filter(Boolean).join('\n');
 }
 function sendNoticeLine(){const t=noticeText();if(!t)return;window.open('https://line.me/R/msg/text/?'+encodeURIComponent(t),'_blank','noopener');toast('💬 กำลังเปิดไลน์ เลือกแชทของผู้ใช้เพื่อส่ง');}
 function copyNotice(){const t=noticeText();if(!t)return;copyText(t).then(ok=>toast(ok?'📋 คัดลอกข้อความแล้ว':'⚠️ คัดลอกไม่ได้'));}
 function exportKeys(){
   if(!KEYS.length){toast('⚠️ ยังไม่มีรายชื่อให้ส่งออก');return;}
   const head=['username','note','expires','status','created','profiles'];
-  const rows=KEYS.map(u=>[kName(u),u.note,kExp(u),kSusp(u)?'suspended':'active',u.created_at??u.created,u.profiles??u.profile_count]);
+  const rows=KEYS.map(u=>[kName(u),u.note,fmtDMY(kExp(u)),kSusp(u)?'suspended':'active',fmtDMY(u.created_at??u.created),u.profiles??u.profile_count]);
   const csv='\ufeff'+[head,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   a.download='bazi_users_'+toISO(new Date())+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);

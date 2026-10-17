@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#8b0000">
-<title>🏛️ Navigator</title>
+<title>🏛️ BaZi Precision Navigator</title>
 <!-- แก้ไขรอบนี้: ดู CHANGELOG ท้ายไฟล์ -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,6 +34,24 @@ h1,h2,h3{text-align:center;color:var(--primary);margin:8px 0}
 .fix>b{color:#1d5c3a;font-size:13.8px}.fixhead{font-weight:600;color:#1d5c3a;margin-top:9px}
 .fix ol{margin:5px 0 0;padding-left:20px}.fix li{margin-bottom:5px}
 .fixnote{font-size:11.8px;color:#5c6b61;margin-top:9px;line-height:1.6}
+/* ===== ตาราง Aspect ดาวโคจร ===== */
+.asp-wrap{margin-top:14px}
+.asp-wrap h4{font-size:14px;font-weight:600;color:var(--primary);margin:0 0 8px;text-align:left}
+.asp-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.asp-table th{background:#f3ede0;color:#5a4634;font-weight:600;padding:6px 8px;text-align:left;border-bottom:2px solid var(--gold)}
+.asp-table td{padding:6px 8px;border-bottom:1px solid #ede7d9;vertical-align:top;line-height:1.55}
+.asp-table tr:hover td{background:#fffaf2}
+.asp-badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600;margin-right:3px}
+.asp-conj{background:#fff0b3;color:#7a5c00}
+.asp-opp{background:#fce4ec;color:#8b0000}
+.asp-trine{background:#e8f5e9;color:#2e7d32}
+.asp-sq{background:#fff3e0;color:#e65100}
+.asp-semi{background:#f3e5f5;color:#6a1b9a}
+.asp-retro{background:#ede7f6;color:#4527a0;font-size:11px;padding:1px 6px;border-radius:10px;margin-left:4px}
+.asp-deg{font-size:11px;color:var(--muted);margin-top:2px}
+.asp-peak{font-size:11px;background:#f0f4ff;border-radius:6px;padding:2px 6px;color:#1a3a8f;margin-top:3px;display:inline-block}
+.asp-summary{margin-top:10px;background:#f7f3eb;border-radius:10px;padding:10px 13px;font-size:13px;line-height:1.7}
+.asp-summary b{color:var(--primary)}
 .pdf-block{page-break-inside:avoid}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;align-items:end}
 .fld label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px}
@@ -160,33 +178,6 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
   .mfgrid{grid-template-columns:1fr}.mfc{min-height:50px;font-size:10.5px}.mfc .cn{font-size:11px}.tbbar button{flex:1 0 118px;font-size:13.5px}
 }
 </style>
-<!-- ไอคอนสำหรับเพิ่มลงหน้าจอโฮมมือถือ (Apple / iOS) -->
-<link rel="apple-touch-icon" href="bazi.png">
-
-<!-- ไอคอนมาตรฐานสำหรับ Android / Chrome / PWA -->
-<link rel="icon" type="image/png" sizes="192x192" href="bazi.png">
-
-<!-- ไฟล์ Manifest ช่วยให้มือถือมองเห็นเว็บเราเป็นแอป (Web App Manifest แบบฝังในตัว) -->
-<link rel="manifest" href='data:application/manifest+json,{
-  "name": "Precision Navigator",
-  "short_name": "Bazi",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#0b1220",
-  "theme_color": "#0b1220",
-  "icons": [
-    {
-      "src": "bazi.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "bazi.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
-}'>
 </head>
 <body oncontextmenu="return false" ondragstart="return false">
 
@@ -195,7 +186,7 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
 <!-- ================= LOGIN GATE ================= -->
 <div id="gate">
   <div class="gatebox">
-    <h2>🏛️ Navigator</h2>
+    <h2>🏛️ BaZi Precision Navigator</h2>
     <p class="small">ระบบวิเคราะห์ดวงชะตาจีน-ไทยเชิงลึก · เฉพาะผู้ได้รับสิทธิ์</p>
     <div class="tabs">
       <button id="tbUser" onclick="switchTab('user')">👤 ผู้ใช้งาน</button>
@@ -1827,23 +1818,61 @@ function mfEff(pl,h){
  if(pl.ben)return [1,2,4,5,7,9,10,11].includes(h)?1:[6,8,12].includes(h)?-1:0;
  return [3,6,10,11].includes(h)?1:[1,4,7,8,12].includes(h)?-1:0;}
 const MF_DOM_H={life:1,work:10,money:2,love:7,luck:9,wish:11,health:1,family:4};
+/* ---------- ฟังก์ชันช่วย aspect ---------- */
+function mfAngDiff(a,b){let d=((a-b)%360+360)%360;return d>180?d-360:d;}
+function mfAspectName(deg){
+  const a=Math.abs(deg);
+  if(a<=8) return {name:'Conjunction (0°)',th:'ประกบ',cls:'asp-conj',orb:a,strength:1-(a/8)};
+  if(Math.abs(a-60)<=5) return {name:'Sextile (60°)',th:'มุม 60°',cls:'asp-semi',orb:Math.abs(a-60),strength:1-(Math.abs(a-60)/5)*.7};
+  if(Math.abs(a-90)<=6) return {name:'Square (90°)',th:'กดทับ 90°',cls:'asp-sq',orb:Math.abs(a-90),strength:1-(Math.abs(a-90)/6)};
+  if(Math.abs(a-120)<=7) return {name:'Trine (120°)',th:'เสริม 120°',cls:'asp-trine',orb:Math.abs(a-120),strength:1-(Math.abs(a-120)/7)};
+  if(Math.abs(a-180)<=8) return {name:'Opposition (180°)',th:'ตรงข้าม 180°',cls:'asp-opp',orb:Math.abs(a-180),strength:1-(Math.abs(a-180)/8)};
+  return null;
+}
+/* คืนองศาภายในราศี (0-29.99) */
+function mfDegInSign(L){return((L%30)+30)%30;}
+
 function mfTransit(y,m,nd,lk){
   const T=mfZero(),rows=[];
+  /* คำนวณตำแหน่งดาวเกิด (natal) ณ วันเกิด */
+  const natalPos={};
+  if(MF_BD){
+    const njd=jdn(MF_BD.y,MF_BD.m,MF_BD.d,(MF_BD.h+MF_BD.mi/60)-TZ_FIXED);
+    MF_PL.forEach(pl=>{natalPos[pl.k]=mfSid(pl.k,njd);});
+  }
   MF_PL.forEach(pl=>{
    const hs={},signs=[];let es=0,retro=false;
+   const dailyL=[],aspects=[];
+   let bestAspDay=null,bestAspStr=0;
    for(let d=1;d<=nd;d++){
     const jd=jdn(y,m,d,12-TZ_FIXED),L=mfSid(pl.k,jd),si=Math.floor(L/30),h=((si-lk.idx)%12+12)%12+1;
     hs[h]=(hs[h]||0)+1;
-    if(!signs.length||signs[signs.length-1].si!==si)signs.push({si,d});
-    const ef=mfEff(pl,h),e=ef*mfRoleMul(pl.th,ef);es+=e; // ดาวจรที่เป็นศรี/มนตรี/เดช ของเจ้าชะตาเสริมแรง · กาลกิณีลดผลดี เพิ่มผลร้าย
+    dailyL.push(L);
+    if(!signs.length||signs[signs.length-1].si!==si)signs.push({si,d,deg:mfDegInSign(L)});
+    const ef=mfEff(pl,h),e=ef*mfRoleMul(pl.th,ef);es+=e;
     const hw=MF_HOUSE[h].d;for(const k in hw)T[k]+=e*pl.w*hw[k]/nd;
     if(pl.k!=='sun'&&pl.k!=='ra'&&(d===1||d===Math.ceil(nd/2)||d===nd)){
       let dl=mfSid(pl.k,jd+1)-L;if(dl>180)dl-=360;if(dl<-180)dl+=360;if(dl<0)retro=true;}
+    /* ตรวจ aspect กับดาวเกิด */
+    if(natalPos[pl.k]!==undefined){
+      const diff=mfAngDiff(L,natalPos[pl.k]),asp=mfAspectName(diff);
+      if(asp&&asp.strength>bestAspStr){bestAspStr=asp.strength;bestAspDay={d,asp,L,diff};}
+    }
+    /* ตรวจ aspect กับดาวจรอื่น (Sun, Jupiter, Saturn) */
+    ['sun','ju','sa'].forEach(pk=>{
+      if(pk===pl.k)return;
+      const Lp=mfSid(pk,jd),diff2=mfAngDiff(L,Lp),asp2=mfAspectName(diff2);
+      if(asp2&&asp2.strength>.85){
+        const found=aspects.find(x=>x.with===pk&&x.asp.name===asp2.name);
+        if(!found)aspects.push({d,with:pk,asp:asp2,L,Lp});}
+    });
    }
-   rows.push({pl,hs,signs,eff:es/nd,retro});
+   /* หา peak degree วันที่ 1, กลางเดือน, ปลายเดือน */
+   const peakL=dailyL[Math.round(nd/2)-1]||dailyL[0];
+   rows.push({pl,hs,signs,eff:es/nd,retro,bestAspDay,aspects,peakL,natalL:natalPos[pl.k]});
   });
   const lordOf=h=>rows.find(r=>r.pl.k===MF_LORD[(lk.idx+h-1)%12]);
-  MF_DOMS.forEach(([k])=>{const r=lordOf(MF_DOM_H[k]);if(r)T[k]+=r.eff*(k==='life'?1:.7);}); // เจ้าเรือนประจำแต่ละด้านของ "ลัคนาคุณ"
+  MF_DOMS.forEach(([k])=>{const r=lordOf(MF_DOM_H[k]);if(r)T[k]+=r.eff*(k==='life'?1:.7);});
   return {T,rows,lordOf};
 }
 const mfHouseStr=(r,lk)=>r.signs.map(s=>{const h=((s.si-lk.idx)%12+12)%12+1;return 'เรือน '+h+' ('+MF_HOUSE[h].t+')';}).join(' → ');
@@ -2130,20 +2159,74 @@ function mfRender(){
    cal+=`<div class="mfc${iso===todayISO?' today':''}" style="background:${c}1f;border-color:${c}55" onclick="mfGoDay('${iso}')" title="${x.ev.lv.t}"><b>${x.d}</b><span class="cn">${x.dp.stem}${x.dp.branch}</span><br>${x.ev.lv.e}${mk}</div>`;});
   cal+='</div><div class="mflg">🟢 ดีมาก · 🟩 ราบรื่น · 🟡 ปานกลาง · 🟠 ท้าทาย · 🔴 ต้องระวัง<br>💥 วันปะทะตัวคุณ · 🤝 วันเข้ากับตัวคุณ · 🌸 เสน่ห์เด่น · ⭐ มีผู้ใหญ่ช่วย · ✨ วันศรี/มนตรี · 🚫 วันกาลกิณี · แตะวันที่เพื่อดูรายละเอียด</div>';
 
+  const PL_TH_MAP={'sun':'อาทิตย์','ma':'อังคาร','me':'พุธ','ju':'พฤหัสบดี','ve':'ศุกร์','sa':'เสาร์','ra':'ราหู'};
   let trt='';
   if(TR){
    const lr=TR.rows.find(r=>r.pl.k===MF_LORD[lk.idx]),sun=TR.rows.find(r=>r.pl.k==='sun');
    trt=`<div class="tip" style="margin-top:4px">🔯 ราศีลัคนาของคุณคือ <b>${RASHI[lk.idx][0]}</b> ${RASHI[lk.idx][1]} (ราศีที่ขึ้นทางตะวันออกตอนคุณเกิด ใช้เป็นจุดเริ่มนับเรือนชะตา) · ดาวประจำตัวคือ <b>${MF_LORD_TH[lk.idx]}</b>`+
     (lr?` เดือนนี้อยู่${mfHouseStr(lr,lk)} ${lr.eff>.3?'✅ หนุน':lr.eff<-.3?'⚠️ กดดัน':'➖ กลาง ๆ'}`:' (เคลื่อนเร็ว ผลกระจายทั้งเดือน)')+
     (sun&&sun.signs.length>1?` · ☉ อาทิตย์ย้ายเข้าราศี${RASHI[sun.signs[1].si][0]} วันที่ ${sun.signs[1].d}`:'')+`</div>`;
-   trt+='<div class="tbwrap"><table class="rtable"><thead><tr><th>ดาวจร</th><th>อยู่ราศี</th><th>อยู่เรือนไหนของคุณ</th><th>ส่งผลอย่างไร</th></tr></thead><tbody>';
-   TR.rows.forEach(r=>{const ef=r.eff>.3?'✅ หนุน':r.eff<-.3?'⚠️ กดดัน':'➖ กลาง ๆ',rl=mfRoleOf(r.pl.th);
+
+   /* ---- ตารางหลัก: ตำแหน่ง + เรือน + ผล + retro ---- */
+   trt+='<div class="tbwrap"><table class="rtable"><thead><tr><th>ดาวจร</th><th>ราศี · องศา</th><th>เรือนชะตา</th><th>ส่งผล</th></tr></thead><tbody>';
+   TR.rows.forEach(r=>{
+    const ef=r.eff>.3?'✅ หนุน':r.eff<-.3?'⚠️ กดดัน':'➖ กลาง ๆ',rl=mfRoleOf(r.pl.th);
     const hs=r.signs.map(s=>((s.si-lk.idx)%12+12)%12+1);
-    trt+=`<tr><td data-label="ดาวจร"><div><b>${r.pl.ic} ${r.pl.th}</b>${r.retro?' <span class="badge" style="background:#7c3aed">เดินถอยหลัง</span>':''}${rl>=0?`<br><span class="small">เป็นดาว${MF_TK_ROLE[rl]}ของคุณ</span>`:''}</div></td>`+
-     `<td data-label="อยู่ราศี"><div>${r.signs.map(s=>RASHI[s.si][0]+(s.d>1?' (ตั้งแต่ '+s.d+')':'')).join(' → ')}</div></td>`+
-     `<td data-label="อยู่เรือนไหนของคุณ"><div>${hs.map(h=>'เรือน '+h+' <span class="small">('+MF_HOUSE[h].t+')</span>').join(' → ')}</div></td>`+
-     `<td data-label="ส่งผลอย่างไร"><div style="text-align:left"><b>${ef}</b> <span class="small">${r.eff>=0?r.pl.kw.g:r.pl.kw.b}</span></div></td></tr>`;});
-   trt+='</tbody></table></div><div class="small" style="margin-top:6px">ตำแหน่งดาวคำนวณแบบนิรายนะ ความละเอียดระดับราศี (คลาดเคลื่อนราว ±1°) หากดาวอยู่ใกล้รอยต่อราศี ผลอาจต่างจากปฏิทินโหรเล็กน้อย</div>';
+    /* องศาในราศี ณ ช่วงกลางเดือน */
+    const degStr=r.signs.map(s=>RASHI[s.si][0]+' '+s.deg.toFixed(1)+'°'+(s.d>1?' ('+s.d+')':'')).join(' → ');
+    /* aspect กับดาวเกิด */
+    let aspHtml='';
+    if(r.bestAspDay){
+      const ba=r.bestAspDay;
+      const isPos=['Trine (120°)','Sextile (60°)','Conjunction (0°)'].includes(ba.asp.name)&&r.pl.ben;
+      aspHtml=`<div class="asp-peak">📍 วันที่ ${ba.d}: <span class="asp-badge ${ba.asp.cls}">${ba.asp.th}</span> กับดาวเกิด (ห่าง ${Math.abs(ba.diff).toFixed(1)}°)</div>`;
+    }
+    trt+=`<tr><td data-label="ดาวจร"><div><b>${r.pl.ic} ${r.pl.th}</b>${r.retro?` <span class="asp-retro">℞ ถอยหลัง</span>`:''}${rl>=0?`<br><span class="small">ทักษา: ดาว${MF_TK_ROLE[rl]}ของคุณ</span>`:''}</div></td>`+
+     `<td data-label="ราศี · องศา"><div>${degStr}${aspHtml}</div></td>`+
+     `<td data-label="เรือนชะตา"><div>${hs.map(h=>'เรือน '+h+' <span class="small">('+MF_HOUSE[h].n+')</span>').join(' → ')}</div></td>`+
+     `<td data-label="ส่งผล"><div style="text-align:left"><b>${ef}</b><br><span class="small">${r.eff>=0?r.pl.kw.g:r.pl.kw.b}</span></div></td></tr>`;
+   });
+   trt+='</tbody></table></div>';
+
+   /* ---- ส่วน Aspect ระหว่างดาวจรสำคัญ ---- */
+   const aspPairs=[];
+   const bigPlanets=TR.rows.filter(r=>['sa','ju','ma','ra'].includes(r.pl.k));
+   TR.rows.forEach(r=>{
+    if(r.aspects&&r.aspects.length){
+     r.aspects.forEach(a=>{
+      const key=[r.pl.k,a.with].sort().join('-');
+      if(!aspPairs.find(x=>x.key===key))
+       aspPairs.push({key,p1:r.pl,p2TH:PL_TH_MAP[a.with]||a.with,asp:a.asp,d:a.d});
+     });
+    }
+   });
+   if(aspPairs.length){
+    trt+=`<div class="asp-wrap"><h4>🔗 มุมดาวสำคัญเดือนนี้ (Planetary Aspects)</h4><table class="asp-table"><thead><tr><th>ดาว</th><th>มุม</th><th>กับดาว</th><th>วันที่ใกล้สุด</th><th>ความหมาย</th></tr></thead><tbody>`;
+    aspPairs.forEach(p=>{
+     const isHard=['Square (90°)','Opposition (180°)'].includes(p.asp.name);
+     const meaning=isHard?'ความตึงเครียด ต้องระวัง':'โอกาสและพลังงานเสริม';
+     trt+=`<tr><td><b>${p.p1.ic} ${p.p1.th}</b></td><td><span class="asp-badge ${p.asp.cls}">${p.asp.th}</span></td><td>${p.p2TH}</td><td>~วันที่ ${p.d}</td><td class="small">${meaning}</td></tr>`;
+    });
+    trt+='</tbody></table></div>';
+   }
+
+   /* ---- สรุปผลดาวหลัก 4 ดวง: ราหู เสาร์ พุธ อังคาร ---- */
+   const keyPlanets=['ra','sa','me','ma'];
+   const summaryRows=TR.rows.filter(r=>keyPlanets.includes(r.pl.k));
+   if(summaryRows.length){
+    trt+=`<div class="asp-summary"><b>🪐 สรุปผลดาวหลักเดือนนี้</b><br>`;
+    summaryRows.forEach(r=>{
+     const hs=r.signs.map(s=>((s.si-lk.idx)%12+12)%12+1);
+     const ef=r.eff>.25?'✅':r.eff<-.25?'⚠️':'➖';
+     const retroNote=r.retro?' <em>(เดินถอยหลัง — ผลช้าหรือย้อนกลับ)</em>':'';
+     const aspNote=r.bestAspDay?` · ${r.bestAspDay.asp.th}กับดวงเกิดวันที่ ${r.bestAspDay.d}`:'';
+     const degMid=r.signs[0]?r.signs[0].deg.toFixed(0):'?';
+     trt+=`<div style="margin-top:7px"><b>${r.pl.ic} ${r.pl.th}</b> ${ef}${retroNote} — อยู่เรือน ${hs[0]} (${MF_HOUSE[hs[0]]?MF_HOUSE[hs[0]].t:'?'}) องศาประมาณ ${degMid}° ในราศี${r.signs[0]?RASHI[r.signs[0].si][0]:'?'}${aspNote}<br><span class="small">${r.eff>=0?r.pl.kw.g:r.pl.kw.b}</span></div>`;
+    });
+    trt+='</div>';
+   }
+
+   trt+='<div class="small" style="margin-top:6px">ตำแหน่งดาวคำนวณแบบนิรายนะ (Sidereal/Lahiri) ความละเอียด ±1° · Aspect คำนวณจากดาวจรเทียบกับดาวเกิดและดาวจรด้วยกัน · orb ที่ใช้: Conj/Opp ±8° · Trine ±7° · Square ±6° · Sextile ±5°</div>';
   }
   const gl='<details class="small" style="margin-top:12px"><summary><b>📖 ศัพท์ในหน้านี้ (อธิบายง่าย ๆ)</b></summary><ul style="margin:6px 0;padding-left:18px;line-height:1.8">'+
    '<li><b>ธาตุประจำตัว</b> = ธาตุหลักของคุณ (ไม้ ไฟ ดิน ทอง น้ำ) คำนวณจากวันเกิด</li>'+
@@ -2419,7 +2502,7 @@ function tbxInit(){
  const bar=document.createElement('div');bar.id='tbxBar';bar.className='tbbar';
  bar.innerHTML=`<button data-t="static" onclick="tbxSwitch('static')">📌 ดวงกำเนิด<small>โครงสร้าง · ลัคนา · ดวงโคจร · 9 มิติ</small></button>`+
   `<button data-t="daily" onclick="tbxSwitch('daily')">📅 วันจร 7 วัน<small>ตรวจวัน · สี · กิจกรรม</small></button>`+
-  `<button data-t="month" onclick="tbxSwitch('month')">🌙 ดวงรายเดือน<small>ภาพรวม 8 ด้าน · ดาวจร</small></button>`;
+  `<button data-t="month" onclick="tbxSwitch('month')">🌙 ดวงรายเดือน<small>8 ด้าน · ดาวโคจร · Aspect</small></button>`;
  const mk=id=>{const p=document.createElement('div');p.id=id;p.className='tbpane';return p;};
  const pS=mk('tbxStatic'),pD=mk('tbxDaily'),pM=mk('tbxMonth');
  sF.before(bar,pS,pD,pM);
@@ -2496,6 +2579,15 @@ CHANGELOG (ดวงรายเดือน 8 ด้าน)
 - เพิ่มทักษาตามวันเกิด (บริวาร อายุ เดช ศรี มูละ อุตสาหะ มนตรี กาลกิณี) ทั้งในคะแนนรายวัน ปฏิทิน และคำแนะนำ
 - ข้อความเฉพาะบุคคล: เทียบพลังเดือนนี้กับโครงสร้างดวงเกิด (มี/ขาดดาวงาน ดาวเงิน ดาวคู่, ดิถีแกร่ง/อ่อน, ช่องคู่ครอง)
 - ปรับภาษาให้อ่านง่าย + ใส่คำอธิบายศัพท์
+
+CHANGELOG (ดาวโคจรเมตริก - รอบนี้)
+- เพิ่มองศาจริงของดาวในราศี (0-29°) แสดงในตารางดาวจร
+- เพิ่ม mfAspectName(): คำนวณมุม Conjunction/Sextile/Square/Trine/Opposition ระหว่างดาวจรกับดาวเกิด (natal)
+- mfTransit() บันทึก natalPos (ตำแหน่งดาว ณ วันเกิด) และหา bestAspDay (วันที่ aspect แรงสุดในเดือน)
+- เพิ่มส่วน Planetary Aspects ระหว่างดาวจรด้วยกัน (Sun, Jupiter, Saturn กับดาวอื่น) orb ≤ 85%
+- เพิ่มส่วน "สรุปผลดาวหลัก" (ราหู เสาร์ พุธ อังคาร) พร้อมเรือน องศา และ aspect
+- เพิ่ม CSS class asp-conj/opp/trine/sq/semi/retro สำหรับ badge สี
+- อัพเดต label แท็บ "ดวงรายเดือน" → "8 ด้าน · ดาวโคจร · Aspect"
 -->
 </body>
 </html>

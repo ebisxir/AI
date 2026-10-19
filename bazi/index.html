@@ -2235,25 +2235,54 @@ const kName=u=>String(u.username??u.name??u.user??'');
 const kExp=u=>u.expire??u.expires??u.exp??u.expires_at??'';
 const kSusp=u=>u.active===false||u.status==='suspended'||u.suspended===true;
 function csvCell(v){let s=String(v??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
+/* ---------- เข้าใช้ล่าสุดของแต่ละบัญชี (ไว้ตัดสินใจลบคนที่ไม่ค่อยใช้งาน) ---------- */
+const INACTIVE_DAYS=30;      /* ไม่เข้าใช้เกินกี่วันถึงติดป้ายเตือน (แดงเมื่อเกิน 90 วัน) */
+let KSORT='created';         /* created = ตามวันที่ออกรหัส · last = ไม่ได้ใช้นานสุดก่อน */
+function agoTxt(ms){
+  const m=Math.floor(ms/60000);
+  if(m<1)return 'เมื่อสักครู่';
+  if(m<60)return m+' นาทีที่แล้ว';
+  const hh=Math.floor(m/60);if(hh<24)return hh+' ชั่วโมงที่แล้ว';
+  const d=Math.floor(hh/24);if(d<60)return d+' วันที่แล้ว';
+  return Math.floor(d/30.4)+' เดือนที่แล้ว';
+}
+function fmtDT(v){
+  const t=v instanceof Date?v:new Date(v);if(isNaN(t))return '';
+  return fmtDMY(t)+' '+dmPad(t.getHours())+':'+dmPad(t.getMinutes());
+}
+function lastSeenInfo(u){
+  const t=u&&u.last_seen?new Date(u.last_seen).getTime():NaN;
+  if(isNaN(t))return {inactive:true,plain:'ยังไม่มีบันทึกการเข้าใช้',html:'<span class="small">ยังไม่มีบันทึก</span> <span class="badge" style="background:#b45309">ไม่มีบันทึกเข้าใช้</span>'};
+  const ms=Math.max(0,Date.now()-t),days=Math.floor(ms/864e5),plain=fmtDT(t)+' ('+agoTxt(ms)+')';
+  const badge=days>=90?` <span class="badge" style="background:#b91c1c">ไม่ได้ใช้ ${days} วัน</span>`:days>=INACTIVE_DAYS?` <span class="badge" style="background:#b45309">ไม่ได้ใช้ ${days} วัน</span>`:'';
+  return {inactive:days>=INACTIVE_DAYS,plain,html:`<b>${esc(fmtDT(t))}</b><br><span class="small">${esc(agoTxt(ms))}</span>${badge}`};
+}
+function toggleKSort(){KSORT=KSORT==='last'?'created':'last';renderKeyList();}
 async function renderKeyList(){
   const box=document.getElementById('keyList');if(!box)return;
   box.innerHTML='<div class="small" style="margin-top:10px">⏳ กำลังโหลดรายชื่อผู้ใช้…</div>';
   try{
     const r=await rpc(ADMIN_RPC.list,{p_token:TOKEN});
-    KEYS=Array.isArray(r)?r:((r&&(r.users||r.keys))||[]);
+    KEYS=Array.isArray(r)?r.slice():((r&&(r.users||r.keys))||[]).slice();
     if(!KEYS.length){box.innerHTML='<div class="small" style="margin-top:10px">ยังไม่มีผู้ใช้งาน</div>';return;}
-    let h='<div class="tbwrap"><table class="rtable"><thead><tr><th>ผู้ใช้</th><th>หมายเหตุ</th><th>หมดอายุ</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>';
+    if(KSORT==='last')KEYS.sort((a,b)=>(a.last_seen?new Date(a.last_seen).getTime():-1)-(b.last_seen?new Date(b.last_seen).getTime():-1));
+    const nIn=KEYS.filter(u=>lastSeenInfo(u).inactive).length;
+    let h=`<div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="mini ghost" onclick="toggleKSort()">↕️ เรียง: ${KSORT==='last'?'ไม่ได้ใช้นานสุดก่อน':'วันที่ออกรหัส'}</button>`+
+      `<span class="small">ไม่ได้เข้าใช้เกิน ${INACTIVE_DAYS} วัน (หรือไม่มีบันทึก): <b>${nIn}</b> จาก ${KEYS.length} บัญชี</span></div>`;
+    h+='<div class="tbwrap"><table class="rtable"><thead><tr><th>ผู้ใช้</th><th>หมายเหตุ</th><th>หมดอายุ</th><th>เข้าใช้ล่าสุด</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>';
     KEYS.forEach((u,i)=>{
       const sp=kSusp(u);
       h+=`<tr><td data-label="ผู้ใช้"><div><b>${esc(kName(u))}</b></div></td>`+
         `<td data-label="หมายเหตุ"><div>${esc(u.note||'')}</div></td>`+
         `<td data-label="หมดอายุ"><div>${esc(fmtDMY(kExp(u)))||'ไม่มีกำหนด'}${expBadge(u)}</div></td>`+
+        `<td data-label="เข้าใช้ล่าสุด"><div>${lastSeenInfo(u).html}</div></td>`+
         `<td data-label="สถานะ"><div>${sp?'<span class="badge" style="background:#b91c1c">ระงับ</span>':'<span class="badge" style="background:#15803d">ใช้งาน</span>'}${u.locked?' <span class="badge" style="background:#b45309">🔒 ล็อกชั่วคราว</span>':''}</div></td>`+
         `<td data-label="จัดการ"><div><button class="mini" onclick="keyAction(${i},'renew')">📅 ต่ออายุ</button> <button class="mini ghost" onclick="keyAction(${i},'reset')">🔄 รีเซ็ตรหัส</button> `+
         `<button class="mini ghost" onclick="keyAction(${i},'status')">${sp?'▶️ เปิดใช้':'⏸️ ระงับ'}</button> `+
         `<button class="mini ghost" onclick="keyAction(${i},'remove')">🗑️ ลบ</button></div></td></tr>`;
     });
-    box.innerHTML=h+'</tbody></table></div>';
+    box.innerHTML=h+'</tbody></table></div>'+
+      '<p class="small">⏱️ “เข้าใช้ล่าสุด” = ครั้งล่าสุดที่ผู้ใช้ล็อกอินด้วยรหัส หรือเปิดแอปด้วยการเข้าสู่ระบบที่ค้างไว้ (ระบบจำการเข้าสู่ระบบ 30 วัน จึงนับทั้งสองแบบ) · บัญชีที่ยังไม่เคยเข้าหลังอัปเดตระบบจะแสดงเวลาที่บันทึกดวงล่าสุดแทน · กด “เรียง” เพื่อให้คนที่ไม่ได้ใช้นานที่สุดขึ้นก่อน</p>';
   }catch(e){box.innerHTML='<div class="err" style="margin-top:10px">⚠️ โหลดรายชื่อไม่สำเร็จ: '+esc(e.message)+'</div>';}
 }
 /* ---------- ส่งรหัสผู้ใช้ทางไลน์ ---------- */
@@ -2331,7 +2360,7 @@ async function keyAction(i,act){
       const rs=await rpc(ADMIN_RPC.status,{p_token:TOKEN,p_user:nm,p_active:kSusp(u)});if(rs&&rs.ok===false){toast('⚠️ ไม่พบผู้ใช้นี้');return;}
       toast(kSusp(u)?'▶️ เปิดใช้งาน '+nm:'⏸️ ระงับ '+nm);
     }else if(act==='remove'){
-      if(!confirm('ลบผู้ใช้ "'+nm+'" และดวงที่บันทึกไว้ทั้งหมด? ย้อนกลับไม่ได้'))return;
+      if(!confirm('ลบผู้ใช้ "'+nm+'" และดวงที่บันทึกไว้ทั้งหมด?\nเข้าใช้ล่าสุด: '+lastSeenInfo(u).plain+'\nย้อนกลับไม่ได้'))return;
       const rd=await rpc(ADMIN_RPC.remove,{p_token:TOKEN,p_user:nm});if(rd&&rd.ok===false){toast('⚠️ ไม่พบผู้ใช้นี้');return;}toast('🗑️ ลบ '+nm+' แล้ว');
     }
     renderKeyList();
@@ -2371,8 +2400,8 @@ function sendNoticeLine(){const t=noticeText();if(!t)return;window.open('https:/
 function copyNotice(){const t=noticeText();if(!t)return;copyText(t).then(ok=>toast(ok?'📋 คัดลอกข้อความแล้ว':'⚠️ คัดลอกไม่ได้'));}
 function exportKeys(){
   if(!KEYS.length){toast('⚠️ ยังไม่มีรายชื่อให้ส่งออก');return;}
-  const head=['username','note','expires','status','created','profiles'];
-  const rows=KEYS.map(u=>[kName(u),u.note,fmtDMY(kExp(u)),kSusp(u)?'suspended':'active',fmtDMY(u.created_at??u.created),u.profiles??u.profile_count]);
+  const head=['username','note','expires','status','created','last_seen','profiles'];
+  const rows=KEYS.map(u=>[kName(u),u.note,fmtDMY(kExp(u)),kSusp(u)?'suspended':'active',fmtDMY(u.created_at??u.created),u.last_seen?fmtDT(u.last_seen):'',u.profiles??u.profile_count]);
   const csv='\ufeff'+[head,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   a.download='bazi_users_'+toISO(new Date())+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
@@ -2443,262 +2472,6 @@ document.addEventListener('copy',e=>{const t=(e.target.tagName||'').toUpperCase(
   await restoreSession();
 })();
 </script>
-
-<!-- ================= PATCH v12 : เมตริกการโคจรดาวละเอียด (ดวงรายเดือน) ================= -->
-<style>
-.mxwrap{margin-top:20px}
-.mxgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
-.mxcard{background:#fbfaff;border:1px solid #e3dcf3;border-radius:12px;padding:12px 14px;font-size:13.4px;line-height:1.8;page-break-inside:avoid}
-.mxcard h4{margin:0 0 4px;font-size:15.5px;color:#4b3f6b;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
-.mxcard h4 em{font-style:normal;font-size:12.5px;font-weight:700}
-.mxcard p{margin:5px 0}
-.mxcard ul{margin:4px 0 0;padding-left:18px;font-size:12.8px}
-.mxtag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:600;margin:1px 2px}
-.mxbar{position:relative;height:12px;background:#ece7dd;border-radius:6px;margin:4px 0;overflow:hidden}
-.mxbar i{position:absolute;top:0;bottom:0;border-radius:6px}
-.mxbar b{position:absolute;left:50%;top:0;bottom:0;width:2px;background:#555}
-.mxlist{list-style:none;padding:0;margin:8px 0 0}
-.mxlist li{padding:6px 2px;border-bottom:1px dashed #e6ddcd;font-size:13px;line-height:1.7;page-break-inside:avoid}
-@media(max-width:760px){.mxgrid{grid-template-columns:1fr}}
-</style>
-<script>
-(function(){
-'use strict';
-if(typeof mfTransit!=='function'||typeof mfRender!=='function'||typeof mfSid!=='function'||typeof MF_PL==='undefined'){
-  console.warn('PATCH v12: ไม่พบเครื่องยนต์ดวงรายเดือน');return;}
-
-/* ---------- เครื่องมือพื้นฐาน ---------- */
-const wrap=a=>((a%360)+360)%360;
-const sep=(a,b)=>{let x=Math.abs(wrap(a)-wrap(b));return x>180?360-x:x;};
-const dlt=(a,b)=>{let x=wrap(b)-wrap(a);if(x>180)x-=360;if(x<-180)x+=360;return x;};
-const RN=i=>RASHI[i][0];
-const sgn=L=>Math.floor(wrap(L)/30);
-const degTxt=L=>{const s=sgn(L),dd=wrap(L)-s*30;return RN(s)+' '+Math.floor(dd)+'°'+String(Math.floor((dd%1)*60)).padStart(2,'0')+'′';};
-const hOf=(si,lk)=>((si-lk.idx)%12+12)%12+1;
-const jdNoon=(y,m,d)=>jdn(y,m,d,12-TZ_FIXED);
-const roleMul=(th,e)=>typeof mfRoleMul==='function'?mfRoleMul(th,e):1;
-const PL={};MF_PL.forEach(p=>PL[p.k]=p);
-function rangesOf(b,nd){const r=[];let s=0;for(let d=1;d<=nd+1;d++){const on=d<=nd&&b[d];if(on&&!s)s=d;if(!on&&s){r.push([s,d-1]);s=0;}}return r;}
-const fmtR=r=>r.map(([s,e])=>s===e?String(s):s+'–'+e).join(', ');
-
-/* ---------- ความแม่นยำ: perturbation พฤหัสบดี–เสาร์ (Schlyter) ---------- */
-if(typeof mfOrb==='function'&&typeof mfKepler==='function'&&typeof mfSunGeo==='function'&&typeof mfPlanetGeo==='function'){
- const _PG=mfPlanetGeo,D=Math.PI/180;
- try{mfPlanetGeo=function(k,d){
-  if(k!=='ju'&&k!=='sa')return _PG(k,d);
-  const o=mfOrb(k,d),E=mfKepler(wrap(o.M),o.e);
-  const xv=o.a*(Math.cos(E)-o.e),yv=o.a*Math.sqrt(1-o.e*o.e)*Math.sin(E),v=Math.atan2(yv,xv),r=Math.sqrt(xv*xv+yv*yv);
-  const N=o.N*D,i=o.i*D,vw=v+o.w*D;
-  const xh=r*(Math.cos(N)*Math.cos(vw)-Math.sin(N)*Math.sin(vw)*Math.cos(i));
-  const yh=r*(Math.sin(N)*Math.cos(vw)+Math.cos(N)*Math.sin(vw)*Math.cos(i));
-  const rp=Math.sqrt(xh*xh+yh*yh);let lon=Math.atan2(yh,xh)/D;
-  const Mj=(19.8950+.0830853001*d)*D,Ms=(316.9670+.0334442282*d)*D;
-  if(k==='ju')lon+=-.332*Math.sin(2*Mj-5*Ms-67.6*D)-.056*Math.sin(2*Mj-2*Ms+21*D)+.042*Math.sin(3*Mj-5*Ms+21*D)
-    -.036*Math.sin(Mj-2*Ms)+.022*Math.cos(Mj-Ms)+.023*Math.sin(2*Mj-3*Ms+52*D)-.016*Math.sin(Mj-5*Ms-69*D);
-  else lon+=.812*Math.sin(2*Mj-5*Ms-67.6*D)-.229*Math.cos(2*Mj-4*Ms-2*D)+.119*Math.sin(Mj-2*Ms-3*D)
-    +.046*Math.sin(2*Mj-6*Ms-69*D)+.014*Math.sin(Mj-3*Ms+32*D);
-  const s=mfSunGeo(d);
-  return wrap(Math.atan2(rp*Math.sin(lon*D)+s.r*Math.sin(s.lon*D),rp*Math.cos(lon*D)+s.r*Math.cos(s.lon*D))/D);
- };}catch(e){console.warn('v12 perturbation skipped',e);}
-}
-
-/* ---------- ตำราไทย: กำลังดาว (ดัชนีราศี 0=เมษ) ---------- */
-const DIG={sun:{own:[4],ex:0,deb:6},ma:{own:[0,7],ex:9,deb:3},me:{own:[2,5],ex:5,deb:11},
- ju:{own:[8,11],ex:3,deb:9},ve:{own:[1,6],ex:11,deb:5},sa:{own:[9,10],ex:6,deb:0},ra:{own:[10],ex:7,deb:1}};
-function dign(k,si){const g=DIG[k];
- if(!g)return{t:'ปกติ',m:1,c:'#6b7280'};
- if(g.ex===si)return{t:'อุจจ์',m:1.4,c:'#15803d'};
- if(g.own.includes(si))return{t:'เกษตร',m:1.25,c:'#16a34a'};
- if(g.deb===si)return{t:'นิจ',m:.6,c:'#b91c1c'};
- if(g.own.some(o=>(o+6)%12===si))return{t:'ประ',m:.7,c:'#ea580c'};
- return{t:'ปกติ',m:1,c:'#6b7280'};}
-const COMB={me:13,ve:10,ma:17,ju:11,sa:15};
-const ASP={1:'ทับลัคนา',7:'เล็งลัคนา',5:'ตรีโกณลัคนา',9:'ตรีโกณลัคนา',4:'จตุโกณลัคนา',10:'จตุโกณลัคนา',3:'โยคลัคนา',11:'โยคลัคนา'};
-const PAIRS=[
- ['sa','ra',-1.1,'เสาร์–ราหู','ภาระหนักซ้อนความสับสน เรื่องยืดเยื้อ ระวังถูกหลอก'],
- ['ma','sa',-.9,'อังคาร–เสาร์','แรงปะทะกับข้อจำกัด เครียดสะสม งานติดขัด ระวังอุบัติเหตุ'],
- ['ma','ra',-.9,'อังคาร–ราหู','ใจร้อนผสมความประมาท ระวังอุบัติเหตุ ของมีคม การโต้เถียงรุนแรง'],
- ['ju','ra',-.4,'พฤหัสบดี–ราหู','คำแนะนำหรือความเชื่อผิดทาง ตรวจข้อมูลก่อนเชื่อ'],
- ['me','ra',-.4,'พุธ–ราหู','ข่าวลือ เอกสารผิดพลาด ข้อมูลบิดเบือน'],
- ['ma','me',-.3,'อังคาร–พุธ','คำพูดแรง ทะเลาะผ่านข้อความ'],
- ['ju','ve',.7,'พฤหัสบดี–ศุกร์','ความสุข ความรัก โชคจากผู้ใหญ่'],
- ['me','ve',.5,'พุธ–ศุกร์','เจรจาค้าขายราบรื่น สื่อสารมีเสน่ห์'],
- ['ju','me',.5,'พฤหัสบดี–พุธ','วางแผน เรียน สอบ ทำสัญญาได้ดี']];
-const HIT={ju:[1,.7],ve:[.6,.2],me:[.5,.2],sa:[-1,-.8],ra:[-.9,-.6],ma:[-.7,-.6]};
-const NAT={lg:{th:'ลัคนากำเนิด',d:{life:1,health:.6}},sun:{th:'อาทิตย์กำเนิด',d:{work:.8,life:.5}},
- me:{th:'พุธกำเนิด',d:{wish:.7,work:.5}},ve:{th:'ศุกร์กำเนิด',d:{love:1,money:.5}},
- ma:{th:'อังคารกำเนิด',d:{health:.8,work:.3}},ju:{th:'พฤหัสบดีกำเนิด',d:{luck:.8,wish:.5}},
- sa:{th:'เสาร์กำเนิด',d:{work:.6,health:.5}}};
-const FOC={
- ra:{g:'โอกาสแปลกใหม่ งานออนไลน์/ต่างชาติ ชื่อเสียงแบบไม่คาดคิด',b:'ความลุ่มหลง ถูกหลอก ตัดสินใจเสี่ยง เรื่องไม่คาดฝัน',r:'',
-     tip:['ตรวจสอบข้อมูลก่อนเชื่อหรือโอนเงิน','เลี่ยงการลงทุนตามกระแส']},
- sa:{g:'ความอดทนออกผล งานที่ทำสม่ำเสมอกลายเป็นรากฐาน',b:'ภาระหนัก งานล่าช้า ความเหนื่อยสะสม ปัญหาเรื้อรัง',r:'เรื่องค้างเก่ากลับมาให้สะสาง ทบทวนภาระและหนี้สิน',
-     tip:['วางแผนระยะยาว ทำทีละขั้น','ดูแลกระดูก ข้อ และการนอน']},
- me:{g:'เจรจา ค้าขาย เอกสาร การเรียน ราบรื่น',b:'การสื่อสารคลาดเคลื่อน ข่าวลือ เอกสารผิดพลาด',r:'ตรวจสัญญาซ้ำ สำรองข้อมูล เลื่อนการเซ็นสัญญาใหญ่ถ้าเลื่อนได้',
-     tip:['อ่านเงื่อนไขก่อนเซ็นทุกครั้ง','ยืนยันนัดหมายเป็นลายลักษณ์อักษร']},
- ma:{g:'แรงขับสูง กล้าลงมือ แข่งขันได้ผล',b:'ใจร้อน ปะทะ อุบัติเหตุ ของมีคม',r:'งานค้างกลับมา แรงตก ความขัดแย้งเก่าปะทุ',
-     tip:['ขับรถและใช้ของมีคมด้วยสติ','ระบายพลังด้วยการออกกำลังกาย']}};
-const FOCUS=['ra','sa','me','ma'];
-let LAST=null;
-
-/* ---------- ตำแหน่งดาวกำเนิด ---------- */
-function natal(){try{
- const b=(typeof MF_BD!=='undefined')?MF_BD:null,o={};
- if(b){const jd=jdn(b.y,b.m,b.d,(b.h+b.mi/60)-TZ_FIXED);['sun','ma','me','ju','ve','sa','ra'].forEach(k=>o[k]=mfSid(k,jd));}
- if(typeof MF_LK!=='undefined'&&MF_LK&&typeof MF_LK.sidereal==='number')o.lg=MF_LK.sidereal;
- return Object.keys(o).length?o:null;}catch(e){return null;}}
-
-/* ---------- เครื่องยนต์เมตริก ---------- */
-function compute(y,m,nd,lk){
- const adj={},why={};MF_DOMS.forEach(([k])=>{adj[k]=0;why[k]={};});
- const add=(k,v,t)=>{if(!(k in adj)||!isFinite(v)||!v)return;adj[k]+=v;why[k][t]=(why[k][t]||0)+v;};
- const N=natal(),S={},ev=[];
- const sunL=[];for(let d=0;d<=nd+1;d++)sunL[d]=mfSid('sun',jdNoon(y,m,d));
- MF_PL.forEach(pl=>{
-  const k=pl.k,L=[];for(let d=0;d<=nd+1;d++)L[d]=k==='sun'?sunL[d]:mfSid(k,jdNoon(y,m,d));
-  const si=[],hh=[],rt=[],cb=[],acc={},segs=[],lgx=[];let mv=0,e1s=0;
-  for(let d=1;d<=nd;d++){
-   const v=dlt(L[d],L[d+1]),vp=dlt(L[d-1],L[d]);mv+=v;
-   const s=sgn(L[d]),h=hOf(s,lk),dg=dign(k,s);
-   si[d]=s;hh[d]=h;rt[d]=k!=='sun'&&v<0;
-   cb[d]=!!COMB[k]&&sep(L[d],sunL[d])<COMB[k];
-   if(!segs.length||segs[segs.length-1].si!==s)segs.push({si:s,d,h,dg});
-   if(sgn(L[d-1])!==s)ev.push({d,t:`${pl.ic} ${pl.th}ย้ายเข้าราศี${RN(s)} (ภพ ${h} ${MF_HOUSE[h].n})`});
-   if(k!=='sun'&&k!=='ra'&&(vp<0)!==(v<0))ev.push({d,t:`${pl.ic} ${pl.th}${v<0?'เริ่มพักร์ (ถอยหลัง)':'กลับเดินหน้า (หายพักร์)'}`});
-   const f=mfEff(pl,h),e0=f*roleMul(pl.th,f),rf=(rt[d]&&k!=='ra')?1.15:1;
-   let e1=0;
-   if(e0>0)e1=e0*dg.m*(cb[d]?.6:1)*rf;
-   else if(e0<0)e1=e0/dg.m*(cb[d]?.8:1)*rf;
-   e1s+=e1;
-   const hw=MF_HOUSE[h].d;for(const q in hw)acc[q]=(acc[q]||0)+(e1-e0)*pl.w*hw[q]/nd;
-   if(k==='me'&&rt[d]){acc.work=(acc.work||0)-.25/nd;acc.wish=(acc.wish||0)-.2/nd;}
-   if(N&&typeof N.lg==='number'){const x=sep(L[d],N.lg);if(x<3)lgx.push({d,t:'ทับ'});else if(Math.abs(x-180)<3)lgx.push({d,t:'เล็ง'});}
-  }
-  Object.keys(acc).forEach(q=>add(q,acc[q],pl.ic+' '+pl.th+': กำลังดาว/พักร์/อัสตะ'));
-  const rr=rangesOf(rt,nd),cr=rangesOf(cb,nd);
-  cr.forEach(([a,b])=>ev.push({d:a,t:`${pl.ic} ${pl.th}อัสตะ (ใกล้อาทิตย์) ถึงวันที่ ${b} — กำลังดาวอ่อนลง`}));
-  if(lgx.length)ev.push({d:lgx[0].d,t:`${pl.ic} ${pl.th}${lgx[0].t}องศาลัคนากำเนิด (±3°)`});
-  S[k]={pl,L,si,hh,rt,cb,rr,cr,segs,speed:mv/nd,idx:Math.max(-1,Math.min(1,e1s/nd/1.5)),lgx};
- });
- /* ดาวจรกุม/เล็งกันเอง */
- const pairs=[];
- PAIRS.forEach(([a,b,val,name,txt])=>{
-  if(!S[a]||!S[b])return;const cj=[],op=[];
-  for(let d=1;d<=nd;d++){
-   const r=((S[b].si[d]-S[a].si[d])%12+12)%12;cj[d]=r===0;op[d]=val<0&&r===6;
-   if(cj[d]||op[d]){const hw=MF_HOUSE[S[a].hh[d]].d,w=val*(cj[d]?.5:.35)/nd;
-    for(const q in hw)add(q,w*hw[q],(val<0?'⚠️ ':'✨ ')+name+(cj[d]?' กุมกัน':' เล็งกัน'));}
-  }
-  const rc=rangesOf(cj,nd),ro=rangesOf(op,nd);
-  if(rc.length){pairs.push({a,b,name,type:'กุม',r:rc,h:S[a].hh[rc[0][0]],val,txt});ev.push({d:rc[0][0],t:`${PL[a].ic}${PL[b].ic} ${name} เริ่มกุมกัน`});}
-  if(ro.length){pairs.push({a,b,name,type:'เล็ง',r:ro,h:S[a].hh[ro[0][0]],val,txt});ev.push({d:ro[0][0],t:`${PL[a].ic}${PL[b].ic} ${name} เริ่มเล็งกัน`});}
- });
- /* ดาวจรทับ/เล็งดาวกำเนิด */
- const hits=[];
- if(N)Object.keys(HIT).forEach(k=>{if(!S[k])return;
-  Object.keys(NAT).forEach(nk=>{if(typeof N[nk]!=='number')return;
-   const nsi=sgn(N[nk]);let c=[0,0],ex=[0,0];
-   for(let d=1;d<=nd;d++){
-    const r=((S[k].si[d]-nsi)%12+12)%12,t=r===0?0:r===6?1:-1;if(t<0)continue;
-    const x=sep(S[k].L[d],N[nk]),exact=t===0?x<3:Math.abs(x-180)<3;
-    c[t]++;if(exact&&!ex[t])ex[t]=d;
-    const v=HIT[k][t]*.45*(exact?1.5:1)*PL[k].w/nd,dd=NAT[nk].d;
-    for(const q in dd)add(q,v*dd[q],PL[k].ic+' '+PL[k].th+'จร'+(t===0?'ทับ':'เล็ง')+NAT[nk].th);
-   }
-   [0,1].forEach(t=>{if(c[t])hits.push({k,nk,t:t===0?'ทับ':'เล็ง',n:c[t],exd:ex[t],val:HIT[k][t]});});
-  });
- });
- Object.keys(adj).forEach(k=>adj[k]=Math.max(-1.2,Math.min(1.2,adj[k])));
- ev.sort((a,b)=>a.d-b.d);
- return {S,pairs,hits,ev,adj,why,natalOk:!!(N&&typeof N.sun==='number')};
-}
-
-/* ---------- ต่อเข้าคะแนนดวงรายเดือน (ไม่แก้ของเดิม) ---------- */
-const _T=mfTransit;
-try{mfTransit=function(y,m,nd,lk){
- const R=_T.apply(this,arguments);
- try{if(lk&&typeof lk.idx==='number'&&R&&R.T){const M=compute(y,m,nd,lk);R.mx=M;LAST={key:y+'-'+m+'-'+lk.idx,M};
-  Object.keys(M.adj).forEach(k=>{if(k in R.T)R.T[k]+=M.adj[k];});}}catch(e){console.warn('v12 transit',e);}
- return R;};}catch(e){console.warn('v12: wrap mfTransit failed',e);}
-
-/* ---------- แสดงผล ---------- */
-const dbar=v=>{v=Math.max(-1,Math.min(1,v));const c=v>=0?'#16a34a':'#dc2626',l=v>=0?50:50+v*50,w=Math.abs(v)*50;
- return `<div class="mxbar"><i style="left:${l}%;width:${w}%;background:${c}"></i><b></b></div>`;};
-const lvl=v=>v>.15?{t:'หนุน',c:'#15803d',e:'✅'}:v<-.15?{t:'กดดัน',c:'#b91c1c',e:'⚠️'}:{t:'กลาง',c:'#ca8a04',e:'➖'};
-const digTags=s=>s.segs.map(g=>`<span class="mxtag" style="background:${g.dg.c}1f;color:${g.dg.c}">${RN(g.si)} · ${g.dg.t}</span>`).join(' ');
-const houseTxt=s=>s.segs.map(g=>`ภพ ${g.h} ${MF_HOUSE[g.h].n} <span class="small">(${MF_HOUSE[g.h].t})</span>${ASP[g.h]?' · <b>'+ASP[g.h]+'</b>':''}${g.d>1?' — ตั้งแต่วันที่ '+g.d:''}`).join(' → ');
-function walkTxt(k,s,nd){
- if(k==='sun')return 'เดินหน้าตามปกติ';
- if(k==='ra')return 'ถอยหลังเสมอ (ธรรมชาติของราหู)';
- if(!s.rr.length)return 'เดินหน้าตลอดเดือน';
- if(s.rr.length===1&&s.rr[0][0]===1&&s.rr[0][1]===nd)return '<b style="color:#7c3aed">℞ พักร์ตลอดเดือน</b>';
- return '<b style="color:#7c3aed">℞ พักร์วันที่ '+fmtR(s.rr)+'</b>';}
-function card(k,M,nd){
- const s=M.S[k];if(!s)return '';const F=FOC[k],L=lvl(s.idx);
- const hs=M.hits.filter(h=>h.k===k);
- const nich=s.segs.some(g=>g.dg.t==='นิจ'||g.dg.t==='ประ'),strong=s.segs.some(g=>g.dg.t==='อุจจ์'||g.dg.t==='เกษตร');
- let read=s.idx>.15?F.g:s.idx<-.15?F.b:'ผลกลาง ๆ ไม่หนุนไม่กดชัดเจน';
- if(s.rr.length&&k!=='ra'&&F.r)read+=' · ช่วงพักร์: '+F.r;
- if(s.cr.length)read+=' · ช่วงอัสตะ ผลของดาวอ่อนลง';
- if(nich)read+=' · ดาวเสียกำลัง ผลดีลดลงและผลร้ายชัดขึ้น';
- else if(strong)read+=' · ดาวมีกำลัง ผลดีเด่นชัดและผลร้ายเบาลง';
- return `<div class="mxcard"><h4><span>${s.pl.ic} ${s.pl.th}จร (${s.pl.n})</span><em style="color:${L.c}">${L.e} ${L.t}</em></h4>${dbar(s.idx)}`+
-  `<p>📍 <b>ตำแหน่ง:</b> ${degTxt(s.L[1])} → ${degTxt(s.L[nd])} · ${Math.abs(s.speed).toFixed(2)}°/วัน</p>`+
-  `<p>🏠 <b>เรือนของคุณ:</b> ${houseTxt(s)}</p>`+
-  `<p>💪 <b>กำลังดาว:</b> ${digTags(s)}</p>`+
-  `<p>🔄 <b>การเดิน:</b> ${walkTxt(k,s,nd)}${s.cr.length?' · 🔥 อัสตะวันที่ '+fmtR(s.cr):''}</p>`+
-  (s.lgx.length?`<p>🎯 <b>${s.lgx[0].t}องศาลัคนาพอดี</b> วันที่ ${s.lgx.map(x=>x.d).filter((v,i,a)=>a.indexOf(v)===i).slice(0,6).join(', ')}</p>`:'')+
-  (hs.length?`<p>🧬 <b>กระทบดาวกำเนิด:</b> ${hs.map(h=>`${h.t}${NAT[h.nk].th} ${h.n} วัน${h.exd?' (ตรงองศาวันที่ '+h.exd+')':''}`).join(' · ')}</p>`:'')+
-  `<p>🧭 <b>อ่านผล:</b> ${read}</p><ul>${F.tip.map(x=>'<li>'+x+'</li>').join('')}</ul></div>`;
-}
-function renderPanel(){
- const box=document.getElementById('mfBox');
- if(!box||typeof CH==='undefined'||!CH||!box.querySelector('.mfhero'))return;
- const old=document.getElementById('mxPanel');if(old)old.remove();
- const lk=(typeof MF_LK!=='undefined'&&MF_LK&&typeof MF_LK.idx==='number')?MF_LK:null;
- if(!lk){box.insertAdjacentHTML('beforeend','<div id="mxPanel" class="tip">🪐 ต้องมีเวลาเกิดที่ถูกต้องเพื่อคำนวณลัคนา จึงจะแสดงเมตริกการโคจรดาวได้</div>');return;}
- const [y,m]=mfMonthVal().split('-').map(Number),nd=new Date(y,m,0).getDate();
- const key=y+'-'+m+'-'+lk.idx,M=(LAST&&LAST.key===key)?LAST.M:compute(y,m,nd,lk);
- const dw=d=>TH_DOWS[new Date(y,m-1,d).getDay()];
- let h='<div id="mxPanel" class="mxwrap"><h3>🪐 เมตริกการโคจรดาวรายเดือน</h3>'+
-  '<p class="small" style="text-align:center">คำนวณตำแหน่งดาวทุกวันในเดือน แล้ววัดกำลังดาว · พักร์และวันเปลี่ยนทิศ · อัสตะ · มุมกับลัคนา · ดาวจรทับ/เล็งดาวกำเนิด · ดาวจรกุม/เล็งกันเอง — ผลทั้งหมดนำไปปรับคะแนน 8 ด้านด้านบนแล้ว</p>';
- h+='<h3 style="font-size:15.5px">🔍 เจาะลึกดาวสำคัญ</h3><div class="mxgrid">'+FOCUS.map(k=>card(k,M,nd)).join('')+'</div>';
- h+='<h3 style="font-size:15.5px;margin-top:16px">📋 ดาวจรทั้ง 7 ดวง</h3><div class="tbwrap"><table class="rtable"><thead><tr><th>ดาว</th><th>ต้นเดือน → ปลายเดือน</th><th>เรือนจากลัคนา</th><th>กำลังดาว</th><th>การเดิน</th><th>ดัชนีผล</th></tr></thead><tbody>';
- MF_PL.forEach(p=>{const s=M.S[p.k];if(!s)return;const L=lvl(s.idx);
-  h+=`<tr><td data-label="ดาว"><div><b>${p.ic} ${p.th}</b> (${p.n})</div></td>`+
-   `<td data-label="ตำแหน่ง"><div>${degTxt(s.L[1])} → ${degTxt(s.L[nd])}<div class="edesc">${Math.abs(s.speed).toFixed(2)}°/วัน</div></div></td>`+
-   `<td data-label="เรือน"><div style="text-align:left">${houseTxt(s)}</div></td>`+
-   `<td data-label="กำลังดาว"><div>${digTags(s)}</div></td>`+
-   `<td data-label="การเดิน"><div>${walkTxt(p.k,s,nd)}${s.cr.length?'<div class="edesc">🔥 อัสตะ '+fmtR(s.cr)+'</div>':''}</div></td>`+
-   `<td data-label="ดัชนีผล"><div><b style="color:${L.c}">${L.e} ${L.t}</b>${dbar(s.idx)}</div></td></tr>`;});
- h+='</tbody></table></div>';
- h+='<h3 style="font-size:15.5px;margin-top:16px">🔗 ดาวจรกุม/เล็งกันเอง</h3><ul class="mxlist">'+
-  (M.pairs.length?M.pairs.map(p=>`<li>${p.val<0?'⚠️':'✨'} <b>${PL[p.a].ic}${PL[p.b].ic} ${p.name} ${p.type}กัน</b> วันที่ ${fmtR(p.r)} · ในภพ ${p.h} ${MF_HOUSE[p.h].n} (${MF_HOUSE[p.h].t}) — ${p.txt}</li>`).join('')
-   :'<li>เดือนนี้ไม่มีดาวคู่สำคัญกุมหรือเล็งกัน</li>')+'</ul>';
- h+='<h3 style="font-size:15.5px;margin-top:16px">🧬 ดาวจรกระทบดาวกำเนิด</h3><ul class="mxlist">'+
-  (!M.natalOk?'<li>ยังไม่มีข้อมูลดาวกำเนิด (ตรวจวันเวลาเกิด)</li>':
-   M.hits.length?M.hits.sort((a,b)=>Math.abs(b.val)-Math.abs(a.val)).map(x=>`<li>${x.val<0?'⚠️':'✨'} <b>${PL[x.k].ic} ${PL[x.k].th}จร${x.t}${NAT[x.nk].th}</b> ${x.n} วัน${x.exd?' · ตรงองศาวันที่ '+x.exd:''} — ส่งผลต่อ${Object.keys(NAT[x.nk].d).map(q=>(MF_DOMS.find(z=>z[0]===q)||[,'',q])[2]).join(' / ')}</li>`).join('')
-   :'<li>เดือนนี้ไม่มีดาวจรทับหรือเล็งดาวกำเนิด</li>')+'</ul>';
- h+='<h3 style="font-size:15.5px;margin-top:16px">🗓️ ไทม์ไลน์ดาวในเดือนนี้</h3><ul class="mxlist">'+
-  (M.ev.length?M.ev.map(e=>`<li><b>${e.d} ${TH_MONS[m-1]} (${dw(e.d)})</b> · ${e.t}</li>`).join(''):'<li>ไม่มีเหตุการณ์ดาวสำคัญ</li>')+'</ul>';
- h+='<h3 style="font-size:15.5px;margin-top:16px">⚖️ เมตริกดาวปรับคะแนนแต่ละด้านอย่างไร</h3><ul class="mxlist">';
- MF_DOMS.forEach(([k,ic,n])=>{const v=M.adj[k]||0;
-  const top=Object.entries(M.why[k]||{}).filter(x=>Math.abs(x[1])>=.02).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,3);
-  h+=`<li><b>${ic} ${n}</b> ${v>.05?'<span style="color:#15803d">▲ ดันขึ้น</span>':v<-.05?'<span style="color:#b91c1c">▼ กดลง</span>':'➖ แทบไม่เปลี่ยน'}${dbar(v/1.2)}`+
-   (top.length?'<span class="small">'+top.map(x=>(x[1]>0?'↑ ':'↓ ')+x[0]).join(' · ')+'</span>':'')+'</li>';});
- h+='</ul><div class="small" style="margin-top:8px">ตำแหน่งดาวคำนวณแบบนิรายนะ (อายนางศ์ตามสูตรในแอป) · พฤหัสบดีและเสาร์เพิ่มสูตรแก้ perturbation แล้ว · ราหูใช้ตำแหน่งเฉลี่ย · ระบบสุริยยาตรในปฏิทินโหรไทยอาจให้วันย้ายราศีต่างไป 1–2 วัน · ไม่รวมดวงจันทร์และเกตุ</div></div>';
- box.insertAdjacentHTML('beforeend',h);
- try{if(typeof MF_LAST!=='undefined'&&MF_LAST)MF_LAST.mx=h;}catch(e){}
-}
-const _R=mfRender;
-try{mfRender=function(){const r=_R.apply(this,arguments);try{renderPanel();}catch(e){console.warn('v12 panel',e);}return r;};}
-catch(e){console.warn('v12: wrap mfRender failed',e);}
-
-/* ถ้าดวงคำนวณไว้แล้วก่อนแพตช์โหลด ให้วาดใหม่ทันที */
-try{if(typeof CH!=='undefined'&&CH&&document.querySelector('#mfBox .mfhero'))mfRender();}catch(e){}
-})();
-</script>
-
 <!--
 CHANGELOG (รอบตรวจสอบนี้)
 [ร้ายแรง]

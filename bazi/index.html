@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#8b0000">
+<meta name="theme-color" content="#060d1b">
 <title>🏛️ BaZi Precision Navigator</title>
 <!-- แก้ไขรอบนี้: ดู CHANGELOG ท้ายไฟล์ -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@700&family=Noto+Serif+Thai:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
@@ -159,9 +159,144 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
   .seg button{padding:9px 10px}.seg button b{font-size:13.5px}
   .mfgrid{grid-template-columns:1fr}.mfc{min-height:50px;font-size:10.5px}.mfc .cn{font-size:11px}.tbbar button{flex:1 0 118px;font-size:13.5px}
 }
+
+/* =====================================================================
+   LUXE THEME — "Midnight Jade & Champagne Gold"
+   โทนสีมงคลของเจ้าของแอป: ธาตุน้ำ (กรมท่า/ไพลิน) · ธาตุทอง (ทองแชมเปญ) · ธาตุไม้ (หยกเขียว)
+   ทับตัวแปรสีเดิมทั้งหมด จึงไม่กระทบตรรกะ/ข้อมูลของแอป
+   ===================================================================== */
+:root{
+  --bg:#060d1b;--bg2:#0a1830;
+  --primary:#0b6e57;--primary-d:#07503f;--primary-l:#13a07c;
+  --secondary:#b8902f;
+  --gold:#c9a24a;--gold-l:#ecd48f;--gold-d:#8f6d1f;
+  --water:#2a6db5;--sapphire:#15386a;
+  --card:#fcfaf5;--line:rgba(190,150,60,.38);
+  --ink:#16202f;--muted:#586273;
+  --serif:'Noto Serif Thai','Noto Serif TC',Georgia,'Times New Roman',serif;
+}
+html{background:#060d1b}
+body{background:radial-gradient(1100px 620px at 78% -8%,rgba(21,56,106,.55),transparent 62%),radial-gradient(900px 560px at 8% 12%,rgba(11,110,87,.28),transparent 60%),linear-gradient(180deg,#050b18 0%,#081528 55%,#06101f 100%);
+  background-attachment:fixed;color:var(--ink)}
+#lxBg{position:fixed;left:0;top:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
+#app{position:relative;z-index:1}
+::selection{background:rgba(201,162,74,.35)}
+*{scrollbar-width:thin;scrollbar-color:rgba(201,162,74,.55) transparent}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#d9bb6a,#9a7a2a);border-radius:9px}::-webkit-scrollbar-track{background:rgba(255,255,255,.03)}
+
+/* ---- ส่วนหัว (อยู่บนพื้นหลังมืด) ---- */
+#app>h1{font-family:var(--serif);font-weight:700;font-size:27px;letter-spacing:.4px;margin:6px 0 2px;
+  background:linear-gradient(95deg,#f7e7ae 0%,#d6b25a 40%,#f3dc92 62%,#b98f2e 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 2px 14px rgba(201,162,74,.28))}
+#app>h1::after{content:'';display:block;width:min(260px,60%);height:2px;margin:10px auto 0;border-radius:2px;
+  background:linear-gradient(90deg,transparent,#2a6db5 18%,#13a07c 50%,#d9b85f 82%,transparent)}
+.topbar .small{color:rgba(240,228,190,.86)}
+.topbar .small b{color:var(--gold-l)}
+.topbar .ghost{background:rgba(255,255,255,.05);color:#ecd48f;border:1px solid rgba(201,162,74,.5);box-shadow:none}
+.topbar .ghost:hover{background:rgba(201,162,74,.16);color:#fff1c2}
+
+/* ---- การ์ดเนื้อหา ---- */
+.card{position:relative;background:linear-gradient(180deg,#fffdf9 0%,#faf6ec 100%);border:1px solid rgba(190,150,60,.42);border-radius:18px;
+  box-shadow:0 14px 40px rgba(0,0,0,.38),0 2px 0 rgba(255,255,255,.65) inset;transition:box-shadow .35s,transform .35s}
+.card::before{content:'';position:absolute;left:18px;right:18px;top:-1px;height:3px;border-radius:0 0 6px 6px;
+  background:linear-gradient(90deg,var(--water),var(--primary-l) 38%,var(--gold) 70%,var(--gold-l))}
+.card:hover{box-shadow:0 18px 48px rgba(0,0,0,.46),0 0 0 1px rgba(201,162,74,.25),0 2px 0 rgba(255,255,255,.65) inset}
+h2{font-family:var(--serif);font-weight:700;color:#0a5c49;letter-spacing:.2px}
+.card>h2::after{content:'';display:block;width:70px;height:2px;margin:9px auto 2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+h3{color:#0a5c49}
+.lcard,.mfdom{background:linear-gradient(180deg,#fffefb,#faf7ef);border:1px solid rgba(190,150,60,.3);box-shadow:0 2px 10px rgba(40,30,0,.06)}
+.box{background:#f5f2e8}.box.read{background:#fffefb}
+.confirm,.mfhero{background:linear-gradient(135deg,#f9f7ee,#f0ebdb);border:1px dashed rgba(190,150,60,.65)}
+.tip{background:#f8f4e6;border-left:3px solid var(--gold);color:#4a4130}
+.fix{background:linear-gradient(180deg,#f1f8f4,#e8f3ed);border-color:#bfdccc;border-left:4px solid var(--primary)}
+.fix>b,.fixhead{color:#0a5c49}
+.pillar{background:linear-gradient(180deg,#fffcf3,#f6eed8);border:2px solid var(--gold);box-shadow:0 3px 12px rgba(120,90,20,.12)}
+.pillar.main{border-color:var(--primary);background:linear-gradient(180deg,#f1faf6,#e0f1e9);box-shadow:0 3px 14px rgba(11,110,87,.18)}
+.pillar .cn{color:#0a5c49}
+.pillar .tag{color:#6b5a30}
+.chartwho{color:#6b5a30}
+th{background:linear-gradient(180deg,#eef4ef,#e2ece5);color:#0a5c49;border-color:rgba(190,150,60,.28)}
+th,td{border-color:rgba(190,150,60,.25)}
+.rtable tr{background:#fffefb}
+.bar{background:#e8e4d6}
+.hid{border-top:1px dashed rgba(190,150,60,.6)}
+.profilebar{border-bottom:1px dashed rgba(190,150,60,.6)}
+.fld label{color:#374253}
+.tmnote{background:#f4f1e6}
+.small{color:var(--muted)}
+
+/* ---- ช่องกรอก ---- */
+input,select{background:#fffefb;color:var(--ink);border:1px solid rgba(160,125,45,.45);transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus{outline:none;border-color:var(--primary-l);box-shadow:0 0 0 3px rgba(19,160,124,.22),0 0 0 1px rgba(201,162,74,.5)}
+input[readonly]{background:#f2efe4;color:#6b5a30}
+
+/* ---- ปุ่ม ---- */
+button{position:relative;overflow:hidden;background:linear-gradient(135deg,#0f8667 0%,#0a604c 55%,#08493a 100%);color:#f6e6b0;
+  border:1px solid rgba(214,177,92,.6);text-shadow:0 1px 0 rgba(0,0,0,.28);letter-spacing:.15px;
+  box-shadow:0 3px 10px rgba(4,40,30,.32),inset 0 1px 0 rgba(255,255,255,.16);transition:transform .15s,box-shadow .25s,filter .25s,background .25s}
+button::after{content:'';position:absolute;top:0;bottom:0;left:0;width:60%;pointer-events:none;
+  background:linear-gradient(105deg,transparent 20%,rgba(255,255,255,.32) 50%,transparent 80%);transform:translateX(-130%) skewX(-12deg);transition:transform .65s ease}
+button:hover{background:linear-gradient(135deg,#13a07c 0%,#0b6e57 55%,#09523f 100%);color:#fff3c9;
+  box-shadow:0 6px 20px rgba(201,162,74,.3),0 3px 10px rgba(4,40,30,.38),inset 0 1px 0 rgba(255,255,255,.22)}
+button:hover::after{transform:translateX(260%) skewX(-12deg)}
+button:active{transform:scale(.97)}
+button.ghost{background:linear-gradient(180deg,#fffdf7,#f1e9d3);color:#0b4f40;border:1px solid rgba(170,130,40,.6);text-shadow:none;box-shadow:0 2px 6px rgba(120,90,20,.14),inset 0 1px 0 #fff}
+button.ghost:hover{background:linear-gradient(180deg,#ffffff,#f7ecce);color:#06392d;border-color:#b8902f;box-shadow:0 5px 16px rgba(201,162,74,.3),inset 0 1px 0 #fff}
+/* ปุ่มหลัก (CTA) = ทองแชมเปญ */
+button.wide:not(.ghost){background:linear-gradient(135deg,#f6e19c 0%,#d9b55a 42%,#b08629 100%);color:#1b1404;border:1px solid #f0d98d;
+  text-shadow:0 1px 0 rgba(255,255,255,.4);font-weight:700;letter-spacing:.3px;box-shadow:0 5px 18px rgba(201,162,74,.38),inset 0 1px 0 rgba(255,255,255,.55)}
+button.wide:not(.ghost):hover{background:linear-gradient(135deg,#fbeaae 0%,#e5c26b 42%,#bd9230 100%);color:#120d02;box-shadow:0 8px 26px rgba(224,190,100,.5),inset 0 1px 0 rgba(255,255,255,.65)}
+.seg button{background:#fffefb;color:#2d3a4a;border:1.5px solid rgba(170,130,40,.42);text-shadow:none;box-shadow:none;letter-spacing:0}
+.seg button:hover{background:#f6f3e8;color:#1c2837;box-shadow:none}
+.seg button span{color:var(--muted)}
+.seg button.on{background:linear-gradient(135deg,#e6f5ee,#f5efd9);border-color:var(--primary);color:#0a4a3b;box-shadow:0 0 0 2px rgba(19,160,124,.2)}
+.seg button.on span{color:#2f6b5a}
+
+/* ---- แท็บหลัก ---- */
+.tbbar{background:linear-gradient(180deg,rgba(5,11,24,.94),rgba(5,11,24,.78));-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border:1px solid rgba(201,162,74,.3);border-radius:16px;padding:8px;margin:6px 0 14px;box-shadow:0 8px 26px rgba(0,0,0,.4)}
+.tbbar button{background:rgba(255,255,255,.04);color:#ead9a2;border:1px solid rgba(201,162,74,.22);box-shadow:none;text-shadow:none;letter-spacing:.2px}
+.tbbar button small{opacity:.78}
+.tbbar button:not(.on):hover{background:rgba(201,162,74,.14);color:#fff0bd;box-shadow:none}
+.tbbar button.on{background:linear-gradient(135deg,#0f8667,#09523f);color:#fff2c4;border-color:#e0bf6a;
+  box-shadow:0 0 0 1px rgba(224,191,106,.45),0 6px 20px rgba(19,160,124,.38),inset 0 1px 0 rgba(255,255,255,.22)}
+
+/* ---- ปฏิทิน/ดวงรายเดือน ---- */
+.mfc{background:#fffefb;border:1px solid rgba(190,150,60,.3);transition:transform .15s,box-shadow .2s}
+.mfc:not(.e):hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(40,30,0,.16)}
+.mfc.today{outline:2px solid var(--primary-l);box-shadow:0 0 0 4px rgba(19,160,124,.15)}
+.mfdom .tr{background:#eef2fa;color:#2d4470}
+.mfcal .h{color:#0a5c49}
+
+/* ---- ป้ายธาตุ (ใช้โทนมงคล: ไพลิน / หยก / ทองแชมเปญ) ---- */
+.bgไม้{background:#0d8a5f}.bgไฟ{background:#b4232c}.bgดิน{background:#a06a14}.bgทอง{background:#9a7a22}.bgน้ำ{background:#1e5fae}
+.badge{box-shadow:0 1px 3px rgba(0,0,0,.2)}
+
+/* ---- หน้าเข้าสู่ระบบ ---- */
+#gate{background:radial-gradient(1000px 640px at 50% -10%,rgba(19,160,124,.2),transparent 62%),radial-gradient(800px 520px at 90% 110%,rgba(42,109,181,.25),transparent 60%),rgba(4,9,20,.30)}
+.gatebox{background:linear-gradient(180deg,rgba(15,28,50,.93),rgba(7,15,30,.95));border:1px solid rgba(201,162,74,.5);color:#efe6c8;border-radius:22px;
+  box-shadow:0 34px 90px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.05) inset,0 0 70px rgba(201,162,74,.14)}
+.gatebox h2{font-family:var(--serif);color:#f3dc92;text-shadow:0 2px 16px rgba(201,162,74,.35)}
+.gatebox h2::after{content:'';display:block;width:80px;height:2px;margin:10px auto 0;background:linear-gradient(90deg,transparent,#2a6db5,#13a07c,#d9b85f,transparent)}
+.gatebox .small{color:rgba(238,226,190,.78)}
+.gatebox input{background:rgba(255,255,255,.07);color:#fff7dd;border:1px solid rgba(201,162,74,.42)}
+.gatebox input::placeholder{color:rgba(238,226,190,.5)}
+.gatebox input:focus{background:rgba(255,255,255,.11);border-color:#e0bf6a;box-shadow:0 0 0 3px rgba(224,191,106,.2)}
+.gatebox .tabs button.ghost{background:transparent;color:#d9c98f;border:1px solid rgba(201,162,74,.38);box-shadow:none}
+.gatebox .tabs button.ghost:hover{background:rgba(201,162,74,.14);color:#fff0bd}
+.gatebox .ok{color:#6ee7b7}.gatebox .err{color:#fca5a5}
+
+/* ---- อื่น ๆ ---- */
+.keyout{background:linear-gradient(135deg,#091527,#0d2338);color:#efd78f;border:1px solid rgba(201,162,74,.55);text-shadow:0 0 16px rgba(236,212,143,.5);box-shadow:inset 0 0 24px rgba(0,0,0,.4)}
+.toast{background:rgba(7,14,29,.96);color:#f6e6b0;border:1px solid rgba(201,162,74,.55);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#adminCard{border-color:rgba(19,160,124,.7)!important}
+@media(max-width:620px){#app>h1{font-size:22px}.card{border-radius:15px}}
+@media(prefers-reduced-motion:reduce){button::after{display:none}.card,.mfc,button{transition:none}}
+@media print{#lxBg{display:none!important}}
 </style>
 </head>
 <body oncontextmenu="return false" ondragstart="return false">
+<canvas id="lxBg" aria-hidden="true"></canvas>
 
 <div class="toast" id="toast"></div>
 
@@ -2499,5 +2634,154 @@ CHANGELOG (ดวงรายเดือน 8 ด้าน)
 - ข้อความเฉพาะบุคคล: เทียบพลังเดือนนี้กับโครงสร้างดวงเกิด (มี/ขาดดาวงาน ดาวเงิน ดาวคู่, ดิถีแกร่ง/อ่อน, ช่องคู่ครอง)
 - ปรับภาษาให้อ่านง่าย + ใส่คำอธิบายศัพท์
 -->
+<script id="lxBgScript">
+/* ============================================================
+   พื้นหลังโต้ตอบได้ (Canvas) — "แสงทองและหยกลอยกลางราตรี"
+   • ออโรร่า 3 ก้อน = น้ำ (ไพลิน) · ไม้ (หยก) · ทอง (แชมเปญ) ลอยช้า ๆ และเลื่อนตามเมาส์/นิ้ว
+   • ฝุ่นทอง/หยกลอยขึ้น มีเส้นเชื่อมเมื่ออยู่ใกล้กัน และถูกผลักหนีเมื่อเมาส์/นิ้วเข้าใกล้
+   • วงแหวนห้าธาตุ (木火土金水 + วัฏจักรเกื้อหนุน) หมุนช้ามาก เลื่อนตามการเลื่อนหน้า
+   ประหยัดแบตฯ: หยุดเมื่อซ่อนแท็บ · ลดจำนวนอนุภาคอัตโนมัติถ้าเครื่องช้า · เคารพ "ลดการเคลื่อนไหว" ของระบบ
+   ============================================================ */
+(function(){
+  'use strict';
+  const cv=document.getElementById('lxBg'); if(!cv||!cv.getContext)return;
+  const ctx=cv.getContext('2d',{alpha:false}); if(!ctx)return;
+  const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU=Math.PI*2;
+  const PAL=[[236,205,120],[236,205,120],[245,225,160],[30,190,150],[70,140,230],[235,235,225]];   // ทอง(เด่น) หยก ไพลิน ไข่มุก
+  let W=0,H=0,DPR=1,parts=[],ringCv=null,ringR=0,raf=0,running=false;
+  let targetN=0,scrollY=window.scrollY||0,last=performance.now(),acc=0,frames=0,slowMs=0;
+  const mouse={x:.62,y:.3,sx:.62,sy:.3,px:-9999,py:-9999,on:false};
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+
+  function glyphRing(){
+    const R=Math.round(Math.min(Math.max(Math.min(W,H)*.46,230),560));
+    ringR=R;
+    const c=document.createElement('canvas'),S=R*2+8;c.width=S;c.height=S;
+    const g=c.getContext('2d'),cx=S/2,cy=S/2;
+    g.translate(cx,cy);
+    const gold='rgba(232,200,120,';
+    // วงแหวนซ้อน
+    [[R,1.4,.9],[R*.93,0.8,.55],[R*.62,0.8,.5],[R*.28,0.8,.35]].forEach(([r,w,a])=>{g.beginPath();g.arc(0,0,r,0,TAU);g.lineWidth=w;g.strokeStyle=gold+a+')';g.stroke();});
+    // ขีดองศา 60 ขีด (เหมือนวงล้อโหราศาสตร์)
+    for(let i=0;i<60;i++){const a=i/60*TAU,l=i%5===0?R*.05:R*.022;g.beginPath();g.moveTo(Math.cos(a)*R*.93,Math.sin(a)*R*.93);g.lineTo(Math.cos(a)*(R*.93-l),Math.sin(a)*(R*.93-l));g.lineWidth=i%5===0?1.2:.7;g.strokeStyle=gold+(i%5===0?'.8':'.45')+')';g.stroke();}
+    // ห้าธาตุ: 木火土金水 เรียงตามวัฏจักรเกื้อหนุน และสีมงคล
+    const els=[['木','rgba(60,210,160,'],['火','rgba(240,120,110,'],['土','rgba(220,170,90,'],['金','rgba(245,225,160,'],['水','rgba(110,170,250,']];
+    const pts=els.map((e,i)=>{const a=-Math.PI/2+i*TAU/5;return {x:Math.cos(a)*R*.78,y:Math.sin(a)*R*.78,ch:e[0],col:e[1]};});
+    // ดาวห้าแฉก (ธาตุข่ม) จางมาก + ห้าเหลี่ยม (ธาตุเกื้อ) ชัดกว่า
+    g.lineWidth=.8;g.strokeStyle=gold+'.28)';
+    g.beginPath();[0,2,4,1,3,0].forEach((k,i)=>{const p=pts[k];i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y);});g.stroke();
+    g.lineWidth=1.1;g.strokeStyle=gold+'.55)';
+    g.beginPath();pts.forEach((p,i)=>{i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y);});g.closePath();g.stroke();
+    pts.forEach(p=>{
+      g.beginPath();g.arc(p.x,p.y,R*.07,0,TAU);g.fillStyle='rgba(6,13,27,.85)';g.fill();g.lineWidth=1.2;g.strokeStyle=p.col+'.85)';g.stroke();
+      g.fillStyle=p.col+'1)';g.font='700 '+Math.round(R*.075)+'px "Noto Serif TC","Noto Serif CJK TC","PingFang TC","Microsoft JhengHei",serif';
+      g.textAlign='center';g.textBaseline='middle';g.fillText(p.ch,p.x,p.y+1);
+    });
+    ringCv=c;
+  }
+  function seed(){
+    const area=W*H,mobile=W<700;
+    targetN=Math.round(Math.max(34,Math.min(mobile?58:112,area/(mobile?15000:14500))));
+    parts=[];for(let i=0;i<targetN;i++)parts.push(mk(true));
+  }
+  function mk(init){
+    const c=PAL[(Math.random()*PAL.length)|0];
+    return {x:rnd(0,W),y:init?rnd(0,H):H+rnd(5,60),vx:rnd(-.08,.08),vy:-rnd(.04,.2),r:rnd(.6,2.2),c,ph:rnd(0,TAU),tw:rnd(.6,1.8),z:rnd(.4,1)};
+  }
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=window.innerWidth;H=window.innerHeight;
+    cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    glyphRing();seed();draw(performance.now(),0);
+  }
+  function aurora(t){
+    // พื้นไล่เฉด
+    const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#050b18');bg.addColorStop(.55,'#081528');bg.addColorStop(1,'#06101f');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    const mx=(mouse.sx-.5)*60,my=(mouse.sy-.5)*40,s=t*.00007,R=Math.max(W,H);
+    const blobs=[
+      [.18+Math.sin(s*1.1)*.08,.22+Math.cos(s*.9)*.06,R*.55,'42,109,181',.30],   // น้ำ
+      [.82+Math.cos(s*.8)*.07,.40+Math.sin(s*1.2)*.08,R*.5,'19,160,124',.22],    // ไม้
+      [.50+Math.sin(s*.6)*.1,.88+Math.cos(s*.7)*.05,R*.5,'214,175,80',.16]       // ทอง
+    ];
+    blobs.forEach((b,i)=>{
+      const x=b[0]*W+mx*(i?-1:1)*.8,y=b[1]*H+my*(i%2?-1:1)*.8-(scrollY*.06*(i+1)%H);
+      const g=ctx.createRadialGradient(x,y,0,x,y,b[2]);
+      g.addColorStop(0,'rgba('+b[3]+','+b[4]+')');g.addColorStop(.5,'rgba('+b[3]+','+(b[4]*.35)+')');g.addColorStop(1,'rgba('+b[3]+',0)');
+      ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    });
+  }
+  function draw(t,dt){
+    // ลื่นไหลของตำแหน่งเมาส์
+    mouse.sx+=(mouse.x-mouse.sx)*.06;mouse.sy+=(mouse.y-mouse.sy)*.06;
+    aurora(t);
+    // วงแหวนห้าธาตุ
+    if(ringCv){
+      const cx=W*(W<800?.5:.64)+(mouse.sx-.5)*-28,cy=H*.44-Math.min(scrollY*.1,H*.3)+(mouse.sy-.5)*-18;
+      ctx.save();ctx.translate(cx,cy);ctx.rotate(t*.000018);ctx.globalAlpha=W<800?.2:.27;
+      ctx.drawImage(ringCv,-ringCv.width/2,-ringCv.height/2);ctx.restore();ctx.globalAlpha=1;
+    }
+    // แสงตามเมาส์
+    if(mouse.on){
+      const gx=mouse.sx*W,gy=mouse.sy*H,g=ctx.createRadialGradient(gx,gy,0,gx,gy,190);
+      g.addColorStop(0,'rgba(236,205,120,.13)');g.addColorStop(1,'rgba(236,205,120,0)');
+      ctx.fillStyle=g;ctx.fillRect(gx-190,gy-190,380,380);
+    }
+    // อนุภาค
+    const L=118,L2=L*L,px=mouse.px,py=mouse.py,rep=130,rep2=rep*rep,k=dt/16.7;
+    for(let i=0;i<parts.length;i++){
+      const p=parts[i];
+      p.ph+=.012*p.tw*k;
+      p.x+=(p.vx+Math.sin(p.ph)*.12)*p.z*k*(reduce?0:1);
+      p.y+=p.vy*p.z*k*(reduce?0:1);
+      const dx=p.x-px,dy=p.y-py,d2=dx*dx+dy*dy;
+      if(d2<rep2&&d2>1){const d=Math.sqrt(d2),f=(1-d/rep)*2.4;p.x+=dx/d*f*k;p.y+=dy/d*f*k;}
+      if(p.y<-12||p.x<-20||p.x>W+20){parts[i]=mk(false);if(p.y>=-12)parts[i].y=rnd(0,H);}
+    }
+    ctx.lineWidth=.6;
+    for(let i=0;i<parts.length;i++){
+      const a=parts[i];
+      for(let j=i+1;j<parts.length;j++){
+        const b=parts[j],dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy;
+        if(d2<L2){ctx.strokeStyle='rgba(222,190,105,'+((1-d2/L2)*.16)+')';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+      }
+    }
+    for(let i=0;i<parts.length;i++){
+      const p=parts[i],tw=.55+.45*Math.sin(p.ph*1.7),a=(.35+.55*p.z)*tw;
+      ctx.fillStyle='rgba('+p.c[0]+','+p.c[1]+','+p.c[2]+','+a+')';
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.z+.3,0,TAU);ctx.fill();
+      if(p.r>1.7){ctx.fillStyle='rgba('+p.c[0]+','+p.c[1]+','+p.c[2]+','+(a*.16)+')';ctx.beginPath();ctx.arc(p.x,p.y,p.r*4.2,0,TAU);ctx.fill();}
+    }
+  }
+  function loop(now){
+    if(!running)return;
+    const dt=Math.min(64,now-last);last=now;
+    draw(now,dt);
+    // ปรับตัวเองตามความแรงของเครื่อง: ถ้าเฟรมช้าต่อเนื่อง ลดอนุภาคลง
+    acc+=dt;frames++;
+    if(acc>=2000){const avg=acc/frames;acc=0;frames=0;
+      if(avg>26&&parts.length>26){parts.length=Math.max(26,Math.floor(parts.length*.75));}
+    }
+    raf=requestAnimationFrame(loop);
+  }
+  function start(){if(reduce||running||document.hidden)return;running=true;last=performance.now();raf=requestAnimationFrame(loop);}
+  function stop(){running=false;cancelAnimationFrame(raf);}
+  // เมาส์/นิ้ว
+  function move(e){
+    const x=e.clientX,y=e.clientY;
+    mouse.x=x/Math.max(1,W);mouse.y=y/Math.max(1,H);mouse.px=x;mouse.py=y;mouse.on=true;
+  }
+  window.addEventListener('pointermove',move,{passive:true});
+  window.addEventListener('pointerdown',move,{passive:true});
+  window.addEventListener('pointerup',e=>{if(e.pointerType==='touch'){mouse.px=-9999;mouse.py=-9999;}},{passive:true});
+  document.addEventListener('mouseleave',()=>{mouse.px=-9999;mouse.py=-9999;mouse.on=false;});
+  window.addEventListener('scroll',()=>{scrollY=window.scrollY||0;if(reduce&&!running)draw(performance.now(),0);},{passive:true});
+  let rt=0;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{resize();},150);});
+  document.addEventListener('visibilitychange',()=>{document.hidden?stop():start();});
+  resize();start();
+})();
+</script>
 </body>
 </html>

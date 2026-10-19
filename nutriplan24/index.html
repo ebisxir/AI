@@ -453,8 +453,10 @@ body.isadmin .adminonly{display:block!important}
     </div>
     <div class="sec">
       <div class="st">รายชื่อที่ออกรหัสไปแล้ว</div>
+      <div id="kbar" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px"></div>
       <div id="klist"></div>
       <div class="note">🔑 รีเซ็ตรหัสใหม่ (รหัสเดิมและเซสชันที่ค้างอยู่ใช้ไม่ได้ทันที) · ⏸ ระงับ/▶ เปิดใช้บัญชี · ✕ ลบบัญชีและข้อมูลถาวร · ระบบล็อกชั่วคราว 15 นาทีเมื่อกรอกรหัสผิดครบ 5 ครั้ง</div>
+      <div class="note">⏱️ “เข้าใช้ล่าสุด” = ครั้งล่าสุดที่ผู้ใช้ล็อกอินด้วยรหัส หรือเปิดแอปด้วยการเข้าสู่ระบบที่ค้างไว้ (ระบบจำการเข้าสู่ระบบ 30 วัน จึงนับทั้งสองแบบ) · บัญชีที่ยังไม่เคยเข้าหลังอัปเดตระบบจะแสดงเวลาที่บันทึกข้อมูลผู้รับแผนครั้งล่าสุดแทน · กดปุ่ม “เรียง” เพื่อให้คนที่ไม่ได้ใช้นานที่สุดขึ้นก่อน</div>
     </div>
   </div>
 </div>
@@ -742,19 +744,48 @@ function copyInvite(){
     ()=>{gerr.innerHTML='<span style="color:var(--acc)">คัดลอกข้อความเรียบร้อยแล้ว</span>';},
     ()=>{gerr.innerHTML='<span style="color:var(--warn)">คัดลอกไม่สำเร็จ ให้จดรหัสเอง</span>';});
 }
+/* ---------- เข้าใช้ล่าสุดของแต่ละบัญชี (ไว้ตัดสินใจลบคนที่ไม่ค่อยใช้งาน) ---------- */
+const INACTIVE_DAYS=30;      /* ไม่เข้าใช้เกินกี่วันถึงติดป้ายเตือน */
+let KSORT='created';         /* created = ตามวันที่ออกรหัส · last = ไม่ได้ใช้นานสุดก่อน */
+function agoTxt(ms){
+  const m=Math.floor(ms/60000);
+  if(m<1) return 'เมื่อสักครู่';
+  if(m<60) return m+' นาทีที่แล้ว';
+  const hh=Math.floor(m/60); if(hh<24) return hh+' ชั่วโมงที่แล้ว';
+  const d=Math.floor(hh/24); if(d<60) return d+' วันที่แล้ว';
+  return Math.floor(d/30.4)+' เดือนที่แล้ว';
+}
+function lastSeenInfo(x){
+  const t=x&&x.last_seen?new Date(x.last_seen).getTime():NaN;
+  if(isNaN(t)) return {days:null,inactive:true,plain:'ยังไม่มีบันทึกการเข้าใช้',line:'⏱️ ยังไม่มีบันทึกการเข้าใช้',badge:'<span class="pill p-warn">ไม่มีบันทึกเข้าใช้</span>'};
+  const ms=Math.max(0,Date.now()-t), days=Math.floor(ms/864e5);
+  const plain=fmtHT(x.last_seen)+' ('+agoTxt(ms)+')';
+  const badge=days>=90?`<span class="pill p-dan">ไม่ได้ใช้ ${days} วัน</span>`:days>=INACTIVE_DAYS?`<span class="pill p-warn">ไม่ได้ใช้ ${days} วัน</span>`:'';
+  return {days,inactive:days>=INACTIVE_DAYS,plain,line:'⏱️ เข้าใช้ล่าสุด '+plain,badge};
+}
+function toggleKSort(){ KSORT=KSORT==='last'?'created':'last'; renderKeyList(); }
 async function renderKeyList(){
   const el=document.getElementById('klist'); if(!el) return;
   try{
     const l=await rpc('np_admin_list',{p_token:TOKEN});
-    KLIST=Array.isArray(l)?l:[];
+    KLIST=Array.isArray(l)?l.slice():[];
   }catch(e){ el.innerHTML=`<div class="note" style="color:var(--dan)">โหลดรายชื่อไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
-  el.innerHTML=KLIST.length?KLIST.map((x,i)=>
-    `<div class="urow"><div class="uc"><b>${esc(x.name)}</b>
-        ${x.active?'':' <span class="pill p-warn">ระงับ</span>'}${x.locked?' <span class="pill p-dan">ล็อกชั่วคราว</span>':''}
-        <small>ออกเมื่อ ${esc(String(x.created||'').slice(0,10))}</small></div>
+  if(KSORT==='last') KLIST.sort((a,b)=>(a.last_seen?new Date(a.last_seen).getTime():-1)-(b.last_seen?new Date(b.last_seen).getTime():-1));
+  const bar=document.getElementById('kbar');
+  if(bar){
+    const n=KLIST.filter(x=>lastSeenInfo(x).inactive).length;
+    bar.innerHTML=KLIST.length?`<button type="button" class="btn2" style="margin:0;width:auto;padding:7px 12px" onclick="toggleKSort()">↕️ เรียง: ${KSORT==='last'?'ไม่ได้ใช้นานสุดก่อน':'วันที่ออกรหัส'}</button>
+      <span class="note" style="margin:0">ไม่ได้เข้าใช้เกิน ${INACTIVE_DAYS} วัน (หรือไม่มีบันทึก): <b>${n}</b> จาก ${KLIST.length} บัญชี</span>`:'';
+  }
+  el.innerHTML=KLIST.length?KLIST.map((x,i)=>{
+    const ls=lastSeenInfo(x);
+    return `<div class="urow"><div class="uc"><b>${esc(x.name)}</b>
+        ${x.active?'':' <span class="pill p-warn">ระงับ</span>'}${x.locked?' <span class="pill p-dan">ล็อกชั่วคราว</span>':''} ${ls.badge}
+        <small>ออกเมื่อ ${esc(String(x.created||'').slice(0,10))}</small>
+        <small>${esc(ls.line)}</small></div>
       <button type="button" class="sdel" style="background:var(--card2);color:var(--txt);border-color:var(--line)" title="รีเซ็ตรหัสใหม่" onclick="resetKey(${i})">🔑</button>
       <button type="button" class="sdel" style="background:var(--card2);color:var(--txt);border-color:var(--line)" title="${x.active?'ระงับบัญชี':'เปิดใช้บัญชี'}" onclick="toggleUser(${i})">${x.active?'⏸':'▶'}</button>
-      <button type="button" class="sdel" title="ลบถาวร" onclick="delUser(${i})">✕</button></div>`).join('')
+      <button type="button" class="sdel" title="ลบถาวร" onclick="delUser(${i})">✕</button></div>`;}).join('')
     :'<div class="note">ยังไม่มีรายชื่อที่ออกรหัส</div>';
 }
 async function resetKey(i){
@@ -779,7 +810,7 @@ async function toggleUser(i){
 }
 async function delUser(i){
   const x=KLIST[i]; if(!x) return;
-  if(!confirm('ลบบัญชี "'+x.name+'" ถาวร พร้อมข้อมูลผู้รับแผนทั้งหมดของบัญชีนี้? ย้อนกลับไม่ได้')) return;
+  if(!confirm('ลบบัญชี "'+x.name+'" ถาวร พร้อมข้อมูลผู้รับแผนและประวัติทั้งหมดของบัญชีนี้?\nเข้าใช้ล่าสุด: '+lastSeenInfo(x).plain+'\nย้อนกลับไม่ได้')) return;
   try{
     const r=await rpc('np_admin_delete_user',{p_token:TOKEN,p_user:x.name});
     if(!r||!r.ok){ gerr.innerHTML=`<span style="color:var(--dan)">${esc(adminMsg(r))}</span>`; return; }

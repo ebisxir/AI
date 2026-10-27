@@ -182,13 +182,12 @@ body.isadmin .adminonly{display:block!important}
   body.pcompact .tl,body.pcompact .elrow{padding:5px 0;font-size:8pt}
   body.pcompact .tl b,body.pcompact .elrow b{min-width:95px;font-size:7.5pt}
 }
-.pdfdoc{width:760px;background:#fff;color:#111;padding:6px;font-family:'Segoe UI','Sarabun',system-ui,sans-serif;--line:#ccc;--mut:#555;--txt:#111}
-.pdfdoc .pdfhead{margin-bottom:10px;page-break-after:always;break-after:page}
+.pdfdoc{width:100%;background:#fff;color:#111;padding:6px;font-family:'Segoe UI','Sarabun',system-ui,sans-serif;--line:#ccc;--mut:#555;--txt:#111}
+.pdfdoc .pdfhead{margin-bottom:10px}
 .pdfdoc .pdft{font-size:24px;font-weight:700;margin-bottom:4px}
 .pdfdoc .pdfs{font-size:13px;color:#333;margin-bottom:3px}
 .pdfdoc .card{background:#fff;border:1px solid #bbb;border-radius:8px;padding:12px;margin:10px 0 0;color:#111}
 .pdfdoc .card h2 i,.pdfdoc .dayttl i{background:#111}
-.pdfdoc .dayblock+.dayblock{page-break-before:always;break-before:page}
 .pdfdoc .meal{background:#fff;border:1px solid #bbb;padding:9px 11px;margin-bottom:8px;page-break-inside:avoid;break-inside:avoid}
 .pdfdoc .stat{gap:8px;margin-bottom:10px;grid-template-columns:repeat(4,1fr)}
 .pdfdoc .stat div{background:#f5f6f8;border:1px solid #ccc;padding:8px}
@@ -2275,19 +2274,66 @@ async function pdfShareAgain(){
   try{ await navigator.share({files:[PDFFILE],title:'NutriPlan 24'}); pdfMsg('✅ เปิดหน้าส่งแล้ว — เลือก LINE แล้วเลือกแชทที่ต้องการ'); }
   catch(e){ if(e&&e.name==='AbortError') pdfMsg(pdfBtns('ยกเลิกการส่ง ')); else pdfMsg(pdfBtns('เปิดหน้าแชร์ไม่สำเร็จ ลองดาวน์โหลดแล้วแนบใน LINE เอง ')); }
 }
-function buildPdfNode(scope){
+/* PDF: แยกเป็นบล็อก (ส่วนหัว+อาหารเสริม, แต่ละวัน) เรนเดอร์ทีละบล็อก แล้วจัดลงหน้า A4 เอง
+   บล็อกไม่ถูกตัดกลางมื้อ · ถ้าบล็อกเดียวสูงเกินหน้า จะย่อให้พอดี */
+function buildPdfBlocks(scope){
   const c=CFG, idx=scope==='all'?DAYS.map((_,i)=>i):[CURDAY];
-  const root=document.createElement('div'); root.className='pdfdoc';
-  let h=`<div class="pdfhead"><div class="pdft">🥗 NutriPlan 24</div>
+  const mk=html=>{
+    const r=document.createElement('div'); r.className='pdfdoc'; r.innerHTML=html;
+    r.querySelectorAll('.dhide').forEach(e=>e.classList.remove('dhide'));
+    r.querySelectorAll('.noprint,.mbtn,.box').forEach(e=>e.remove());
+    r.querySelectorAll('.pbreak').forEach(e=>e.classList.remove('pbreak'));
+    return r;
+  };
+  const blocks=[mk(`<div class="pdfhead"><div class="pdft">🥗 NutriPlan 24</div>
     <div class="pdfs">ผู้รับแผน: <b>${esc(c.who)}</b> · Week ${c.week} · Period ${c.per.id} ${esc(c.per.name)}</div>
     <div class="pdfs">เป้าหมาย ${c.kcal} kcal · โปรตีนขั้นต่ำ ${c.prot} ก./วัน · คาร์บรวมไม่เกิน ${r0(c.carbG)} ก. · ${c.slots.length} มื้อ/วัน</div>
-    ${suppTable()}</div>`;
-  idx.forEach(i=>{ h+=dayBlock(DAYS[i],i); });
-  root.innerHTML=h;
-  root.querySelectorAll('.dhide').forEach(e=>e.classList.remove('dhide'));
-  root.querySelectorAll('.noprint,.mbtn,.box').forEach(e=>e.remove());
-  root.querySelectorAll('.pbreak').forEach(e=>e.classList.remove('pbreak'));
-  return root;
+    ${suppTable()}</div>`)];
+  idx.forEach(i=>blocks.push(mk(dayBlock(DAYS[i],i))));
+  return blocks;
+}
+async function buildPdfBlob(scope,opt){
+  const blocks=buildPdfBlocks(scope);
+  let ratio=279/194, inner={width:194};
+  try{
+    const ps=await html2pdf().set(opt).get('pageSize');
+    if(ps&&ps.inner&&ps.inner.ratio>0){ ratio=ps.inner.ratio; inner=ps.inner; }
+  }catch(e){}
+  /* เรนเดอร์ทีละบล็อก (เลื่อนหน้าไปบนสุดชั่วคราว กันภาพเพี้ยนเมื่อเลื่อนหน้าอยู่) */
+  const sy=window.scrollY||0, sx=window.scrollX||0;
+  window.scrollTo(0,0);
+  const canv=[];
+  try{
+    for(let i=0;i<blocks.length;i++){
+      pdfMsg(`⏳ กำลังสร้างไฟล์ PDF… (${i+1}/${blocks.length})`);
+      canv.push(await html2pdf().set(opt).from(blocks[i]).toCanvas().get('canvas'));
+    }
+  }finally{ window.scrollTo(sx,sy); }
+  /* จัดบล็อกลงหน้า: ไม่พอที่เหลือ → ขึ้นหน้าใหม่ */
+  const cw=canv[0].width, ph=Math.floor(cw*ratio);
+  const sc=(opt.html2canvas&&opt.html2canvas.scale)||1;
+  const gap=Math.round(12*sc), avail=ph-Math.round(cw*0.015);
+  const pages=[]; let g=null, y=0;
+  const newPage=()=>{
+    const p=document.createElement('canvas'); p.width=cw; p.height=ph;
+    g=p.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,cw,ph);
+    pages.push(p); y=0;
+  };
+  canv.forEach(c=>{
+    const f=cw/c.width;
+    let dw=c.width*f, dh=c.height*f;
+    if(dh>avail){ const s=avail/dh; dw*=s; dh*=s; }
+    if(!g||(y>0&&y+dh>avail)) newPage();
+    g.drawImage(c,(cw-dw)/2,y,dw,dh);
+    y+=dh+gap;
+  });
+  const m=opt.margin, q=(opt.image&&opt.image.quality)||0.92;
+  const pdf=await html2pdf().set(opt).from(pages[0],'canvas').toPdf().get('pdf');
+  for(let i=1;i<pages.length;i++){
+    pdf.addPage();
+    pdf.addImage(pages[i].toDataURL('image/jpeg',q),'JPEG',m[1],m[0],inner.width,inner.width*pages[i].height/pages[i].width);
+  }
+  return pdf.output('blob');
 }
 async function sharePdfLine(forceScope){
   if(!DAYS.length) run();
@@ -2302,10 +2348,10 @@ async function sharePdfLine(forceScope){
     const who=String(CFG.who||'plan').replace(/[\\\/:*?"<>|\s]+/g,'_').slice(0,30);
     const name=`NutriPlan24_${who}_W${CFG.week}${scope==='all'?'_7days':`_${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}`}.pdf`;
     const opt={margin:[8,8,10,8],filename:name,image:{type:'jpeg',quality:0.92},
-      html2canvas:{scale:1.6,useCORS:true,backgroundColor:'#ffffff',logging:false},
+      html2canvas:{scale:1.5,useCORS:true,backgroundColor:'#ffffff',logging:false,windowWidth:1100},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-      pagebreak:{mode:['css','legacy'],avoid:['.meal','.tl','.stat']}};
-    const blob=await html2pdf().set(opt).from(buildPdfNode(scope)).outputPdf('blob');
+      pagebreak:{mode:[]}};
+    const blob=await buildPdfBlob(scope,opt);
     PDFFILE=new File([blob],name,{type:'application/pdf'});
     if(navigator.canShare&&navigator.canShare({files:[PDFFILE]})){
       try{

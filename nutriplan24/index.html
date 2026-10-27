@@ -1629,29 +1629,50 @@ function allocScoops(blends){
   });
   return out;
 }
-/* เติมโปรตีนก่อนอาหาร: เพิ่มช้อนจากชนิดที่ผู้ใช้เลือก จนถึงเป้าโปรตีนของมื้อ
-   ไม่เกินกฎจำนวนช้อน และไม่ทำให้พลังงานเกินเป้ามื้อเกิน 8% */
+/* เลือกจำนวนช้อนโปรตีนของมื้อเชก (บอดี้คีย์ + โปรตีนผง)
+   · เปิดเติมอัตโนมัติ: ลองทุกชุดช้อนที่ถูกกฎ จากชนิดโปรตีนที่เลือกไว้ในข้อ 1.5 (เพิ่ม ลด หรือสลับออลแพลนท์ ↔ รสชาติได้)
+     เลือกชุดที่ไม่ทำให้พลังงานเกินเป้ามื้อ (+8%) ก่อน แล้วให้โปรตีนถึงเป้า และเปลี่ยนจากที่กรอกไว้น้อยที่สุด
+   · ปิดเติมอัตโนมัติ: ใช้จำนวนช้อนตามที่กรอกเท่านั้น
+   กฎจำนวนช้อน: รวม ≤3 · ออลแพลนท์ล้วน ≤2 · รสชาติล้วนรวม ≤3 · ผสม = ออลแพลนท์ ≤1 + รสชาติรวม ≤2 */
+function scoopRuleOK(ap,fl){
+  if(ap+fl>3) return false;
+  if(ap>0&&fl>0) return ap<=1&&fl<=2;
+  return ap>0?ap<=2:fl<=3;
+}
+function chosenTypes(){
+  const t=[];
+  [1,2,3].forEach(i=>{ const v=document.getElementById('pt'+i).value; if(v&&PRODS[v]&&!t.includes(v)) t.push(v); });
+  return t;
+}
 function proteinFill(blends,tK,tP,baseK,baseP){
-  let a=allocScoops(blends);
-  if(!document.getElementById('autop').checked||!blends.length) return a;
-  const tot=x=>x.reduce((s,b)=>s+b.q,0);
-  const types=[...new Set(blends.map(b=>b.type))].sort((x,y)=>PRODS[y].p-PRODS[x].p);
-  for(let g=0;g<3;g++){
-    const K=baseK+a.reduce((s,b)=>s+b.kcal*b.q,0);
-    const P=baseP+a.reduce((s,b)=>s+b.p*b.q,0);
-    if(P>=tP) break;
-    let added=false;
-    for(const t of types){
-      if(K+PRODS[t].kcal>tK*(1+KTOL*0.8)) continue;
-      const trial=a.map(b=>({...b}));
-      const ex=trial.find(b=>b.type===t);
-      if(ex) ex.q++; else trial.push({type:t,...PRODS[t],q:1});
-      const a2=allocScoops(trial);
-      if(tot(a2)>tot(a)){ a=a2; added=true; break; }
+  const base=allocScoops(blends);
+  if(!document.getElementById('autop').checked||!blends.length) return base;
+  const types=chosenTypes(); if(!types.length) return base;
+  const want={}; base.forEach(b=>{ want[b.type]=b.q; });
+  const limit=tK*(1+KTOL*0.8);
+  let best=null;
+  const qs=new Array(types.length).fill(0);
+  (function rec(i){
+    if(i===types.length){
+      let ap=0,fl=0,K=baseK,P=baseP,dev=0,n=0;
+      types.forEach((t,j)=>{
+        const q=qs[j]; n+=q;
+        if(t==='allplant') ap+=q; else fl+=q;
+        K+=PRODS[t].kcal*q; P+=PRODS[t].p*q; dev+=Math.abs(q-(want[t]||0));
+      });
+      if(!scoopRuleOK(ap,fl)) return;
+      if(baseK===0&&n===0) return;                  /* มื้อที่ไม่มีบอดี้คีย์ ต้องมีโปรตีนผงอย่างน้อย 1 ช้อน */
+      const sc=Math.max(0,K-limit)*1000               /* พลังงานเกินเป้า: ตัดทิ้งก่อน */
+        +Math.max(0,tP-P)*30                          /* โปรตีนต่ำกว่าเป้ามื้อ */
+        +dev*15                                       /* เปลี่ยนจากที่กรอกไว้ให้น้อยที่สุด */
+        +Math.abs(K-tK)*0.05-P*0.3+(n===0?20:0);
+      if(!best||sc<best.sc) best={sc,qs:qs.slice()};
+      return;
     }
-    if(!added) break;
-  }
-  return a;
+    for(let q=0;q<=3;q++){ qs[i]=q; rec(i+1); }
+  })(0);
+  if(!best) return base;
+  return types.map((t,j)=>best.qs[j]>0?{type:t,...PRODS[t],q:best.qs[j]}:null).filter(Boolean);
 }
 /* มื้อสาย/บ่าย: ตัวเลือกจำนวนโปรตีนผง 0,1,2,3 ช้อน (เพิ่มทีละช้อนจากชนิดที่โปรตีนสูงสุดที่เลือกไว้ในข้อ 1.5 · ไม่เกินกฎจำนวนช้อน · พลังงานไม่เกินเป้ามื้อเกิน 8%)
    planDay จะลองทุกตัวเลือกร่วมกับของว่าง แล้วเลือกชุดที่ทั้งมื้อพอดีเป้ามากที่สุด */
@@ -1688,7 +1709,7 @@ function blendSummary(){
     🥤 ตั้งต้นต่อมื้อเชก: ${esc(a.map(x=>x.n.replace('โปรตีน','')+' '+x.q+' ช้อน').join(' + ')||'—')}
     <span class="pill p-blue">${r0(K)} kcal</span> <span class="pill p-acc">โปรตีน ${r1(P)} ก.</span> <span class="pill p-pur">คาร์บ ${r1(C)} ก.</span>${cut?' <span class="pill p-warn">ถูกตัดตามกฎจำนวนช้อน</span>':''}<br>
     🎯 พลังงานรายมื้อต้องคลาดเคลื่อนไม่เกิน ±10% — ถ้าอาหารปกติเติมแล้วไม่พอดี ระบบใช้ไข่ต้ม/ขนมปังโฮลวีตเสริมให้พอดี<br>
-    ${document.getElementById('autop').checked?'⚡ ถ้ามื้อยังไม่ถึงเป้าโปรตีน ระบบจะเติมช้อนจากชนิดที่เลือกก่อน แล้วจึงเติมอาหารปกติ':'✋ ใช้จำนวนช้อนตามที่กรอกเท่านั้น'}<br>
+    ${document.getElementById('autop').checked?'⚡ ระบบปรับจำนวนช้อนให้เอง (เพิ่ม/ลด/สลับออลแพลนท์ ↔ รสชาติ จากชนิดที่เลือก) ให้พลังงานไม่เกินเป้ามื้อและโปรตีนถึงเป้า แล้วจึงเติมอาหารปกติ':'✋ ใช้จำนวนช้อนตามที่กรอกเท่านั้น'}<br>
     <span style="font-size:10.5px">กฎ: สูงสุด 3 ช้อน/มื้อ · ออลแพลนท์ล้วน ≤2 · รสชาติล้วนรวม ≤3 · ผสมกัน = ออลแพลนท์ 1 + รสชาติรวม 2</span>`;
 }
 
@@ -2468,13 +2489,14 @@ function shakeFitWarn(){
   if(per.mode==='bk2'){ baseMap['เช้า']='bk'; baseMap['เย็น']='bk'; }
   else if(per.mode==='bk1'){ baseMap['เช้า']='bk'; baseMap['เย็น']='flav'; }
   else { baseMap[breakslot.value]='flav'; }
-  const sc=allocScoops(readBlends());
-  const sK=sc.reduce((a,b)=>a+b.kcal*b.q,0);
+  const bl=readBlends();
   const out=[];
   slots.forEach(s=>{
     const mode=baseMap[s]; if(!mode) return;
     const tK=+((document.getElementById('k_'+s)||{}).value||0); if(!(tK>0)) return;
-    const K=(mode==='bk'?PRODS.bodykey.kcal:0)+sK;
+    const tP=+((document.getElementById('p_'+s)||{}).value||0);
+    const bK=mode==='bk'?PRODS.bodykey.kcal:0, bP=mode==='bk'?PRODS.bodykey.p:0;
+    const K=bK+proteinFill(bl,tK,tP,bK,bP).reduce((a,b)=>a+b.kcal*b.q,0);
     const e=(K-tK)/tK;
     if(e>KTOL+0.0005) out.push(`มื้อ${SLOTTH[s]||s}: ${mode==='bk'?'บอดี้คีย์ + โปรตีน':'โปรตีน'} ≈ ${r0(K)} kcal เกินเป้ามื้อ ${tK} kcal (+${Math.round(e*100)}%)`);
   });

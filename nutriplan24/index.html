@@ -2265,18 +2265,24 @@ function copyLine(){
 function shareLine(){ window.open('https://line.me/R/msg/text/?'+encodeURIComponent(document.getElementById('ltext').value),'_blank'); }
 
 /* ================= ส่ง PDF ผ่าน LINE =================
-   สร้าง PDF ในเบราว์เซอร์ (html2pdf.js โหลดจาก cdnjs ตอนกดครั้งแรก) แล้วเปิดหน้าแชร์ของเครื่อง (Web Share) ให้เลือก LINE
+   สร้าง PDF ในเบราว์เซอร์ (html2canvas + jsPDF โหลดจาก cdnjs ตอนกดครั้งแรก) แล้วเปิดหน้าแชร์ของเครื่อง (Web Share) ให้เลือก LINE
    ถ้าเครื่อง/เบราว์เซอร์ไม่รองรับการแชร์ไฟล์ (เช่นคอมพิวเตอร์) จะดาวน์โหลดไฟล์ให้ แล้วแนบในแชท LINE เอง
    (LINE ไม่มีลิงก์ที่แนบไฟล์ให้อัตโนมัติจากหน้าเว็บ) */
 let PDFFILE=null;
-const H2P_URL='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-function loadH2P(){
-  if(window.html2pdf) return Promise.resolve();
+const H2C_URL='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+const JSPDF_URL='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+function loadScript(u){
   return new Promise((ok,ng)=>{
-    const sc=document.createElement('script'); sc.src=H2P_URL; sc.onload=ok;
+    const sc=document.createElement('script'); sc.src=u; sc.onload=ok;
     sc.onerror=()=>ng(new Error('โหลดตัวสร้าง PDF ไม่สำเร็จ — ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'));
     document.head.appendChild(sc);
   });
+}
+function loadH2P(){
+  const l=[];
+  if(!window.html2canvas) l.push(loadScript(H2C_URL));
+  if(!(window.jspdf&&window.jspdf.jsPDF)) l.push(loadScript(JSPDF_URL));
+  return Promise.all(l);
 }
 function pdfMsg(h){ ['lnote','pdfst'].forEach(id=>{const e=document.getElementById(id); if(e) e.innerHTML=h;}); }
 function pdfBtns(msg){
@@ -2313,47 +2319,56 @@ function buildPdfBlocks(scope){
   idx.forEach(i=>blocks.push(mk(dayBlock(DAYS[i],i))));
   return blocks;
 }
+/* เรนเดอร์บล็อกด้วย html2canvas โดยตรง ที่ความกว้างคงที่ 760px (ไม่ขึ้นกับหน้าจอ/มือถือ) */
+const PDF_W=760;
+async function renderPdfBlock(el,scale){
+  const holder=document.createElement('div');
+  holder.style.cssText='position:absolute;left:0;top:0;width:'+PDF_W+'px;z-index:-1;pointer-events:none;background:#fff';
+  holder.appendChild(el); document.body.appendChild(holder);
+  try{
+    if(document.fonts&&document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} }
+    return await html2canvas(holder,{scale,useCORS:true,backgroundColor:'#ffffff',logging:false,width:PDF_W,windowWidth:PDF_W+40});
+  }finally{ holder.remove(); }
+}
+/* สร้าง PDF แนวตั้ง A4 (portrait) ด้วย jsPDF: จัดบล็อกลงหน้าเอง ไม่ตัดกลางมื้อ · บล็อกเดียวสูงเกินหน้าจะย่อให้พอดี */
 async function buildPdfBlob(scope,opt){
   const blocks=buildPdfBlocks(scope);
-  let ratio=279/194, inner={width:194};
-  try{
-    const ps=await html2pdf().set(opt).get('pageSize');
-    if(ps&&ps.inner&&ps.inner.ratio>0){ ratio=ps.inner.ratio; inner=ps.inner; }
-  }catch(e){}
-  /* เรนเดอร์ทีละบล็อก (เลื่อนหน้าไปบนสุดชั่วคราว กันภาพเพี้ยนเมื่อเลื่อนหน้าอยู่) */
+  const m=opt.margin, scale=opt.scale, q=opt.quality;
+  const PW=210, PH=297, iw=PW-m[1]-m[3], ih=PH-m[0]-m[2];
+  const jsPDF=window.jspdf.jsPDF;
+  const pdf=new jsPDF({unit:'mm',format:'a4',orientation:'portrait'});
   const sy=window.scrollY||0, sx=window.scrollX||0;
   window.scrollTo(0,0);
   const canv=[];
   try{
     for(let i=0;i<blocks.length;i++){
       pdfMsg(`⏳ กำลังสร้างไฟล์ PDF… (${i+1}/${blocks.length})`);
-      canv.push(await html2pdf().set(opt).from(blocks[i]).toCanvas().get('canvas'));
+      canv.push(await renderPdfBlock(blocks[i],scale));
     }
   }finally{ window.scrollTo(sx,sy); }
-  /* จัดบล็อกลงหน้า: ไม่พอที่เหลือ → ขึ้นหน้าใหม่ */
-  const cw=canv[0].width, ph=Math.floor(cw*ratio);
-  const sc=(opt.html2canvas&&opt.html2canvas.scale)||1;
-  const gap=Math.round(12*sc), avail=ph-Math.round(cw*0.015);
-  const pages=[]; let g=null, y=0;
+  const cw=canv[0].width, ph=Math.floor(cw*ih/iw);
+  const gap=Math.round(12*scale), avail=ph-Math.round(cw*0.015);
+  let cur=null, g=null, y=0, n=0;
+  const flush=()=>{
+    if(!cur) return;
+    if(n>0) pdf.addPage('a4','portrait');
+    pdf.addImage(cur.toDataURL('image/jpeg',q),'JPEG',m[1],m[0],iw,iw*cur.height/cur.width);
+    n++; cur=null; g=null;
+  };
   const newPage=()=>{
-    const p=document.createElement('canvas'); p.width=cw; p.height=ph;
-    g=p.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,cw,ph);
-    pages.push(p); y=0;
+    flush();
+    cur=document.createElement('canvas'); cur.width=cw; cur.height=ph;
+    g=cur.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,cw,ph); y=0;
   };
   canv.forEach(c=>{
     const f=cw/c.width;
     let dw=c.width*f, dh=c.height*f;
     if(dh>avail){ const s=avail/dh; dw*=s; dh*=s; }
-    if(!g||(y>0&&y+dh>avail)) newPage();
+    if(!cur||(y>0&&y+dh>avail)) newPage();
     g.drawImage(c,(cw-dw)/2,y,dw,dh);
     y+=dh+gap;
   });
-  const m=opt.margin, q=(opt.image&&opt.image.quality)||0.92;
-  const pdf=await html2pdf().set(opt).from(pages[0],'canvas').toPdf().get('pdf');
-  for(let i=1;i<pages.length;i++){
-    pdf.addPage();
-    pdf.addImage(pages[i].toDataURL('image/jpeg',q),'JPEG',m[1],m[0],inner.width,inner.width*pages[i].height/pages[i].width);
-  }
+  flush();
   return pdf.output('blob');
 }
 async function sharePdfLine(forceScope){
@@ -2368,10 +2383,7 @@ async function sharePdfLine(forceScope){
     const dt=addDay(CFG.start,CURDAY), pad=n=>String(n).padStart(2,'0');
     const who=String(CFG.who||'plan').replace(/[\\\/:*?"<>|\s]+/g,'_').slice(0,30);
     const name=`NutriPlan24_${who}_W${CFG.week}${scope==='all'?'_7days':`_${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}`}.pdf`;
-    const opt={margin:[8,8,10,8],filename:name,image:{type:'jpeg',quality:0.92},
-      html2canvas:{scale:1.5,useCORS:true,backgroundColor:'#ffffff',logging:false,windowWidth:1100},
-      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-      pagebreak:{mode:[]}};
+    const opt={margin:[8,8,10,8],scale:1.5,quality:0.92};
     const blob=await buildPdfBlob(scope,opt);
     PDFFILE=new File([blob],name,{type:'application/pdf'});
     if(navigator.canShare&&navigator.canShare({files:[PDFFILE]})){

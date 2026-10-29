@@ -207,6 +207,18 @@ body.isadmin .adminonly{display:block!important}
 .hclick:hover{background:rgba(56,189,248,.07)}
 .hchev{color:var(--acc2);width:14px;flex:none;font-size:12px}
 .hdet{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px;margin:4px 0 8px;font-size:12.5px}
+.rowb{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.rowb .full{grid-column:1/-1}
+.rowb label{margin:10px 0 6px}
+input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:var(--acc);font-weight:800;cursor:not-allowed}
+.chain{display:grid;gap:6px;margin-bottom:2px}
+.chain .cl{display:flex;justify-content:space-between;align-items:baseline;gap:4px 10px;flex-wrap:wrap;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.chain .cl span{color:var(--mut);font-size:12px;min-width:0;flex:1 1 140px;line-height:1.55}
+.chain .cl b{font-size:15px;color:var(--txt);white-space:nowrap}
+.chain .cl.res{border-color:rgba(74,222,128,.45)}
+.chain .cl.res b{color:var(--acc);font-size:17px}
+.tpv .al.e{background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.4);color:var(--dan)}
+.hrow .hd small.hb{color:var(--acc2)}
 </style>
 </head>
 <body class="pcompact">
@@ -271,15 +283,22 @@ body.isadmin .adminonly{display:block!important}
     </div>
 
     <div class="sec" style="border-color:rgba(56,189,248,.5)">
-      <div class="st">📈 ประวัติการบันทึกของผู้รับแผน (ไว้ติดตามผล)</div>
-      <div class="row">
-        <div><label>น้ำหนัก (กก.) — ไม่บังคับ</label><input type="number" id="hwt" step="0.1" min="20" max="300" placeholder="เช่น 68.5"></div>
-        <div><label>หมายเหตุ — ไม่บังคับ</label><input type="text" id="hnote" maxlength="200" placeholder="เช่น หิวช่วงบ่าย"></div>
+      <div class="st">📈 ข้อมูลร่างกายและประวัติการบันทึกของผู้รับแผน (ไว้ติดตามผล)</div>
+      <div class="note" style="margin-top:0">กรอกเท่าที่มี (ไม่บังคับ) · ค่าเหล่านี้ถูกจำไว้แยกตามผู้รับแผน และใช้คำนวณ TDEE กับเป้าหมายรายวันอัตโนมัติ</div>
+      <div class="rowb">
+        <div><label for="hwt">⚖️ น้ำหนัก (กก.)</label><input type="number" id="hwt" inputmode="decimal" step="0.1" min="20" max="300" placeholder="เช่น 68.5"></div>
+        <div><label for="hbf">🧈 ไขมัน (%)</label><input type="number" id="hbf" inputmode="decimal" step="0.1" min="2" max="70" placeholder="เช่น 24.5"></div>
+        <div><label for="hmm">💪 มวลกล้ามเนื้อ (กก.)</label><input type="number" id="hmm" inputmode="decimal" step="0.1" min="5" max="150" placeholder="เช่น 29.8"></div>
+        <div><label for="hbw">💧 น้ำในร่างกาย (%)</label><input type="number" id="hbw" inputmode="decimal" step="0.1" min="30" max="80" placeholder="เช่น 52.0"></div>
+        <div class="full"><label for="hbmr">🔥 BMR (kcal/วัน) — จากเครื่องวัดองค์ประกอบร่างกาย</label><input type="number" id="hbmr" inputmode="numeric" step="1" min="800" max="3300" placeholder="เช่น 1420"></div>
       </div>
+      <div id="bodybox" class="tpv"></div>
+      <label for="hnote">📝 หมายเหตุ — ไม่บังคับ</label>
+      <input type="text" id="hnote" maxlength="200" placeholder="เช่น หิวช่วงบ่าย">
       <button type="button" class="btn2" onclick="histManual()">📌 บันทึกประวัติครั้งนี้</button>
       <div id="histst" class="note"></div>
       <div id="histlist"></div>
-      <div class="note">ประวัติจะถูกบันทึกเฉพาะเมื่อกดปุ่ม "บันทึกประวัติครั้งนี้" เท่านั้น (เก็บบน Supabase) · กดที่รายการเพื่อดูรายละเอียดย้อนหลัง</div>
+      <div class="note">ประวัติจะถูกบันทึกเฉพาะเมื่อกดปุ่ม "บันทึกประวัติครั้งนี้" เท่านั้น (เก็บบน Supabase) · ค่าร่างกายที่กรอกยังคงอยู่ในช่องเพื่อใช้คำนวณต่อ แก้ไขได้เมื่อวัดครั้งใหม่ · กดที่รายการเพื่อดูรายละเอียดย้อนหลัง</div>
     </div>
 
     <label>📅 วันเริ่มต้นของแผน 7 วันนี้</label>
@@ -290,12 +309,21 @@ body.isadmin .adminonly{display:block!important}
     <select id="week"></select>
     <div id="pinfo" class="note"></div>
 
+    <div class="sec" style="border-color:rgba(251,191,36,.5)">
+      <div class="st">🔥 TDEE (พลังงานที่ใช้ต่อวัน) และการคำนวณเป้าหมายอัตโนมัติ</div>
+      <label for="actlv">ระดับกิจกรรม (ตัวคูณ × BMR)</label>
+      <select id="actlv"></select>
+      <div id="actnote" class="note"></div>
+      <div id="tdeebox" class="tpv"></div>
+    </div>
+
     <div class="sec">
-      <div class="st">🎯 เป้าหมายรายวัน</div>
+      <div class="st">🎯 เป้าหมายรายวัน <span style="color:var(--acc)">(คำนวณอัตโนมัติ — แก้เองไม่ได้)</span></div>
       <div class="row">
-        <div><label>1.1 แคลอรี่/วัน (kcal)</label><input type="number" id="kcal" value="1150" min="800" max="4000" step="10"></div>
-        <div><label>1.2 โปรตีนขั้นต่ำ/วัน (ก.)</label><input type="number" id="prot" value="110" min="40" max="300" step="1"></div>
+        <div><label for="kcal">1.1 แคลอรี่/วัน (kcal)</label><input type="number" id="kcal" class="auto" value="1150" min="500" max="6000" step="1" readonly tabindex="-1" aria-readonly="true"></div>
+        <div><label for="prot">1.2 โปรตีนขั้นต่ำ/วัน (ก.)</label><input type="number" id="prot" class="auto" value="110" min="40" max="300" step="1" readonly tabindex="-1" aria-readonly="true"></div>
       </div>
+      <div id="tgtnote" class="note"></div>
       <label>1.3 จำนวนมื้ออาหาร/วัน <span style="color:var(--acc2)">(คำนวณอัตโนมัติ)</span></label>
       <select id="meals" disabled><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
       <div id="mealnote" class="note"></div>
@@ -850,6 +878,13 @@ function migrate(d){
     o.locks[k]=v.filter(i=>i&&menuOf(i.n)).map(i=>({n:i.n,q:(+i.q>0&&+i.q<=4)?+i.q:1}));
     if(!o.locks[k].length) delete o.locks[k];
   });
+  if(o.body!==undefined){
+    const b=(o.body&&typeof o.body==='object'&&!Array.isArray(o.body))?o.body:{}, nb={};
+    Object.keys(BODY_IDS).forEach(k=>{ const x=parseFloat(b[k]); nb[k]=(Number.isFinite(x)&&x>0)?String(x):''; });
+    nb.at=/^\d{4}-\d{2}-\d{2}$/.test(b.at||'')?b.at:'';
+    o.body=nb;
+  }
+  if(o.act!==undefined&&!ACTS.some(a=>a.v===String(o.act))) o.act='';
   o.schema=SCHEMA;
   return o;
 }
@@ -985,6 +1020,12 @@ function applyData(d){
   dm.value=d.dm||''; dmstr.value=d.ds||'strong';
   style.value=d.s||'all'; breakslot.value=d.b||'เช้า';
   pmode.value=d.pm||'compact';
+  {
+    const bd=(d.body&&typeof d.body==='object')?d.body:{};
+    Object.keys(BODY_IDS).forEach(k=>{ document.getElementById(BODY_IDS[k]).value=bd[k]||''; });
+    document.getElementById('actlv').value=ACTS.some(a=>a.v===String(d.act||''))?String(d.act):'';
+    BODYAT=/^\d{4}-\d{2}-\d{2}$/.test(bd.at||'')?bd.at:'';
+  }
   SUPPS=(Array.isArray(d.supps)&&d.supps.length)?JSON.parse(JSON.stringify(d.supps)):JSON.parse(JSON.stringify(DEFAULT_SUPPS));
   /* [] = ผู้ใช้ตั้งใจล้างทั้งหมด ต้องคงไว้ */
   SON=new Set(Array.isArray(d.sup)?d.sup.filter(id=>SUPPS.some(x=>x.id===id)):SUPPS.map(x=>x.id));
@@ -1021,10 +1062,207 @@ function applyData(d){
   run();
 }
 
+/* ================= ข้อมูลร่างกาย · TDEE · เป้าหมายอัตโนมัติ =================
+   BMR (กรอกจากเครื่องวัดองค์ประกอบร่างกาย) × ตัวคูณกิจกรรม = TDEE (ปัดเป็นจำนวนเต็มก่อนนำไปคำนวณต่อ เพื่อให้ตรวจด้วยมือได้ตรงกับที่แสดง)
+   เป้าแคลอรี่ = สูตร IFS ตามช่วงสัปดาห์: ถ้า TDEE × สัดส่วนที่ลด > 500 → TDEE − 500, ไม่เช่นนั้น TDEE × (1 − สัดส่วน) · Diet Break / Lifestyle = TDEE
+   Lean mass (มวลไร้ไขมัน, FFM) = น้ำหนัก × (1 − %ไขมัน/100) · เป้าโปรตีน = Lean mass × ก./กก. ตามช่วงสัปดาห์
+   ถ้าข้อมูลไม่ครบ (เช่นโปรไฟล์เก่า) จะคงค่าเดิมที่บันทึกไว้ แต่แก้เองในช่องไม่ได้ */
+const ACTS=[
+ {v:'1.2',  n:'น้อยมาก หรือไม่ออกกำลังกายเลย',  d:'นั่งทำงานอยู่กับที่ เดินน้อยมากในแต่ละวัน'},
+ {v:'1.375',n:'ออกกำลังกายเบาๆ',                d:'ออกกำลังกายหรือเล่นกีฬาเล็กน้อย ประมาณ 1–3 วัน/สัปดาห์'},
+ {v:'1.55', n:'ออกกำลังกายปานกลาง',             d:'ออกกำลังกายหรือเล่นกีฬา ประมาณ 3–5 วัน/สัปดาห์'},
+ {v:'1.725',n:'ออกกำลังกายหนัก',                d:'ออกกำลังกายหรือเล่นกีฬาอย่างหนัก ประมาณ 6–7 วัน/สัปดาห์'},
+ {v:'1.9',  n:'ออกกำลังกายหนักมาก / ใช้แรงงาน', d:'ออกกำลังกายหนักมากทุกวัน (เช้า-เย็น) หรือทำงานใช้แรงงาน'}
+];
+/* ตามช่วง (Period 1–7 = Week 1-4, 5-8, 9-10, 11-16, 17-18, 19-22, 23-24) · p = สัดส่วนที่ลด · keep = 1 − p (ใช้ค่าคงที่ตามสูตรต้นฉบับ) · pro = ก./กก. Lean mass */
+const PLAN_RULE={
+ 1:{p:.15,keep:.85,pro:2.0}, 2:{p:.20,keep:.80,pro:2.2}, 3:{p:0,keep:1,pro:1.8}, 4:{p:.20,keep:.80,pro:2.2},
+ 5:{p:0,keep:1,pro:1.8},     6:{p:.15,keep:.85,pro:2.0}, 7:{p:0,keep:1,pro:1.8}
+};
+const RULE_DEFAULT={p:0,keep:1,pro:1.8};
+const DEF_CAP=500;
+const RNG={wt:[20,300],bf:[2,70],mm:[5,150],bw:[30,80],bmr:[800,3300]};
+const RNL={wt:'น้ำหนัก',bf:'% ไขมัน',mm:'มวลกล้ามเนื้อ',bw:'% น้ำ',bmr:'BMR'};
+const RNU={wt:'กก.',bf:'%',mm:'กก.',bw:'%',bmr:'kcal'};
+const BODY_IDS={wt:'hwt',bf:'hbf',mm:'hmm',bw:'hbw',bmr:'hbmr'};
+let BODYAT='';   /* วันที่ที่แก้ค่าร่างกายล่าสุด (YYYY-MM-DD) ไว้เตือนเมื่อข้อมูลเก่า */
+
+function kcalTarget(tdee,rule){
+  if(!(rule.p>0)) return Math.round(tdee);
+  return (tdee*rule.p>DEF_CAP)?Math.round(tdee-DEF_CAP):Math.round(tdee*rule.keep);
+}
+function bodyVals(){
+  const o={};
+  Object.keys(BODY_IDS).forEach(k=>{
+    const v=String(document.getElementById(BODY_IDS[k]).value).trim();
+    const x=v===''?NaN:Number(v);
+    o[k]=Number.isFinite(x)?x:null;
+  });
+  return o;
+}
+function calcTargets(){
+  const b=bodyVals(), w=Math.min(24,Math.max(1,+week.value||1)), per=perOf(w)||PERIODS[0];
+  const rule=PLAN_RULE[per.id]||RULE_DEFAULT;
+  const act=ACTS.find(a=>a.v===document.getElementById('actlv').value)||null;
+  const T={b,w,per,rule,act,ok:{},bw:[],be:[],tw:[],tdee:null,kcal:null,prot:null,lean:null,fm:null,km:null,dev:null};
+  Object.keys(RNG).forEach(k=>{
+    T.ok[k]=b[k]!=null&&b[k]>=RNG[k][0]&&b[k]<=RNG[k][1];
+    if(b[k]!=null&&!T.ok[k]) T.bw.push(`${RNL[k]} ${b[k]} อยู่นอกช่วงที่เป็นไปได้ (${RNG[k][0]}–${RNG[k][1]} ${RNU[k]}) — ระบบจะไม่นำค่านี้ไปคำนวณ`);
+  });
+  if(T.ok.wt&&T.ok.bf){
+    T.lean=b.wt*(1-b.bf/100);                 /* Lean mass = มวลไร้ไขมัน (FFM) */
+    T.fm=b.wt-T.lean;
+    T.km=370+21.6*T.lean;                      /* Katch–McArdle: BMR อ้างอิงจากมวลไร้ไขมัน */
+  }
+  if(T.ok.bmr&&act){ T.tdee=Math.round(b.bmr*(+act.v)); T.kcal=kcalTarget(T.tdee,rule); }
+  if(T.lean!=null) T.prot=Math.round(T.lean*rule.pro);
+
+  /* ---- ตรวจความสมเหตุสมผลของค่าที่กรอก ---- */
+  if(T.ok.mm){
+    if(T.lean!=null&&b.mm>T.lean+0.5)
+      T.be.push(`มวลกล้ามเนื้อ ${r1(b.mm)} กก. มากกว่ามวลไร้ไขมัน ${r1(T.lean)} กก. ซึ่งเป็นไปไม่ได้ (กล้ามเนื้อเป็นส่วนหนึ่งของมวลไร้ไขมัน) — ตรวจน้ำหนัก % ไขมัน และมวลกล้ามเนื้ออีกครั้ง`);
+    else if(T.ok.wt&&b.mm>b.wt)
+      T.be.push(`มวลกล้ามเนื้อ ${r1(b.mm)} กก. มากกว่าน้ำหนักตัว ${r1(b.wt)} กก. — ตรวจค่าที่กรอกอีกครั้ง`);
+  }
+  if(T.lean!=null&&T.ok.bw&&b.wt*b.bw/100>T.lean*0.80)
+    T.bw.push(`น้ำในร่างกาย ${r1(b.wt*b.bw/100)} กก. คิดเป็น ${Math.round(b.wt*b.bw/100/T.lean*100)}% ของมวลไร้ไขมัน สูงกว่าที่ร่างกายมักมี (ราว 70–75%) — ตรวจ % น้ำและ % ไขมันอีกครั้ง`);
+  if(T.km!=null&&T.ok.bmr){
+    T.dev=(b.bmr-T.km)/T.km;
+    if(Math.abs(T.dev)>0.25)
+      T.bw.push(`BMR ที่กรอก (${r0(b.bmr)}) ต่างจากค่าอ้างอิง Katch–McArdle (${r0(T.km)}) ${T.dev>0?'+':''}${Math.round(T.dev*100)}% — ตรวจว่ากรอกถูกหน่วยและตรงกับการวัดครั้งเดียวกับน้ำหนักและ % ไขมัน`);
+  }
+  /* ---- ข้อควรระวังของเป้าหมาย ---- */
+  if(T.kcal!=null){
+    if(T.kcal<1200) T.tw.push(`เป้าแคลอรี่ ${T.kcal} kcal ต่ำกว่า 1,200 kcal/วัน ซึ่งต่ำกว่าเกณฑ์ขั้นต่ำที่แนะนำทั่วไปสำหรับการลดน้ำหนักโดยไม่มีแพทย์หรือนักกำหนดอาหารกำกับ`);
+    if(T.kcal<b.bmr) T.tw.push(`เป้าแคลอรี่ ${T.kcal} kcal ต่ำกว่า BMR (${r0(b.bmr)} kcal) — การกินต่ำกว่า BMR ต่อเนื่องหลายสัปดาห์เพิ่มความเสี่ยงสูญเสียมวลกล้ามเนื้อและขาดสารอาหาร ควรปรึกษาแพทย์หรือนักกำหนดอาหาร${act&&act.v==='1.2'&&rule.p>=0.2?' (เกิดจากกิจกรรมน้อย + ช่วงลด 20% — เพิ่มกิจกรรมหรือตรวจว่าเลือกระดับกิจกรรมตรงความจริง)':''}`);
+    if(T.prot!=null){
+      const pe=T.prot*4/T.kcal*100;
+      if(pe>35) T.tw.push(`โปรตีน ${T.prot} ก. คิดเป็น ${Math.round(pe)}% ของพลังงาน เกินช่วงที่แนะนำทั่วไป (10–35%) — ตรวจ % ไขมันและเป้าแคลอรี่`);
+    }
+  }
+  if(BODYAT&&(T.kcal!=null||T.prot!=null)){
+    const days=Math.round((parseDate(todayStr())-parseDate(BODYAT))/864e5);
+    if(days>=28) T.tw.push(`ค่าร่างกายที่ใช้คำนวณถูกแก้ไขล่าสุดเมื่อ ${days} วันก่อน — น้ำหนักและ BMR เปลี่ยนไปตามความคืบหน้า ควรวัดซ้ำทุก 2–4 สัปดาห์แล้วอัปเดต เพื่อให้เป้าหมายตรงกับร่างกายปัจจุบัน`);
+  }
+  return T;
+}
+function alertsHtml(list,cls,icon){ return list.map(x=>`<div class="al ${cls}">${icon} ${esc(x)}</div>`).join(''); }
+function renderBody(T){
+  const el=document.getElementById('bodybox'); if(!el) return;
+  const b=T.b;
+  if(!Object.values(b).some(v=>v!=null)){
+    el.className='tpv';
+    el.innerHTML='<span class="ln" style="margin:0">น้ำหนัก + %ไขมัน → คำนวณ Lean mass และเป้าโปรตีน · BMR + ระดับกิจกรรม → คำนวณ TDEE และเป้าแคลอรี่</span>';
+    return;
+  }
+  let h='';
+  if(T.lean!=null){
+    h+=`<span class="big">${r1(T.lean)}<small>กก. · Lean mass (มวลไร้ไขมัน)</small></span>
+      <div class="ln">มวลไขมัน ${r1(T.fm)} กก. (${r1(b.bf)}% ของ ${r1(b.wt)} กก.) · BMR อ้างอิง Katch–McArdle ≈ ${r0(T.km)} kcal${T.dev!=null?` · ค่าที่กรอกต่างจากอ้างอิง ${T.dev>0?'+':''}${Math.round(T.dev*100)}%`:''}</div>`;
+    if(!T.ok.bmr&&b.bmr==null)
+      h+=`<button type="button" class="btn2" style="padding:8px;font-size:12px" onclick="useKM()">ใช้ค่าอ้างอิง ${r0(T.km)} kcal เป็น BMR (ค่าประมาณ ไม่ใช่ค่าที่เครื่องวัด)</button>`;
+  }else h+='<div class="ln" style="margin:0">กรอกน้ำหนักและ % ไขมัน เพื่อคำนวณ Lean mass</div>';
+  h+=alertsHtml(T.be,'e','⛔')+alertsHtml(T.bw,'w','⚠️');
+  el.className='tpv'+((T.be.length||T.bw.length)?' warn':'');
+  el.innerHTML=h;
+}
+function renderTargets(T){
+  const el=document.getElementById('tdeebox'), nt=document.getElementById('tgtnote'), an=document.getElementById('actnote');
+  if(!el) return;
+  an.innerHTML=T.act?`<b style="color:var(--warn)">×${T.act.v}</b> — ${esc(T.act.d)}`:'เลือกระดับกิจกรรมที่ตรงกับชีวิตประจำวันจริง (อย่าประเมินสูงเกินจริง)';
+  const r=T.rule, per=T.per;
+  let h='<div class="chain">';
+  if(T.tdee!=null){
+    const how=r.p>0
+      ?(T.tdee*r.p>DEF_CAP?`ลดคงที่ ${DEF_CAP} kcal (เพราะ ${Math.round(r.p*100)}% ของ TDEE เกิน ${DEF_CAP})`:`ลด ${Math.round(r.p*100)}% ของ TDEE`)
+      :'คุมที่ระดับ TDEE (ไม่ลด)';
+    h+=`<div class="cl"><span>BMR ${r0(T.b.bmr)} kcal × ตัวคูณกิจกรรม ${T.act.v}</span><b>TDEE ${T.tdee} kcal</b></div>
+        <div class="cl res"><span>Week ${T.w} · Period ${per.id} ${esc(per.name)}: ${how}</span><b>${T.kcal} kcal/วัน</b></div>`;
+  }
+  if(T.prot!=null){
+    h+=`<div class="cl res"><span>Lean mass ${r1(T.lean)} กก. × ${r.pro} ก./กก. (Week ${T.w} · Period ${per.id})</span><b>โปรตีน ${T.prot} ก./วัน</b></div>`;
+  }
+  h+='</div>';
+  const miss=[];
+  if(T.tdee==null){
+    const m=[]; if(!T.ok.bmr) m.push('BMR'); if(!T.act) m.push('ระดับกิจกรรม');
+    miss.push(`ยังคำนวณแคลอรี่อัตโนมัติไม่ได้ — ต้องมี ${m.join(' และ ')} (ตอนนี้ใช้ค่าที่บันทึกไว้เดิม ${esc(kcal.value)} kcal)`);
+  }
+  if(T.prot==null) miss.push(`ยังคำนวณโปรตีนอัตโนมัติไม่ได้ — ต้องมีน้ำหนักและ % ไขมัน (ตอนนี้ใช้ค่าที่บันทึกไว้เดิม ${esc(prot.value)} ก.)`);
+  h+=alertsHtml(miss,'i','ℹ️')+alertsHtml(T.tw,'w','⚠️');
+  h+=`<div class="ln" style="font-size:11px">TDEE เป็นค่าประมาณ · โปรตีนคิดจาก Lean mass ไม่ใช่น้ำหนักตัวรวม · ผู้ที่เป็นโรคไตหรือมีโรคประจำตัวควรปรึกษาแพทย์ก่อนใช้โปรตีนสูง${BODYAT?` · แก้ค่าร่างกายล่าสุด ${esc(thMid(parseDate(BODYAT)))}`:''}</div>`;
+  el.className='tpv'+(T.tw.length?' warn':'');
+  el.innerHTML=h;
+  if(T.tdee!=null&&T.prot!=null) nt.innerHTML=`<span class="pill p-acc">คำนวณอัตโนมัติ</span> แคลอรี่จาก TDEE ${T.tdee} kcal และโปรตีนจาก Lean mass ${r1(T.lean)} กก. ตามช่วง Week ${T.w} (Period ${per.id} ${esc(per.name)})`;
+  else if(T.tdee!=null) nt.innerHTML=`<span class="pill p-acc">แคลอรี่อัตโนมัติ</span> <span class="pill p-warn">โปรตีนใช้ค่าเดิม</span> กรอกน้ำหนักและ % ไขมันเพื่อคำนวณโปรตีน`;
+  else if(T.prot!=null) nt.innerHTML=`<span class="pill p-warn">แคลอรี่ใช้ค่าเดิม</span> <span class="pill p-acc">โปรตีนอัตโนมัติ</span> กรอก BMR และเลือกระดับกิจกรรมเพื่อคำนวณแคลอรี่`;
+  else nt.innerHTML='<span class="pill p-warn">ใช้ค่าที่บันทึกไว้เดิม</span> กรอกข้อมูลร่างกายและเลือกระดับกิจกรรม ระบบจะคำนวณให้อัตโนมัติ';
+}
+/* คำนวณเป้าหมายและเขียนลงช่อง (แก้เองไม่ได้) · เรียกจาก upd() ทุกครั้ง */
+function targetsUI(){
+  const T=calcTargets();
+  if(T.kcal!=null&&kcal.value!==String(T.kcal)) kcal.value=T.kcal;
+  if(T.prot!=null&&prot.value!==String(T.prot)) prot.value=T.prot;
+  renderBody(T); renderTargets(T);
+  return T;
+}
+function bodyPreview(){ const T=calcTargets(); renderBody(T); renderTargets(T); }
+/* ค่าร่างกาย/ระดับกิจกรรม/สัปดาห์เปลี่ยน → คำนวณเป้าใหม่ ถ้าเป้ารายวันเปลี่ยนจึงกระจายรายมื้อใหม่ */
+function onTargetInputs(){
+  if(BOOTING) return;
+  const k0=kcal.value, p0=prot.value;
+  upd();
+  if(kcal.value!==k0||prot.value!==p0) redistribute();
+  run();
+}
+function onBodyChange(){ BODYAT=todayStr(); onTargetInputs(); }
+function useKM(){
+  const T=calcTargets(); if(T.km==null) return;
+  document.getElementById('hbmr').value=Math.round(T.km);
+  onBodyChange();
+}
+function buildAct(){
+  document.getElementById('actlv').innerHTML='<option value="">— เลือกระดับกิจกรรม —</option>'+
+    ACTS.map(a=>`<option value="${a.v}">${esc(a.n)} (×${a.v})</option>`).join('');
+}
+
 /* ================= ประวัติผู้รับแผน (เก็บบน Supabase: ตาราง np_profile_history ผ่าน RPC) =================
    บันทึกเฉพาะเมื่อกดปุ่ม "บันทึกประวัติครั้งนี้" เท่านั้น · กดที่รายการเพื่อดูรายละเอียดย้อนหลัง
    ไม่ผ่านคิวซิงก์หลัก — ถ้ายังไม่ได้รัน supabase_history.sql จะแจ้งเตือนเฉพาะกล่องนี้ ไม่กระทบการบันทึกแผนปกติ */
-let HIST=[], HSHOW=10, HOK=true, HDET={}, HOPEN=null;
+let HIST=[], HSHOW=10, HOK=true, HDET={}, HOPEN=null, HPF=0;
+/* ค่าร่างกายของรายการประวัติ อยู่ในสแนปช็อตข้อมูลแผน (data.body) · ดึงรายละเอียดของรายการที่แสดงมาเก็บไว้เบื้องหลังเพื่อโชว์ในรายการ */
+const bodyOfRec=x=>{
+  if(!x) return null;
+  /* 1) คอลัมน์ใหม่จาก np_history_list (หลังรัน supabase_history.sql รุ่นล่าสุด) */
+  const c={bf:x.body_fat,mm:x.muscle_kg,bw:x.body_water,bmr:x.bmr};
+  if(Object.values(c).some(v=>v!=null)) return c;
+  /* 2) สำรอง: สแนปช็อต data.body (รายการที่ดึงรายละเอียดแล้ว) */
+  const id=Number(x.id); const src=(HDET[id]&&HDET[id].data)||x.data||null;
+  return (src&&src.body&&typeof src.body==='object')?src.body:null;
+};
+const bodyNum=(b,k)=>{ const v=parseFloat(b&&b[k]); return Number.isFinite(v)&&v>0?v:null; };
+function bodyLine(x){
+  const b=bodyOfRec(x); if(!b) return '';
+  const p=[bodyNum(b,'bf')!=null?`ไขมัน ${r1(bodyNum(b,'bf'))}%`:'', bodyNum(b,'mm')!=null?`กล้ามเนื้อ ${r1(bodyNum(b,'mm'))} กก.`:'',
+           bodyNum(b,'bw')!=null?`น้ำ ${r1(bodyNum(b,'bw'))}%`:'', bodyNum(b,'bmr')!=null?`BMR ${r0(bodyNum(b,'bmr'))}`:''].filter(Boolean);
+  return p.length?`<small class="hb">🧬 ${p.join(' · ')}</small>`:'';
+}
+function bodyTrend(key,label,unit){
+  const l=HIST.map(x=>bodyNum(bodyOfRec(x),key)).filter(v=>v!=null);
+  if(l.length<2) return '';
+  const d=l[0]-l[l.length-1];
+  return `<div class="hsum">${label} ${r1(l[l.length-1])} → ${r1(l[0])} ${unit} (${d>0?'+':''}${r1(d)})</div>`;
+}
+async function histPrefetch(pid){
+  const tok=++HPF;
+  for(const x of HIST.slice(0,HSHOW)){
+    const id=Number(x.id);
+    if(HDET[id]||x.data||('bmr' in x)) continue;   /* มีคอลัมน์ค่าร่างกายในรายการแล้ว = ไม่ต้องดึงรายละเอียด */
+    if(pid!==PID||tok!==HPF||!HOK) return;
+    try{ HDET[id]=await rpc('np_history_get',{p_token:TOKEN,p_hid:id}); }catch(e){ return; }
+    if(pid===PID&&tok===HPF) renderHist();
+  }
+}
 function histMsg(h,col){ const el=document.getElementById('histst'); if(el) el.innerHTML=h?`<span style="color:var(${col||'--mut'})">${h}</span>`:''; }
 function histErrText(e){
   const m=String((e&&e.message)||'');
@@ -1043,25 +1281,28 @@ async function histLoad(){
     HIST=Array.isArray(l)?l:[]; HOK=true; histMsg('');
   }catch(e){ if(pid!==PID) return; HIST=[]; HOK=false; histMsg('⚠️ '+esc(histErrText(e)),'--warn'); }
   renderHist();
+  histPrefetch(pid);
 }
 /* บันทึกประวัติ (เรียกจากปุ่มเท่านั้น) */
 async function histManual(){
   const pid=PID; if(!pid||!TOKEN) return;
+  const bv=bodyVals(), bad=[];
+  Object.keys(RNG).forEach(k=>{
+    if(bv[k]!=null&&!(bv[k]>=RNG[k][0]&&bv[k]<=RNG[k][1])) bad.push(`${RNL[k]}ไม่ถูกต้อง (ใส่ ${RNG[k][0]}–${RNG[k][1]} ${RNU[k]})`);
+  });
+  if(bad.length){ histMsg(bad.join(' · '),'--dan'); return; }
+  const T0=calcTargets();
+  if(T0.be.length){ histMsg('⛔ '+esc(T0.be.join(' · ')),'--dan'); return; }
+  onTargetInputs();   /* ให้เป้าหมายในสแนปช็อตตรงกับค่าร่างกายที่กรอกอยู่ตอนนี้ */
   save();
   const d=DATA[pid]; if(!d){ histMsg('ยังไม่มีข้อมูลให้บันทึก','--dan'); return; }
-  const wv=document.getElementById('hwt').value.trim();
-  let wt=null;
-  if(wv!==''){
-    const w=parseFloat(wv);
-    if(!Number.isFinite(w)||w<20||w>300){ histMsg('น้ำหนักไม่ถูกต้อง (ใส่ 20–300 กก.)','--dan'); return; }
-    wt=Math.round(w*10)/10;
-  }
+  const wt=bv.wt!=null?Math.round(bv.wt*10)/10:null;
   const note=String(document.getElementById('hnote').value||'').replace(/[<>]/g,'').trim().slice(0,200);
   const nm=(PROF.find(x=>x.id===pid)||{}).name||'';
   histMsg('กำลังบันทึกประวัติ…');
   try{
     await rpc('np_log_history',{p_token:TOKEN,p_id:pid,p_name:nm,p_data:d,p_trigger:'manual',p_weight:wt,p_note:note||null});
-    document.getElementById('hwt').value=''; document.getElementById('hnote').value='';
+    document.getElementById('hnote').value='';   /* ค่าร่างกายคงไว้ในช่อง เพราะใช้คำนวณ TDEE/เป้าหมายต่อ */
     HOK=true; await histLoad();
     histMsg('บันทึกประวัติเรียบร้อยแล้ว','--acc');
   }catch(e){ histMsg('⚠️ บันทึกประวัติไม่สำเร็จ: '+esc(histErrText(e)),'--dan'); }
@@ -1083,9 +1324,21 @@ function histDetailHtml(r){
   const sups=(Array.isArray(d.supps)?d.supps:[]).filter(x=>!Array.isArray(d.sup)||d.sup.includes(x.id)).map(x=>esc(x.n)).join(' · ');
   let sd=''; try{ sd=d.sd?thFull(parseDate(d.sd)):''; }catch(e){ sd=esc(d.sd||''); }
   const lab={manual:'📌 บันทึกเอง',auto:'⚙️ อัตโนมัติ',create:'🆕 สร้างใหม่',duplicate:'📄 ทำสำเนา'};
+  const bd0=(d.body&&typeof d.body==='object')?d.body:{};
+  const wt0=r.weight_kg!=null?Number(r.weight_kg):bodyNum(bd0,'wt'), bf0=bodyNum(bd0,'bf'), mm0=bodyNum(bd0,'mm'), bw0=bodyNum(bd0,'bw'), bmr0=bodyNum(bd0,'bmr');
+  const lean0=(wt0!=null&&bf0!=null)?wt0*(1-bf0/100):null;
+  const act0=ACTS.find(a=>a.v===String(d.act||''))||null;
+  const tdee0=(bmr0!=null&&act0)?Math.round(bmr0*(+act0.v)):null;
   return `<div style="margin-bottom:6px"><b>${esc(fmtHT(r.taken_at))}</b> · ${lab[r.source]||esc(r.source||'')}${r.weight_kg!=null?` · ⚖️ ${r1(Number(r.weight_kg))} กก.`:''}</div>
     ${r.note?`<div style="margin-bottom:6px">📝 ${esc(r.note)}</div>`:''}
     <table>
+      ${row('ไขมัน',bf0!=null?r1(bf0)+' %':'')}
+      ${row('Lean mass (มวลไร้ไขมัน)',lean0!=null?r1(lean0)+' กก.':'')}
+      ${row('มวลกล้ามเนื้อ',mm0!=null?r1(mm0)+' กก.':'')}
+      ${row('น้ำในร่างกาย',bw0!=null?r1(bw0)+' %':'')}
+      ${row('BMR',bmr0!=null?r0(bmr0)+' kcal':'')}
+      ${row('ระดับกิจกรรม',act0?esc(act0.n)+' (×'+act0.v+')':'')}
+      ${row('TDEE',tdee0!=null?tdee0+' kcal':'')}
       ${row('สัปดาห์',per?`Week ${esc(d.w)} — Period ${per.id} ${esc(per.name)}`:esc(d.w))}
       ${row('วันเริ่มแผน',sd)}
       ${row('แคลอรี่/วัน',d.k?esc(d.k)+' kcal':'')}
@@ -1130,6 +1383,7 @@ function renderHist(){
     const dw=Number(wl[0].weight_kg)-Number(wl[wl.length-1].weight_kg);
     sum=`<div class="hsum">⚖️ น้ำหนักจาก ${r1(Number(wl[wl.length-1].weight_kg))} → ${r1(Number(wl[0].weight_kg))} กก. (${dw>0?'+':''}${r1(dw)} กก.) · ${HIST.length} ครั้งที่บันทึก</div>`;
   }
+  sum+=bodyTrend('bf','🧈 ไขมัน','%')+bodyTrend('mm','💪 มวลกล้ามเนื้อ','กก.');
   const rows=HIST.slice(0,HSHOW).map((x,i)=>{
     const id=Number(x.id), open=(HOPEN===id&&!!HDET[id]);
     let wt='';
@@ -1142,13 +1396,14 @@ function renderHist(){
       <span class="hchev" id="hc${id}">${open?'▾':'▸'}</span>
       <div class="hd"><b>${esc(fmtHT(x.taken_at))}</b>
       <small>${lab[x.source]||esc(x.source||'')} · Week ${esc(x.week??'-')} · ${esc(x.kcal??'-')} kcal · โปรตีน ${esc(x.protein??'-')} ก. · Visceral ${esc(x.visceral??'-')}</small>
+      ${bodyLine(x)}
       ${x.note?`<small>📝 ${esc(x.note)}</small>`:''}</div>
       <div class="hw">${wt}</div>
       <button type="button" class="sdel" title="ลบรายการนี้" onclick="event.stopPropagation();histDel(${id})">✕</button></div>
       <div class="hdet ${open?'':'hide'}" id="hd${id}">${open?histDetailHtml(HDET[id]):''}</div></div>`;
   }).join('');
   el.innerHTML=sum+'<div class="note" style="margin-top:4px">👆 กดที่รายการเพื่อดูรายละเอียดของครั้งนั้น</div>'+rows+
-    (HIST.length>HSHOW?`<button type="button" class="btn2" onclick="HSHOW+=20;renderHist()">แสดงเพิ่ม (${HIST.length-HSHOW} รายการ)</button>`:'');
+    (HIST.length>HSHOW?`<button type="button" class="btn2" onclick="HSHOW+=20;renderHist();histPrefetch(PID)">แสดงเพิ่ม (${HIST.length-HSHOW} รายการ)</button>`:'');
 }
 
 /* ================= วันที่ไทย ================= */
@@ -2537,6 +2792,7 @@ function save(){
     af:document.getElementById('autop').checked,
     dm:dm.value,ds:dmstr.value,s:style.value,b:breakslot.value,pm:pmode.value,
     sup:[...SON],supps:SUPPS,locks:ITEM_LOCKS,
+    body:{wt:hwt.value,bf:hbf.value,mm:hmm.value,bw:hbw.value,bmr:hbmr.value,at:BODYAT},act:actlv.value,
     bazi:{d:bdate.value,t:btime.value,m:getTMode(),pv:document.getElementById('bprov').value,
       ln:document.getElementById('blon').value,tz:document.getElementById('btz').value,dst:document.getElementById('bdst').checked},rows:{}};
   document.querySelectorAll('#mrows input').forEach(i=>d.rows[i.id]=i.value);
@@ -2545,6 +2801,7 @@ function save(){
   DATA[PID]=nd; markDirty(PID);
 }
 function upd(){
+  targetsUI();
   mealsUI();
   const p=perOf(+week.value)||PERIODS[0];
   pinfo.innerHTML=`<span class="pill p-acc">Period ${p.id} · ${p.name}</span> ${p.desc}`;
@@ -2592,7 +2849,16 @@ function upd(){
   buildSupps();
   sdate.value=todayStr();
   buildBirthLoc();
-  ['week','vis','breakslot','style','sdate','pt1','ps1','pt2','ps2','pt3','ps3','dm','dmstr','autop'].forEach(id=>
+  buildAct();
+  /* สัปดาห์เปลี่ยน → เป้าแคลอรี่/โปรตีนเปลี่ยนตามช่วง (Period) */
+  document.getElementById('week').addEventListener('change',onTargetInputs);
+  /* ค่าร่างกาย/ระดับกิจกรรม: พิมพ์ = แสดงผลสด · เสร็จแล้ว (change) = คำนวณเป้าใหม่ + บันทึก */
+  Object.values(BODY_IDS).concat(['actlv']).forEach(id=>{
+    const el=document.getElementById(id);
+    el.addEventListener('input',bodyPreview);
+    el.addEventListener('change',id==='actlv'?onTargetInputs:onBodyChange);
+  });
+  ['vis','breakslot','style','sdate','pt1','ps1','pt2','ps2','pt3','ps3','dm','dmstr','autop'].forEach(id=>
     document.getElementById(id).addEventListener('change',()=>{ upd(); run(); }));
   /* เปลี่ยนเป้ารายวันหรือโมเดล → คำนวณจำนวนมื้อใหม่ แล้วกระจายเป้ารายมื้อให้ตรงอัตโนมัติ */
   ['kcal','prot','dmodel'].forEach(id=>

@@ -219,6 +219,16 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
 .chain .cl.res b{color:var(--acc);font-size:17px}
 .tpv .al.e{background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.4);color:var(--dan)}
 .hrow .hd small.hb{color:var(--acc2)}
+
+.hchart{margin:10px 0 4px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px}
+.htabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.htab{width:auto;margin:0;padding:6px 12px;font-size:12px;border-radius:99px;background:transparent;color:var(--mut);border:1px solid var(--line);min-height:32px}
+.htab.on{background:rgba(56,189,248,.15);color:var(--acc2);border-color:var(--acc2)}
+.htab[disabled]{opacity:.35;cursor:not-allowed}
+.hchart svg{display:block;width:100%;height:auto;touch-action:manipulation}
+.hchart .hpt{cursor:pointer}
+.hchart .hinfo{font-size:12.5px;margin-top:6px;line-height:1.6}
+.hchart .hinfo b{color:var(--acc2)}
 </style>
 </head>
 <body class="pcompact">
@@ -1253,6 +1263,59 @@ function bodyTrend(key,label,unit){
   const d=l[0]-l[l.length-1];
   return `<div class="hsum">${label} ${r1(l[l.length-1])} → ${r1(l[0])} ${unit} (${d>0?'+':''}${r1(d)})</div>`;
 }
+
+/* ================= กราฟแนวโน้ม (SVG ในหน้า ไม่พึ่งไลบรารีภายนอก) ================= */
+const HMET={
+  wt :{n:'⚖️ น้ำหนัก',     u:'กก.',  d:1, get:x=>{const v=Number(x.weight_kg);return (x.weight_kg!=null&&v>0)?v:null;}},
+  bf :{n:'🧈 ไขมัน',       u:'%',    d:1, get:x=>bodyNum(bodyOfRec(x),'bf')},
+  mm :{n:'💪 กล้ามเนื้อ',  u:'กก.',  d:1, get:x=>bodyNum(bodyOfRec(x),'mm')},
+  bw :{n:'💧 น้ำ',         u:'%',    d:1, get:x=>bodyNum(bodyOfRec(x),'bw')},
+  bmr:{n:'🔥 BMR',         u:'kcal', d:0, get:x=>bodyNum(bodyOfRec(x),'bmr')}
+};
+let HCH='wt', HSEL=null;
+const hShort=d=>`${d.getDate()} ${TH_MS[d.getMonth()]} ${String(d.getFullYear()+543).slice(2)}`;
+function chartSeries(k){
+  return HIST.map(x=>({t:new Date(x.taken_at).getTime(),v:HMET[k].get(x)})).filter(p=>p.v!=null&&Number.isFinite(p.t)).sort((a,b)=>a.t-b.t);
+}
+function chartPick(i){ HSEL=i; renderChart(); }
+function chartTab(k){ HCH=k; HSEL=null; renderChart(); }
+function renderChart(){
+  const el=document.getElementById('hchart'); if(!el) return;
+  const cnt={}; Object.keys(HMET).forEach(k=>cnt[k]=chartSeries(k).length);
+  if(!(cnt[HCH]>=1)){ const f=Object.keys(HMET).find(k=>cnt[k]>=2)||Object.keys(HMET).find(k=>cnt[k]>=1); if(f) HCH=f; }
+  const M=HMET[HCH], pts=chartSeries(HCH);
+  const tabs='<div class="htabs" role="tablist">'+Object.keys(HMET).map(k=>
+    `<button type="button" role="tab" class="htab${k===HCH?' on':''}" aria-selected="${k===HCH}" ${cnt[k]?'':'disabled'} onclick="chartTab('${k}')">${HMET[k].n}</button>`).join('')+'</div>';
+  if(!pts.length){ el.innerHTML=tabs+'<div class="note" style="margin:0">ยังไม่มีข้อมูลตัวชี้วัดนี้ในประวัติ — กรอกค่าแล้วกด “บันทึกประวัติครั้งนี้”</div>'; return; }
+  const W=360,H=190,L=40,R=14,T=14,B=30, pw=W-L-R, ph=H-T-B;
+  let lo=Math.min(...pts.map(p=>p.v)), hi=Math.max(...pts.map(p=>p.v));
+  const span=Math.max(hi-lo,(M.d?0.5:20));
+  const mid=(hi+lo)/2; lo=mid-span*0.6; hi=mid+span*0.6;
+  if(M.d===0){ lo=Math.floor(lo/10)*10; hi=Math.ceil(hi/10)*10; }
+  const t0=pts[0].t, t1=pts[pts.length-1].t, tr=Math.max(t1-t0,1);
+  const X=t=>pts.length===1?L+pw/2:L+(t-t0)/tr*pw, Y=v=>T+ph-(v-lo)/(hi-lo)*ph;
+  const fmt=v=>M.d?(Math.round(v*10)/10).toFixed(1):String(Math.round(v));
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="กราฟ${esc(M.n.replace(/^\S+\s/,''))} ${pts.length} ครั้ง จาก ${fmt(pts[0].v)} ถึง ${fmt(pts[pts.length-1].v)} ${M.u}">`;
+  for(let i=0;i<=3;i++){
+    const v=lo+(hi-lo)*i/3, y=Y(v);
+    svg+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y+4}" text-anchor="end" font-size="10" fill="var(--mut)">${fmt(v)}</text>`;
+  }
+  const xl=[[pts[0].t,pts.length===1?'middle':'start']]; if(pts.length>1) xl.push([t1,'end']);
+  xl.forEach(([t,a])=>{ const x=pts.length===1?X(t):(a==='start'?L:W-R); svg+=`<text x="${x}" y="${H-8}" text-anchor="${a}" font-size="10" fill="var(--mut)">${esc(hShort(new Date(t)))}</text>`; });
+  if(pts.length>1) svg+=`<polyline fill="none" stroke="var(--acc2)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" points="${pts.map(p=>X(p.t).toFixed(1)+','+Y(p.v).toFixed(1)).join(' ')}"/>`;
+  const sel=(HSEL!=null&&HSEL<pts.length)?HSEL:pts.length-1;
+  pts.forEach((p,i)=>{
+    const on=i===sel;
+    svg+=`<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="${on?5.5:3.5}" fill="${on?'var(--acc)':'var(--card2)'}" stroke="${on?'var(--card2)':'var(--acc2)'}" stroke-width="${on?2:1.8}"/>
+      <circle class="hpt" cx="${X(p.t).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="14" fill="transparent" onclick="chartPick(${i})"><title>${esc(hShort(new Date(p.t)))} · ${fmt(p.v)} ${M.u}</title></circle>`;
+  });
+  svg+='</svg>';
+  const a=pts[0], z=pts[pts.length-1], c=pts[sel], dl=z.v-a.v;
+  const info=pts.length>1
+    ?`<div class="hinfo">📍 <b>${esc(hShort(new Date(c.t)))}</b> · ${fmt(c.v)} ${M.u} &nbsp;|&nbsp; ตั้งแต่ครั้งแรก ${dl>0?'+':''}${fmt(dl)} ${M.u} (${pts.length} ครั้ง)</div>`
+    :`<div class="hinfo">📍 <b>${esc(hShort(new Date(c.t)))}</b> · ${fmt(c.v)} ${M.u} · มีข้อมูลครั้งเดียว บันทึกอีกครั้งเพื่อดูแนวโน้ม</div>`;
+  el.innerHTML=tabs+svg+info;
+}
 async function histPrefetch(pid){
   const tok=++HPF;
   for(const x of HIST.slice(0,HSHOW)){
@@ -1402,8 +1465,9 @@ function renderHist(){
       <button type="button" class="sdel" title="ลบรายการนี้" onclick="event.stopPropagation();histDel(${id})">✕</button></div>
       <div class="hdet ${open?'':'hide'}" id="hd${id}">${open?histDetailHtml(HDET[id]):''}</div></div>`;
   }).join('');
-  el.innerHTML=sum+'<div class="note" style="margin-top:4px">👆 กดที่รายการเพื่อดูรายละเอียดของครั้งนั้น</div>'+rows+
+  el.innerHTML='<div id="hchart" class="hchart"></div>'+sum+'<div class="note" style="margin-top:4px">👆 กดที่รายการเพื่อดูรายละเอียดของครั้งนั้น</div>'+rows+
     (HIST.length>HSHOW?`<button type="button" class="btn2" onclick="HSHOW+=20;renderHist();histPrefetch(PID)">แสดงเพิ่ม (${HIST.length-HSHOW} รายการ)</button>`:'');
+  renderChart();
 }
 
 /* ================= วันที่ไทย ================= */

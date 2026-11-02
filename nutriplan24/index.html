@@ -66,14 +66,12 @@ td:first-child,th:first-child{text-align:left}
 .b-warn{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35)}
 .b-dan{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.35)}
 .b-ok{background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.3)}
-.tabs{display:flex;gap:6px;flex-wrap:wrap}
-.tab{padding:7px 12px;background:var(--card2);border:1px solid var(--line);border-radius:10px;font-size:12.5px;cursor:pointer}
-.tab.on{background:var(--acc);color:#04220f;font-weight:700;border-color:var(--acc)}
 .tl{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(38,51,77,.5);font-size:13px}
 .tl b{min-width:140px;color:var(--acc2);font-size:12px}
 .note{font-size:11.5px;color:var(--mut);line-height:1.75;margin-top:10px}
 .dayttl{font-size:17px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .dayttl i{width:8px;height:18px;background:var(--acc);border-radius:4px;display:inline-block}
+.subtot td{font-weight:700;border-top:1px solid var(--line);border-bottom:none}
 #mrows{width:100%;border-collapse:separate;border-spacing:0 6px}
 #mrows td{border:none;padding:0 4px}
 #mrows input{padding:8px;font-size:13px;text-align:center}
@@ -141,46 +139,29 @@ body.isadmin .adminonly{display:block!important}
 .dhide{display:none}
 @page{size:A4;margin:10mm}
 @media print{
-  body{background:#fff;color:#000;padding:0}
+  body{background:#fff;color:#000;padding:0;font-size:10pt}
   .wrap{max-width:none;opacity:1!important}
   header{margin-bottom:8px}
   header h1{font-size:17pt}
   header h1 span{color:#111;-webkit-text-fill-color:#111}
   header p{color:#444;font-size:8pt}
-  .noprint,.modal,.rolebar,.mbtn{display:none!important}
+  .noprint,.modal,.rolebar,.mbtn,.box{display:none!important}
   .grid{display:block}
-  .dayblock{display:block!important;page-break-inside:avoid;break-inside:avoid}
   .card,.meal,.stat div{background:#fff!important;border:1px solid #bbb!important;color:#000!important}
-  .card{margin-bottom:8px;border-radius:8px}
-  .meal{page-break-inside:avoid;break-inside:avoid}
+  .card{margin-bottom:8px;border-radius:8px;padding:10px}
+  .meal{padding:8px 10px;margin-bottom:6px;border-radius:8px}
+  .meal,.tl,.elrow,tr,.stat{break-inside:avoid;page-break-inside:avoid}
+  .dayttl,.card h2{break-after:avoid;page-break-after:avoid}
   .note,.dsc,th,.stat small{color:#444!important}
   .supp{color:#333!important}
   .bar{display:none}
   .pill{border:1px solid #999;color:#000!important;background:#fff!important}
-  .box{background:#fff!important;border:1px solid #999!important}
   .dayttl i,.card h2 i{background:#000!important}
-  body.pfull .dayblock{page-break-after:always;break-after:page}
-  body.pcompact .dayblock.pbreak{page-break-after:always;break-after:page}
-  body.pcompact .dayblock{padding:10px;margin-bottom:6px}
-  body.pcompact .dayttl{font-size:12pt;margin-bottom:4px}
-  body.pcompact .dayttl i{height:13px}
-  body.pcompact .stat{gap:5px;margin-bottom:6px}
-  body.pcompact .stat div{padding:4px;border-radius:6px}
-  body.pcompact .stat b{font-size:10.5pt;margin-bottom:0}
-  body.pcompact .stat small{font-size:6.5pt}
-  body.pcompact .meal{padding:7px 8px;margin-bottom:5px;border-radius:7px}
-  body.pcompact .meal .mh{margin-bottom:4px;gap:4px}
-  body.pcompact .meal .mh b{font-size:9.5pt}
-  body.pcompact table{font-size:7.8pt}
-  body.pcompact th{padding:2px 3px;font-size:6.8pt}
-  body.pcompact td{padding:2.5px 3px}
-  body.pcompact .dsc{font-size:6.6pt;margin-top:1px}
-  body.pcompact .supp{font-size:6.8pt;margin-top:4px;padding-top:4px}
-  body.pcompact .pill{font-size:6.6pt;padding:1px 6px}
-  body.pcompact .note{font-size:6.8pt;margin-top:4px;line-height:1.5}
-  body.pcompact .box.b-warn,body.pcompact .box.b-dan{display:none}
-  body.pcompact .tl,body.pcompact .elrow{padding:5px 0;font-size:8pt}
-  body.pcompact .tl b,body.pcompact .elrow b{min-width:95px;font-size:7.5pt}
+  .stat{gap:6px;margin-bottom:8px}
+  .stat b{font-size:13pt;margin-bottom:0}
+  table{font-size:9pt}
+  td{padding:4px 3px}
+  th{padding:3px}
 }
 .pdfdoc{width:100%;background:#fff;color:#111;padding:6px;font-family:'Segoe UI','Sarabun',system-ui,sans-serif;--line:#ccc;--mut:#555;--txt:#111}
 .pdfdoc .pdfhead{margin-bottom:10px}
@@ -246,7 +227,7 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
 .hedit button{margin-top:8px}
 </style>
 </head>
-<body class="pcompact">
+<body>
 
 <!-- ================= LOGIN ================= -->
 <div id="pwgate" class="modal" style="z-index:100">
@@ -326,7 +307,7 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
       <div class="note">ประวัติจะถูกบันทึกเฉพาะเมื่อกดปุ่ม "บันทึกประวัติครั้งนี้" เท่านั้น (เก็บบน Supabase) · ค่าร่างกายที่กรอกยังคงอยู่ในช่องเพื่อใช้คำนวณต่อ แก้ไขได้เมื่อวัดครั้งใหม่ · กดที่รายการเพื่อดูรายละเอียดย้อนหลัง</div>
     </div>
 
-    <label>📅 วันเริ่มต้นของแผน 7 วันนี้</label>
+    <label>📅 วันเริ่มต้นของสัปดาห์นี้ (ตั้งเป็นวันนี้อัตโนมัติทุกครั้งที่เข้าแอป)</label>
     <input type="date" id="sdate">
     <div id="dnote" class="note"></div>
 
@@ -421,18 +402,12 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
     </div>
 
     <button class="btn1" onclick="run()">🧮 คำนวณแผนอาหาร</button>
-    <button class="btn2" onclick="reroll()">🔀 สลับเมนูใหม่ทั้งสัปดาห์ (คงเมนูที่ล็อกไว้)</button>
-    <button class="btn2" onclick="unlockAllItems()">🔓 ปลดล็อกเมนูทั้งหมด</button>
+    <button class="btn2" onclick="reroll()">🔀 สลับเมนูแนะนำใหม่ทั้งแผน</button>
     <div id="lockinfo" class="note"></div>
 
-    <label style="margin-top:16px">🖨️ รูปแบบการพิมพ์</label>
-    <select id="pmode">
-      <option value="compact" selected>กระชับ — 2 วัน/หน้า</option>
-      <option value="full">เต็มรูปแบบ — 1 วัน/หน้า</option>
-    </select>
-    <button class="btn2" onclick="window.print()">🖨️ พิมพ์แผนครบ 7 วัน / บันทึกเป็น PDF</button>
+    <button class="btn2" style="margin-top:16px" onclick="window.print()">🖨️ พิมพ์แผนประจำสัปดาห์ / บันทึกเป็น PDF</button>
     <button class="btnline" onclick="openLine()">💬 ส่งแผนเข้า LINE</button>
-    <button class="btnline" data-pdfbtn onclick="sharePdfLine('all')">📄 ส่ง PDF ผ่าน LINE (ครบ 7 วัน)</button>
+    <button class="btnline" data-pdfbtn onclick="sharePdfLine()">📄 ส่ง PDF ผ่าน LINE</button>
     <div id="pdfst" class="note"></div>
   </div>
 
@@ -508,7 +483,7 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
       <div id="kbar" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px"></div>
       <div id="klist"></div>
       <div class="note">🔑 รีเซ็ตรหัสใหม่ (รหัสเดิมและเซสชันที่ค้างอยู่ใช้ไม่ได้ทันที) · ⏸ ระงับ/▶ เปิดใช้บัญชี · ✕ ลบบัญชีและข้อมูลถาวร · ระบบล็อกชั่วคราว 15 นาทีเมื่อกรอกรหัสผิดครบ 5 ครั้ง</div>
-      <div class="note">⏱️ “เข้าใช้ล่าสุด” = ครั้งล่าสุดที่ผู้ใช้ล็อกอินด้วยรหัส หรือเปิดแอปด้วยการเข้าสู่ระบบที่ค้างไว้ (ระบบจำการเข้าสู่ระบบ 30 วัน จึงนับทั้งสองแบบ) · บัญชีที่ยังไม่เคยเข้าหลังอัปเดตระบบจะแสดงเวลาที่บันทึกข้อมูลผู้รับแผนครั้งล่าสุดแทน · กดปุ่ม “เรียง” เพื่อให้คนที่ไม่ได้ใช้นานที่สุดขึ้นก่อน</div>
+      <div class="note">⏱️ "เข้าใช้ล่าสุด" = ครั้งล่าสุดที่ผู้ใช้ล็อกอินด้วยรหัส หรือเปิดแอปด้วยการเข้าสู่ระบบที่ค้างไว้ (ระบบจำการเข้าสู่ระบบ 30 วัน จึงนับทั้งสองแบบ) · บัญชีที่ยังไม่เคยเข้าหลังอัปเดตระบบจะแสดงเวลาที่บันทึกข้อมูลผู้รับแผนครั้งล่าสุดแทน · กดปุ่ม "เรียง" เพื่อให้คนที่ไม่ได้ใช้นานที่สุดขึ้นก่อน</div>
     </div>
   </div>
 </div>
@@ -520,16 +495,12 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
 <div id="lmodal" class="modal hide noprint">
   <div class="inner">
     <h2 style="font-size:16px;margin-bottom:10px">💬 ข้อความสำหรับส่งเข้า LINE</h2>
-    <select id="lscope" onchange="buildLineText()">
-      <option value="day" selected>เฉพาะวันที่กำลังดูอยู่</option>
-      <option value="all">ครบทั้ง 7 วัน</option>
-    </select>
     <textarea id="ltext" readonly style="margin-top:10px"></textarea>
     <div class="row">
       <button class="btn2" style="margin-top:10px" onclick="copyLine()">📋 คัดลอกข้อความ</button>
       <button class="btnline" style="margin-top:10px" onclick="shareLine()">เปิด LINE เพื่อส่ง</button>
     </div>
-    <button class="btnline" data-pdfbtn onclick="sharePdfLine()">📄 ส่ง PDF ผ่าน LINE (ตามขอบเขตที่เลือกด้านบน)</button>
+    <button class="btnline" data-pdfbtn onclick="sharePdfLine()">📄 ส่ง PDF ผ่าน LINE</button>
     <button class="btn2" onclick="document.getElementById('lmodal').classList.add('hide')">ปิดหน้าต่าง</button>
     <div class="note" id="lnote"></div>
   </div>
@@ -538,7 +509,7 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
 <script>
 /* ============================================================
-   NutriPlan 24 — Prototype (HTML ไฟล์เดียว)
+   NutriPlan 24 — Prototype (HTML ไฟล์เดียว) · แผนอาหารรายสัปดาห์
    ============================================================ */
 /* ---------- ตั้งค่า Supabase ----------
    ใส่ Project URL และ anon public key (Project Settings → API) เท่านั้น
@@ -563,6 +534,7 @@ const normName=s=>(s||'').trim().toLowerCase().replace(/\s+/g,'');
 
 let ROLE=null, CFG=null, DAYS=[], BOOTING=false, INVITE=null;
 let TOKEN=null, UNAME='', LOGGING=false, UNAUTH_SHOWN=false;
+let DATE_USER=false;   /* true = ผู้ใช้แก้วันที่เองในรอบนี้ (ไม่ดึงกลับเป็นวันนี้ระหว่างเปิดแอปค้างไว้) */
 
 /* ================= Supabase client ================= */
 const CFG_OK=/^https:\/\//.test(SUPABASE_URL)&&!/YOUR-/.test(SUPABASE_URL+SUPABASE_ANON_KEY);
@@ -654,7 +626,17 @@ function flushNow(){
   try{ save(); }catch(e){}
   flushDirty();
 }
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') flushNow(); });
+/* วันที่ของแผน = วันนี้เสมอ: ถ้าเปิดแอปค้างข้ามวัน (และผู้ใช้ไม่ได้แก้วันที่เอง) ให้ขยับเป็นวันนี้อัตโนมัติ */
+function refreshToday(){
+  if(!ROLE||!PID||BOOTING||DATE_USER) return;
+  const t=todayStr();
+  if(document.getElementById('sdate').value!==t){ document.getElementById('sdate').value=t; upd(); run(); }
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden') flushNow();
+  else refreshToday();
+});
+setInterval(refreshToday,60000);
 window.addEventListener('pagehide',flushNow);
 window.addEventListener('beforeunload',e=>{ if(FAILED.size){ e.preventDefault(); e.returnValue=''; } });
 
@@ -896,13 +878,7 @@ function migrate(d){
       normal:!!s.normal, dose:clean(s.dose||'')
     })):null;
   }
-  if(!o.locks||typeof o.locks!=='object'||Array.isArray(o.locks)) o.locks={};
-  Object.keys(o.locks).forEach(k=>{
-    const v=o.locks[k];
-    if(!/^[0-6]\|/.test(k)||!Array.isArray(v)){ delete o.locks[k]; return; }
-    o.locks[k]=v.filter(i=>i&&menuOf(i.n)).map(i=>({n:i.n,q:(+i.q>0&&+i.q<=4)?+i.q:1}));
-    if(!o.locks[k].length) delete o.locks[k];
-  });
+  delete o.locks; delete o.pm;   /* แผนรายสัปดาห์ไม่มีการล็อกเมนูรายวัน / รูปแบบพิมพ์ 2 วันต่อหน้าแล้ว */
   if(o.body!==undefined){
     const b=(o.body&&typeof o.body==='object'&&!Array.isArray(o.body))?o.body:{}, nb={};
     Object.keys(BODY_IDS).forEach(k=>{ const x=parseFloat(b[k]); nb[k]=(Number.isFinite(x)&&x>0)?String(x):''; });
@@ -928,7 +904,6 @@ function legacyImport(){
   if(old&&typeof old==='object'){
     const d=Object.assign({},old);
     d.supps=sGet('nutri_supps',null);
-    d.locks=sGet('nutri_item_locks',null);
     d.bazi =sGet('nutri_bazi',null);
     return [{id:newId(),name:clean(UNAME)||'ผู้รับแผนคนที่ 1',data:migrate(d)}];
   }
@@ -972,7 +947,7 @@ function renderProfSel(){
   profsel.value=PID;
   profname.value=profName();
   whoami.innerHTML=`แผนสำหรับ <b>${esc(profName())}</b>`;
-  profnote.innerHTML=`มีผู้รับแผนในบัญชีนี้ <b>${PROF.length}</b> คน · ข้อมูลของแต่ละคนแยกกันทั้งหมด ทั้งเป้าหมาย วันเริ่มต้น อาหารเสริม ธาตุประจำตัว และเมนูที่ล็อกไว้`;
+  profnote.innerHTML=`มีผู้รับแผนในบัญชีนี้ <b>${PROF.length}</b> คน · ข้อมูลของแต่ละคนแยกกันทั้งหมด ทั้งเป้าหมาย อาหารเสริม และธาตุประจำตัว`;
 }
 function switchProfile(id){
   if(id===PID) return;
@@ -1044,7 +1019,6 @@ function applyData(d){
   document.getElementById('autop').checked=d.af!==false;
   dm.value=d.dm||''; dmstr.value=d.ds||'strong';
   style.value=d.s||'all'; breakslot.value=d.b||'เช้า';
-  pmode.value=d.pm||'compact';
   {
     const bd=(d.body&&typeof d.body==='object')?d.body:{};
     Object.keys(BODY_IDS).forEach(k=>{ document.getElementById(BODY_IDS[k]).value=bd[k]||''; });
@@ -1054,7 +1028,6 @@ function applyData(d){
   SUPPS=(Array.isArray(d.supps)&&d.supps.length)?JSON.parse(JSON.stringify(d.supps)):JSON.parse(JSON.stringify(DEFAULT_SUPPS));
   /* [] = ผู้ใช้ตั้งใจล้างทั้งหมด ต้องคงไว้ */
   SON=new Set(Array.isArray(d.sup)?d.sup.filter(id=>SUPPS.some(x=>x.id===id)):SUPPS.map(x=>x.id));
-  ITEM_LOCKS=d.locks||{};
   bdate.value=(d.bazi&&d.bazi.d)||'';
   btime.value=(d.bazi&&d.bazi.t)||'12:00';
   {
@@ -1067,11 +1040,10 @@ function applyData(d){
     setTMode(bz.m==='clock'?'clock':'solar');   /* ข้อมูลเดิมที่ยังไม่มีค่า = เวลาสุริยะจริง (ค่าเริ่มต้น) */
   }
   bzerr.innerHTML='';
-  /* โปรไฟล์ใหม่ = วันนี้ · โปรไฟล์เดิม = วันที่ที่บันทึกไว้ */
-  sdate.value=d.sd||todayStr();
+  /* วันเริ่มต้นของแผน = วันนี้เสมอทุกครั้งที่เข้าแอป/สลับผู้รับแผน (ไม่ใช้วันที่ที่เคยบันทึกไว้ เพราะทำให้ลูกค้าเห็นวันเก่า) */
+  DATE_USER=false;
+  sdate.value=todayStr();
   buildSupps();
-  document.body.classList.toggle('pcompact',pmode.value==='compact');
-  document.body.classList.toggle('pfull',pmode.value!=='compact');
   mrows.innerHTML='';   /* ไม่นำค่ารายมื้อของคนก่อนหน้ามาใช้ */
   upd();
   /* ใช้เป้ารายมื้อที่บันทึกไว้ได้ก็ต่อเมื่อครบพอดีกับจำนวนมื้อที่คำนวณได้ในตอนนี้ ไม่งั้นกระจายใหม่ตามโมเดลที่เลือก */
@@ -1331,7 +1303,7 @@ function renderChart(){
   const M=HMET[HCH], pts=chartSeries(HCH);
   const tabs='<div class="htabs" role="tablist">'+Object.keys(HMET).map(k=>
     `<button type="button" role="tab" class="htab${k===HCH?' on':''}" aria-selected="${k===HCH}" ${cnt[k]?'':'disabled'} onclick="chartTab('${k}')">${HMET[k].n}</button>`).join('')+'</div>';
-  if(!pts.length){ el.innerHTML=tabs+'<div class="note" style="margin:0">ยังไม่มีข้อมูลตัวชี้วัดนี้ในประวัติ — กรอกค่าแล้วกด “บันทึกประวัติครั้งนี้”</div>'; return; }
+  if(!pts.length){ el.innerHTML=tabs+'<div class="note" style="margin:0">ยังไม่มีข้อมูลตัวชี้วัดนี้ในประวัติ — กรอกค่าแล้วกด "บันทึกประวัติครั้งนี้"</div>'; return; }
   const sel=(HSEL!=null&&HSEL<pts.length)?HSEL:pts.length-1, c=pts[sel], dl=pts[pts.length-1].v-pts[0].v;
   const info=pts.length>1
     ?`<div class="hinfo">📍 <b>${esc(hShort(new Date(c.t)))}</b> · ${hfmt(HCH,c.v)} ${M.u} &nbsp;|&nbsp; ตั้งแต่ครั้งแรก ${dl>0?'+':''}${hfmt(HCH,dl)} ${M.u} (${pts.length} ครั้ง)</div>`
@@ -1570,7 +1542,7 @@ function histDetailHtml(r){
       ${row('เติมโปรตีนอัตโนมัติ',d.af===false?'ปิด':'เปิด')}
       ${row('อาหารเสริมที่เปิดใช้',sups)}
     </table>
-    <div class="note">นี่คือค่าตั้งต้นของแผนตอนที่กดบันทึก ส่วนเมนูรายวันคำนวณใหม่จากค่านี้ทุกครั้ง</div>
+    <div class="note">นี่คือค่าตั้งต้นของแผนตอนที่กดบันทึก ส่วนเมนูแนะนำคำนวณใหม่จากค่านี้ทุกครั้ง</div>
     <div id="hedit${Number(r.id)}"></div>
     <button type="button" class="btn2" style="padding:8px;font-size:12px" onclick="histEditOpen(${Number(r.id)})">✏️ แก้ไขค่าที่บันทึกผิด</button>`;
 }
@@ -1593,7 +1565,7 @@ async function histToggle(id){
 function renderHist(){
   const el=document.getElementById('histlist'); if(!el) return;
   if(!HIST.length){
-    el.innerHTML=HOK?'<div class="note">ยังไม่มีประวัติของผู้รับแผนคนนี้ กดปุ่ม “บันทึกประวัติครั้งนี้” ด้านบนเพื่อเริ่มบันทึก</div>':'';
+    el.innerHTML=HOK?'<div class="note">ยังไม่มีประวัติของผู้รับแผนคนนี้ กดปุ่ม "บันทึกประวัติครั้งนี้" ด้านบนเพื่อเริ่มบันทึก</div>':'';
     return;
   }
   const lab={manual:'📌 บันทึกเอง',auto:'⚙️ อัตโนมัติ',create:'🆕 สร้างใหม่',duplicate:'📄 ทำสำเนา'};
@@ -1947,7 +1919,11 @@ const MENUS=[
  M('มะเขือเทศราชินี + ไข่ต้ม 1 ฟอง','ของว่าง',110,8,8,'snack','egg','fire',1),
  M('ถั่วแระต้ม 1 ถ้วย','ของว่างโปรตีนพืช',120,11,9,'snack','plant','wood'),
  M('เห็ดหูหนูดำยำ','1 จานเล็ก',90,5,8,'snack','plant','water'),
- M('ซุปใสเต้าหู้ไข่','1 ถ้วย',100,9,5,'snack','plant','earth')
+ M('ซุปใสเต้าหู้ไข่','1 ถ้วย',100,9,5,'snack','plant','earth'),
+ M('สลัดผักรวมน้ำสลัดใส','ผักสลัด 1 จาน + น้ำสลัดใสเล็กน้อย',70,3,9,'snack','plant','wood'),
+ M('โยเกิร์ตธรรมชาติไม่หวาน + ถั่ว','โยเกิร์ต 1 ถ้วยเล็ก + ถั่วอบ 1 ช้อนโต๊ะ',120,8,9,'snack','plant','earth'),
+ M('สลัดผักรวม + ไข่ต้ม 1 ฟอง','ผักสลัด 1 จาน + ไข่ต้ม 1 ฟอง + น้ำสลัดใส',140,9,10,'snack','egg','wood',1),
+ M('ขนมปังโฮลวีต 1 แผ่น + ไข่ต้ม 1 ฟอง','ของว่างที่หาทานง่าย',150,10,13,'snack','egg','earth',1)
 ];
 /* ตัวช่วยปรับแคลอรี่ (tag 'fill'): ไข่ต้ม + ขนมปังโฮลวีต — ใช้เมื่ออาหารปกติเติมแล้วไม่ถึง/เกินเป้ามื้อ
    q = จำนวนหน่วย (ฟอง/แผ่น) · ไข่ 1 ฟอง ≈ 72 kcal โปรตีน 6.3 ก. · ขนมปังโฮลวีต 1 แผ่น (~30 ก.) ≈ 75 kcal โปรตีน 3.5 ก. คาร์บ 13 ก. */
@@ -1967,6 +1943,8 @@ function dietOK(m,s){
   return ['plant','egg'].includes(m.diet);
 }
 const foodItem=(m,q)=>({n:m.n,d:m.d,q,u:m.u||'ที่',kcal:m.kcal*q,p:m.p*q,c:m.c*q});
+/* รายการในมื้อ: โปรตีนเชก/บอดี้คีย์ และไข่ต้ม แสดงชื่อจริง · อย่างอื่นทั้งหมดรวมเป็น "อาหารปกติ" */
+const isNormalItem=i=>!PRODNAMES.has(i.n)&&i.n!==FILL_EGG.n;
 
 /* ================= อาหารเสริม ================= */
 const TIMES=[['เช้า','ก่อน'],['เช้า','หลัง'],['กลางวัน','ก่อน'],['กลางวัน','หลัง'],['เย็น','ก่อน'],['เย็น','หลัง']];
@@ -2000,7 +1978,7 @@ const PERIODS=[
 const perOf=w=>PERIODS.find(p=>w>=p.w[0]&&w<=p.w[1]);
 
 /* ================= UTILS ================= */
-let SEED=1, USED={}, LASTDAY={}, CURDAY=0, ITEM_LOCKS={}, ROLLED=0;
+let SEED=1, USED={}, LASTDAY={}, CURDAY=0, ROLLED=0;
 const r0=x=>Math.round(x), r1=x=>Math.round(x*10)/10;
 /* ความคลาดเคลื่อนพลังงานรายมื้อที่ยอมรับได้ = ±10% ของเป้ามื้อ (เกินนี้ถือว่าไม่ผ่าน) */
 const KTOL=0.10;
@@ -2018,15 +1996,6 @@ function migSlots(d){
       r[nk]=d.rows[k];
     });
     d.rows=r;
-  }
-  if(d.locks&&typeof d.locks==='object'){
-    const l={};
-    Object.keys(d.locks).forEach(k=>{
-      const i=k.indexOf('|'); let nk=k;
-      if(i>=0&&SLOT_MIG[k.slice(i+1)]) nk=k.slice(0,i+1)+SLOT_MIG[k.slice(i+1)];
-      l[nk]=d.locks[k];
-    });
-    d.locks=l;
   }
   return d;
 }
@@ -2081,8 +2050,7 @@ function hsh(str,day,salt){
   return h%160;
 }
 
-/* ===== โปรตีน: กฎจำนวนช้อน (สูงสุด 3 ช้อน) =====
-   ออลแพลนท์ล้วน ≤2 · รสชาติล้วนรวม ≤3 · ผสม = ออลแพลนท์ ≤1 + รสชาติรวม ≤2 */
+/* ===== โปรตีน: กฎจำนวนช้อน (สูงสุด 3 ช้อน) ===== */
 function readBlends(){
   const map={};
   [1,2,3].forEach(i=>{
@@ -2105,20 +2073,15 @@ function allocScoops(blends){
   });
   return out;
 }
-/* เลือกจำนวนช้อนโปรตีนของมื้อเชก (บอดี้คีย์ + โปรตีนผง)
-   · เปิดเติมอัตโนมัติ: ลองทุกชุดช้อนที่ถูกกฎ จากชนิดโปรตีนที่เลือกไว้ในข้อ 1.5 (เพิ่ม ลด หรือสลับออลแพลนท์ ↔ รสชาติได้)
-     เลือกชุดที่ไม่ทำให้พลังงานเกินเป้ามื้อ (+8%) ก่อน แล้วให้โปรตีนถึงเป้า และเปลี่ยนจากที่กรอกไว้น้อยที่สุด
-   · ปิดเติมอัตโนมัติ: ใช้จำนวนช้อนตามที่กรอกเท่านั้น
-   กฎจำนวนช้อน: รวม ≤3 · ออลแพลนท์ล้วน ≤2 · รสชาติล้วนรวม ≤3 · ผสม = ออลแพลนท์ ≤1 + รสชาติรวม ≤2 */
+/* ชนิดโปรตีนที่เลือกไว้ (เรียงจากโปรตีนสูงไปต่ำ) และกฎจำนวนช้อนที่ใช้ตรวจชุดที่ระบบลองจับคู่ */
+function chosenTypes(){
+  return [...new Set(readBlends().map(b=>b.type))].sort((x,y)=>PRODS[y].p-PRODS[x].p);
+}
 function scoopRuleOK(ap,fl){
   if(ap+fl>3) return false;
-  if(ap>0&&fl>0) return ap<=1&&fl<=2;
-  return ap>0?ap<=2:fl<=3;
-}
-function chosenTypes(){
-  const t=[];
-  [1,2,3].forEach(i=>{ const v=document.getElementById('pt'+i).value; if(v&&PRODS[v]&&!t.includes(v)) t.push(v); });
-  return t;
+  if(ap>0&&fl>0) return ap<=1&&fl<=2;   /* ผสมกัน = ออลแพลนท์ 1 + รสชาติรวม 2 */
+  if(ap>0) return ap<=2;                /* ออลแพลนท์ล้วน ≤2 */
+  return fl<=3;                         /* รสชาติล้วนรวม ≤3 */
 }
 function proteinFill(blends,tK,tP,baseK,baseP){
   const base=allocScoops(blends);
@@ -2150,8 +2113,20 @@ function proteinFill(blends,tK,tP,baseK,baseP){
   if(!best) return base;
   return types.map((t,j)=>best.qs[j]>0?{type:t,...PRODS[t],q:best.qs[j]}:null).filter(Boolean);
 }
-/* มื้อสาย/บ่าย: ตัวเลือกจำนวนโปรตีนผง 0,1,2,3 ช้อน (เพิ่มทีละช้อนจากชนิดที่โปรตีนสูงสุดที่เลือกไว้ในข้อ 1.5 · ไม่เกินกฎจำนวนช้อน · พลังงานไม่เกินเป้ามื้อเกิน 8%)
-   planDay จะลองทุกตัวเลือกร่วมกับของว่าง แล้วเลือกชุดที่ทั้งมื้อพอดีเป้ามากที่สุด */
+/* ทุกชุดจำนวนช้อนที่ถูกกฎ (ชนิดที่เลือกไว้ × 0–3 ช้อน) — ใช้ลองลดช้อนเมื่อเติมอาหารจริง ≥ MIN_ADD แล้วพลังงานมื้อไม่พอดี */
+function scoopCombos(){
+  const types=chosenTypes(), out=[], qs=new Array(types.length).fill(0);
+  (function rec(i){
+    if(i===types.length){
+      let ap=0,fl=0; types.forEach((t,j)=>{ if(t==='allplant') ap+=qs[j]; else fl+=qs[j]; });
+      if(scoopRuleOK(ap,fl)) out.push(types.map((t,j)=>qs[j]>0?{type:t,...PRODS[t],q:qs[j]}:null).filter(Boolean));
+      return;
+    }
+    for(let q=0;q<=3;q++){ qs[i]=q; rec(i+1); }
+  })(0);
+  return out;
+}
+/* ตัวเลือกโปรตีนผง 0–3 ช้อนสำหรับมื้อสาย/บ่าย (เพิ่มทีละช้อนตามชนิดที่เลือก ภายใต้กฎจำนวนช้อน) */
 function snackShakeOptions(blends,tK,tP){
   const out=[[]];
   if(!blends.length||!document.getElementById('autop').checked) return out;
@@ -2199,7 +2174,9 @@ function blendSummary(){
    กฎเสริม: ถ้าอาหารปกติเติมแล้ว "ไม่ถึง" เป้า (ต่ำกว่าเป้าเกิน 5%) จะสร้างตัวเลือก อาหารปกติ + ไข่ต้ม/ขนมปังโฮลวีต
    ถ้าอาหารปกติ "เกิน" เป้า จะถูกตัดออกและเลือกอาหารปกติที่เบากว่า + ไข่ต้ม/ขนมปังโฮลวีตมาเติมส่วนที่เหลือแทน */
 /* ของว่างที่หาทานยาก/ต้องทำเอง ไม่ใช้ในมื้อสาย–บ่าย (ยังใช้เป็นเมนูเสริมในมื้อหลักได้) */
-const SNACK_NOT_EASY=new Set(['เห็ดหูหนูดำยำ','ซุปใสเต้าหู้ไข่','เต้าหู้ไข่ลวก + น้ำจิ้มซีฟู้ด','งาดำบด 1 ชต. + นมถั่วเหลือง']);
+const SNACK_NOT_EASY=new Set(['เห็ดหูหนูดำยำ','ซุปใสเต้าหู้ไข่','เต้าหู้ไข่ลวก + น้ำจิ้มซีฟู้ด','งาดำบด 1 ชต. + นมถั่วเหลือง','สลัดผักรวมน้ำสลัดใส']);
+/* ปริมาณอาหารที่เติมเข้ามื้อต้องรวมไม่ต่ำกว่านี้ — ต่ำกว่า 100 kcal ในทางปฏิบัติทำไม่ได้ (เช่น ไข่ 1 ฟอง ≈ 72 kcal) */
+const MIN_ADD=100;
 const WIDE_SLACK=4;   /* ค่าเผื่อคาร์บ (กรัม/มื้อ) ตอนโควตาคาร์บหมดแล้ว — ตั้ง 0 ถ้าต้องการเคร่งที่สุด */
 function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban,opt){
   opt=opt||{};
@@ -2215,14 +2192,16 @@ function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban,opt){
   /* มื้อสาย/บ่าย: ของว่างที่หาทานง่าย + (ไข่ต้ม/ขนมปังโฮลวีตเสริม) เท่านั้น ไม่ใช้อาหารจานหลัก */
   let easy=snacks.filter(m=>!SNACK_NOT_EASY.has(m.n));
   if(!easy.length) easy=snacks;
-  const primary=snack?easy:mains;
+  /* ช่องว่างพลังงานเล็ก (<250 kcal): ใช้เมนูของว่าง (ไข่ต้ม/ขนมปัง/โยเกิร์ต/สลัด) แทนอาหารจานหลักได้ด้วย */
+  const primary=snack?easy:(tK<250?mains.concat(easy):mains);
   const side=snack?easy:snacks.concat(mains.filter(m=>m.kcal<=200));
   const banned=cb=>opt.hardBan&&ban&&cb.some(x=>ban.has(x.m.n));
   const mk=cb=>{let K=0,P=0,C=0,E=0;cb.forEach(x=>{K+=x.m.kcal*x.q;P+=x.m.p*x.q;C+=x.m.c*x.q;E+=x.m.egg*x.q;});return {cb,K,P,C,E,nf:0};};
 
   /* 1) ชุดอาหารปกติ (ยังไม่รวมตัวเสริม) */
   const raw=[];
-  const add=cb=>{ if(banned(cb)) return; const v=mk(cb); if(st.eggs+v.E<=4) raw.push(v); };
+  /* ทุกรายการที่เติมต้องให้พลังงานอย่างน้อย MIN_ADD (ไม่มีครึ่งหน่วยของของว่างเล็กๆ ที่เหลือไม่ถึง 100 kcal) */
+  const add=cb=>{ if(banned(cb)||cb.some(x=>x.m.kcal*x.q<MIN_ADD)) return; const v=mk(cb); if(st.eggs+v.E<=4) raw.push(v); };
   const qs=tK>=380?[1,1.5,2]:[1,1.5], aq=tK>=500?[1,1.5]:[1];   /* มื้อใหญ่ให้เพิ่มปริมาณได้ */
   primary.forEach(m=>qs.forEach(q=>add([{m,q}])));
   if(maxItems>=2) primary.forEach(a=>side.forEach(b=>{
@@ -2240,12 +2219,13 @@ function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban,opt){
       return {cb,K:v.K+f.K,P:v.P+f.P,C:v.C+f.C,E:v.E+f.egg,nf:(f.e?1:0)+(f.b?1:0)};
     };
     const bases=raw.slice();
-    if(tK<=400) bases.push({cb:[],K:0,P:0,C:0,E:0,nf:0});
+    if(tK<=400) bases.push({cb:[],K:0,P:0,E:0,nf:0});
     bases.forEach(v=>{
       const gap=tK-v.K;
       if(gap<=tol*0.5) return;
       let bestAll=null, bestEgg=null;
       FILLS.forEach(f=>{
+        if(f.K<MIN_ADD) return;   /* ไข่ 1 ฟอง/ขนมปัง 1 แผ่น เดี่ยวๆ ให้ไม่ถึง 100 kcal */
         if(st.eggs+v.E+f.egg>4) return;
         const err=Math.abs(gap-f.K);
         if(!bestAll||err<bestAll.err) bestAll={f,err};
@@ -2255,6 +2235,8 @@ function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban,opt){
       if(bestEgg&&(!bestAll||bestEgg.f!==bestAll.f)) cands.push(mkFill(v,bestEgg.f));
     });
   }
+  /* ข้อกำหนด: ชุดที่เติมต้องให้พลังงานรวม ≥ MIN_ADD (100 kcal) — ไม่มีการเติมเศษแคลอรี่ต่ำกว่านี้ */
+  for(let i=cands.length-1;i>=0;i--) if(cands[i].K<MIN_ADD) cands.splice(i,1);
   if(!cands.length) return null;
 
   /* 3) กรองพลังงานก่อน: ต้องอยู่ในกรอบ ±tol ถ้าไม่มีเลยค่อยใช้ชุดที่ใกล้เป้าที่สุด */
@@ -2338,7 +2320,7 @@ function mealState(p,skipSlot){
   return st;
 }
 
-/* ========== วางแผน 1 วัน ========== */
+/* ========== วางแผน 1 วัน (ใช้เป็นแผนประจำสัปดาห์ ทานซ้ำได้ทุกวัน) ========== */
 function planDay(day,cfg){
   const st={eggs:0,today:new Set()};
   const per=cfg.per, blends=readBlends();
@@ -2348,7 +2330,7 @@ function planDay(day,cfg){
   else if(per.mode==='bk1'){ baseMap['เช้า']='bk'; baseMap['เย็น']='flav'; }
   else { baseMap[cfg.breakSlot]='flav'; }
 
-  /* 1) วางเชก (เติมโปรตีนก่อนอาหาร) + เมนูที่ล็อกไว้ */
+  /* 1) วางเชก (เติมโปรตีนก่อนอาหาร) */
   const meals=cfg.slots.map(s=>{
     const mode=baseMap[s.slot]; const items=[];
     if(mode==='bk'){
@@ -2361,13 +2343,11 @@ function planDay(day,cfg){
         items.push({n:f.n,q:f.q,u:f.u,kcal:f.kcal*f.q,p:f.p*f.q,c:f.c*f.q}));
     }
     const sn=isSnackSlot(s.slot);
-    const locked=(ITEM_LOCKS[day+'|'+s.slot]||[]).map(li=>{const mn=menuOf(li.n);return mn?foodItem(mn,+li.q||1):null;}).filter(Boolean);
-    locked.forEach(it=>{ items.push(it); st.today.add(it.n); st.eggs+=menuOf(it.n).egg*it.q; });
-    return {slot:s.slot,type:sn?'snack':(mode?'shake':'normal'),bk:mode==='bk',items,tK:s.kcal,tP:s.prot,locked:locked.length>0,over:false};
+    return {slot:s.slot,type:sn?'snack':(mode?'shake':'normal'),bk:mode==='bk',items,tK:s.kcal,tP:s.prot,over:false};
   });
   const p={meals}; recalcDay(p);
 
-  /* 2) โควตาคาร์บที่เหลือ = โควตารายวัน − คาร์บเชก − คาร์บเมนูล็อก (กันไว้ก่อน) */
+  /* 2) โควตาคาร์บที่เหลือ = โควตารายวัน − คาร์บเชก */
   let budget=cfg.carbG-p.C;
   const needs=meals.map(m=>Math.max(0,m.tK-m.K));
   let needLeft=needs.reduce((a,b)=>a+b,0);
@@ -2379,7 +2359,7 @@ function planDay(day,cfg){
     const free=Math.max(0,budget);
     const share=needLeft>0?free*needs[i]/needLeft:free;
     const pick=(gK,gP,dry)=>{
-      const maxI=m.locked?1:(m.type==='shake'?(gK>250?2:1):2);
+      const maxI=(m.type==='shake'?(gK>250?2:1):2);
       const a=[cfg,st,Math.max(0,gK),Math.max(0,gP)];
       const o={strict:true,minPool:6,tol:tolK,skipIfNoGain:true,dry};   /* minPool: ต้องมีเมนูที่ไม่เกินโควตาอย่างน้อย 6 ชุด ไม่งั้นขยายพูล */
       let r=pickMenus(...a,share,snack,maxI,day,0,null,o);
@@ -2387,10 +2367,45 @@ function planDay(day,cfg){
       if(!r) r=pickMenus(...a,free,snack,maxI,day,0,null,{minPool:6,tol:tolK,skipIfNoGain:true,dry});
       return r;
     };
-    const needFood=(gK,gP)=>m.locked?(gK>tolK||gP>4):(gK>m.tK*0.05||(gP>2&&gK>m.tK*0.02));
+    const needFood=(gK,gP)=>(gK>m.tK*0.05||(gP>2&&gK>m.tK*0.02));
+
+    /* มื้อเชก (ไม่ใช่มื้อสาย/บ่าย): ถ้าเติมอาหารตามปกติแล้วพลังงานยังคลาดเกิน ±10%
+       (เช่น เชกขาดอยู่ 40 kcal แต่อาหารที่เติมได้ต้องไม่ต่ำกว่า 100 kcal) → ลองลดจำนวนช้อนโปรตีน
+       เพื่อเว้นที่ให้อาหารจริง ≥ MIN_ADD แล้วเลือกชุดที่พลังงานพอดีและโปรตีนใกล้เป้าที่สุด */
+    if(!snack&&m.type==='shake'&&blends.length&&document.getElementById('autop').checked){
+      const baseK=m.bk?PRODS.bodykey.kcal:0, baseP=m.bk?PRODS.bodykey.p:0, baseC=m.bk?PRODS.bodykey.c:0;
+      const evalOpt=sc=>{
+        const sK=sc.reduce((a,b)=>a+b.kcal*b.q,0), sP=sc.reduce((a,b)=>a+b.p*b.q,0);
+        const K0=baseK+sK, P0=baseP+sP, gK=m.tK-K0, gP=m.tP-P0;
+        let K1=K0, P1=P0;
+        if(needFood(gK,gP)){ const r=pick(gK,gP,true); if(r){ K1+=r.K; P1+=r.P; } }
+        return {K1,P1,err:Math.abs(m.tK-K1),short:Math.max(0,m.tP-P1)};
+      };
+      const cur=m.items.filter(i=>PRODNAMES.has(i.n)&&i.n!==PRODS.bodykey.n);
+      const curQ={}; cur.forEach(i=>{ curQ[i.n]=i.q; });
+      const e0=evalOpt(cur.map(i=>({kcal:i.kcal/i.q,p:i.p/i.q,q:i.q})));
+      if(e0.err>tolK+0.5){
+        let best=null;
+        scoopCombos().forEach(sc=>{
+          if(!baseK&&!sc.length) return;                 /* มื้อที่ไม่มีบอดี้คีย์ ต้องมีโปรตีนผงอย่างน้อย 1 ช้อน */
+          const e=evalOpt(sc);
+          const dev=sc.reduce((a,b)=>a+Math.abs(b.q-(curQ[b.n]||0)),0)+cur.reduce((a,i)=>a+(sc.some(b=>b.n===i.n)?0:i.q),0);
+          const score=(e.err>tolK+0.5?5000+e.err*10:e.err*0.3)+e.short*9+dev*4;
+          if(!best||score<best.score) best={score,sc,e};
+        });
+        if(best&&best.e.err<e0.err-1){
+          const oldC=m.C;
+          m.items=[];
+          if(m.bk){ const b=PRODS.bodykey; m.items.push({n:b.n,q:1,u:b.u,kcal:b.kcal,p:b.p,c:b.c}); }
+          best.sc.forEach(f=>m.items.push({n:f.n,q:f.q,u:f.u,kcal:f.kcal*f.q,p:f.p*f.q,c:f.c*f.q}));
+          m.K=m.items.reduce((a,i)=>a+i.kcal,0); m.P=m.items.reduce((a,i)=>a+i.p,0); m.C=m.items.reduce((a,i)=>a+i.c,0);
+          budget+=oldC-m.C;
+        }
+      }
+    }
 
     /* มื้อสาย/บ่าย: ลองจำนวนโปรตีนผง 0–3 ช้อน ร่วมกับของว่าง/ไข่ต้ม/ขนมปังโฮลวีต แล้วเลือกชุดที่พอดีเป้าพลังงานและโปรตีนที่สุด */
-    if(snack&&!m.locked){
+    if(snack){
       let best=null;
       snackShakeOptions(blends,m.tK,m.tP).forEach(opt=>{
         const sK=opt.reduce((a,b)=>a+b.kcal*b.q,0), sP=opt.reduce((a,b)=>a+b.p*b.q,0);
@@ -2408,7 +2423,7 @@ function planDay(day,cfg){
     }
 
     const gK=m.tK-m.K, gP=m.tP-m.P;
-    /* เติมเมื่อพลังงานยังขาดเกิน 5% ของเป้ามื้อ หรือโปรตีนขาด (และยังมีที่ว่างพลังงาน) · มื้อที่ล็อกเมนูไว้เติมเฉพาะเมื่อหลุดกรอบ ±10% */
+    /* เติมเมื่อพลังงานยังขาดเกิน 5% ของเป้ามื้อ หรือโปรตีนขาด (และยังมีที่ว่างพลังงาน) */
     if(needFood(gK,gP)){
       const r=pick(gK,gP,false);
       if(r){
@@ -2422,7 +2437,7 @@ function planDay(day,cfg){
   return p;
 }
 
-/* ========== สถานะรายวัน: ผ่าน / มีคำเตือน / ไม่ผ่าน ========== */
+/* ========== สถานะแผน: ผ่าน / มีคำเตือน / ไม่ผ่าน ========== */
 function dayStatus(p,c){
   const fail=[],warn=[];
   if(![p.K,p.P,p.C].every(Number.isFinite)) fail.push('พบค่าตัวเลขผิดปกติ ตรวจสอบช่องกรอกข้อมูล');
@@ -2444,19 +2459,15 @@ function dayStatus(p,c){
     if(!m.items.length) return;
     if(m.P<m.tP-1.5) warn.push(`มื้อ${m.slot}: โปรตีน ${r1(m.P)} ก. ต่ำกว่าเป้ามื้อ ${m.tP} ก.`);
     const ek=(m.K-m.tK)/Math.max(1,m.tK);
-    if(Math.abs(ek)>KTOL+0.0005) fail.push(`มื้อ${m.slot}: พลังงาน ${r0(m.K)} kcal คลาดจากเป้ามื้อ ${m.tK} kcal ${ek>0?'+':''}${Math.round(ek*100)}% (เกินเกณฑ์ ±${Math.round(KTOL*100)}%)${m.items.every(i=>PRODNAMES.has(i.n))?' — ปรับจำนวนช้อนโปรตีนหรือเป้ามื้อ':m.locked?' — ลองปลดล็อกเมนูในมื้อนี้':''}`);
+    if(Math.abs(ek)>KTOL+0.0005) fail.push(`มื้อ${m.slot}: พลังงาน ${r0(m.K)} kcal คลาดจากเป้ามื้อ ${m.tK} kcal ${ek>0?'+':''}${Math.round(ek*100)}% (เกินเกณฑ์ ±${Math.round(KTOL*100)}%)${m.items.every(i=>PRODNAMES.has(i.n))?' — ปรับจำนวนช้อนโปรตีนหรือเป้ามื้อ':''}`);
   });
   return {level:fail.length?'fail':warn.length?'warn':'pass',fail,warn};
 }
 
-/* ========== สุ่มใหม่เฉพาะมื้อเดียว (มี rollback) ========== */
+/* ========== สุ่มข้อเสนอแนะใหม่เฉพาะมื้อเดียว (มี rollback) ========== */
 function rerollMeal(day,slot){
   const p=DAYS[day]; if(!p||!CFG) return;
   const mi=p.meals.findIndex(x=>x.slot===slot); if(mi<0) return;
-  if((ITEM_LOCKS[day+'|'+slot]||[]).length){
-    lockinfo.innerHTML='<span style="color:var(--warn)">🔒 มื้อนี้มีเมนูที่ล็อกไว้ ปลดล็อกก่อนจึงจะสุ่มใหม่ได้</span>';
-    return;
-  }
   const backup=JSON.parse(JSON.stringify(p));
   const failBefore=dayStatus(p,CFG).fail.length;
   const m=p.meals[mi];
@@ -2483,12 +2494,13 @@ function rerollMeal(day,slot){
   recalcDay(p);
   if(dayStatus(p,CFG).fail.length>failBefore){
     DAYS[day]=backup; renderAll(day);
-    lockinfo.innerHTML='<span style="color:var(--warn)">เมนูใหม่ทำให้วันนี้ไม่ผ่านการตรวจสอบ จึงคืนเมนูเดิม</span>';
+    lockinfo.innerHTML='<span style="color:var(--warn)">เมนูใหม่ทำให้แผนไม่ผ่านการตรวจสอบ จึงคืนเมนูเดิม</span>';
     return;
   }
   oldFood.forEach(i=>{ if(USED[i.n]) USED[i.n]--; });
   renderAll(day);
-  lockinfo.innerHTML=`🔀 สุ่มมื้อ${esc(slot)}ของ${thMid(addDay(CFG.start,day))}ใหม่แล้ว → <b>${esc(r.cb.map(x=>x.m.n).join(' + '))}</b> · ถ้าถูกใจให้กด 🔒 ล็อกไว้ ก่อนคำนวณใหม่`;
+  save();
+  lockinfo.innerHTML=`🔀 สุ่มข้อเสนอแนะมื้อ${esc(slot)}ใหม่แล้ว → <b>${esc(r.cb.map(x=>x.m.n).join(' + '))}</b>`;
 }
 
 /* ========== อาหารเสริมรายมื้อ ========== */
@@ -2529,44 +2541,30 @@ function run(){
        carbPct:pct,carbG:K*pct/4,style:style.value,breakSlot:breakslot.value,
        bazi:(style.value==='bazi'&&bz)?bz:null, bzprofile:bz, who:profName()};
   USED={}; LASTDAY={};
-  DAYS=[0,1,2,3,4,5,6].map(d=>planDay(d,CFG));
-  renderAll(Math.min(Math.max(CURDAY,0),6)); save(); lockInfo();
+  DAYS=[planDay(0,CFG)];   /* แผนรายสัปดาห์ = แผน 1 วันที่ทานซ้ำได้ทุกวัน */
+  renderAll(0); save(); lockInfo();
 }
 const reroll=()=>{SEED+=7+Math.floor(Math.random()*50);run();};
-
-function toggleItemLock(day,slot,idx){
-  const m=DAYS[day]&&DAYS[day].meals.find(x=>x.slot===slot); if(!m) return;
-  const t=m.items[idx]; if(!t||PRODNAMES.has(t.n)) return;
-  const key=day+'|'+slot;
-  const list=ITEM_LOCKS[key]||[];
-  const ex=list.findIndex(i=>i.n===t.n);
-  if(ex>=0) list.splice(ex,1); else list.push({n:t.n,q:t.q});
-  if(list.length) ITEM_LOCKS[key]=list; else delete ITEM_LOCKS[key];
-  save(); renderAll(day); lockInfo();
-}
-function unlockAllItems(){ ITEM_LOCKS={}; save(); run(); }
 function lockInfo(){
-  const n=Object.keys(ITEM_LOCKS).reduce((a,k)=>a+ITEM_LOCKS[k].length,0);
-  lockinfo.innerHTML=n?`🔒 ล็อกเมนูไว้แล้ว <b>${n}</b> รายการ — เมนูเหล่านี้จะไม่เปลี่ยนเมื่อคำนวณใหม่`
-    :'กด 🔒 ล็อกข้างรายการอาหารเพื่อตรึงเฉพาะเมนูที่ถูกใจ หรือกด 🔀 สุ่มมื้อนี้ใหม่ เพื่อเปลี่ยนเฉพาะมื้อเดียว';
+  lockinfo.innerHTML='กด 🔀 ที่แต่ละมื้อเพื่อสุ่มข้อเสนอแนะอาหารปกติของมื้อนั้นใหม่ หรือกด "สลับเมนูแนะนำใหม่ทั้งแผน" เพื่อเปลี่ยนทุกมื้อ';
 }
 
 /* ================= RENDER ================= */
-function dayBlock(p,idx){
-  const c=CFG,per=c.per,dt=addDay(c.start,idx),S=dayStatus(p,c);
+const STYLE_NAME={all:'ทั่วไป (เนื้อสัตว์ ปลา ไข่)',fish:'เน้นปลา / อาหารทะเล',veg:'มังสวิรัติ',bazi:'ตามดวงจีน (Bazi)'};
+function planHead(p){
+  const c=CFG,per=c.per,S=dayStatus(p,c);
   const dk=Math.abs(p.K-c.kcal)/Math.max(1,c.kcal);
   const kC=dk<=0.05?'var(--acc)':dk<=0.10?'var(--warn)':'var(--dan)';
   const pC=p.P>=c.prot?'var(--acc)':p.P>=c.prot*0.9?'var(--warn)':'var(--dan)';
   const cC=p.C<=c.carbG+0.5?'var(--acc2)':p.C<=c.carbG*1.1?'var(--warn)':'var(--dan)';
   const pe=p.P*4/Math.max(1,p.K)*100;
   let box;
-  if(S.level==='pass') box=`<div class="box b-ok">✅ <b>ผ่าน</b> — พลังงาน โปรตีน คาร์บ และโควตาไข่ของวันนี้อยู่ในกรอบทั้งหมด</div>`;
+  if(S.level==='pass') box=`<div class="box b-ok">✅ <b>ผ่าน</b> — พลังงาน โปรตีน คาร์บ และโควตาไข่ต่อวันอยู่ในกรอบทั้งหมด</div>`;
   else if(S.level==='warn') box=`<div class="box b-warn">⚠️ <b>มีคำเตือน</b> — แผนใช้งานได้ แต่ควรตรวจสอบจุดต่อไปนี้<ul>${S.warn.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`;
   else box=`<div class="box b-dan">⛔ <b>ไม่ผ่าน</b> — ต้องแก้ไขก่อนใช้งาน<ul>${S.fail.concat(S.warn).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`;
-
-  let h=`<div class="card dayblock ${idx%2===1?'pbreak':''} ${idx===CURDAY?'':'dhide'}" id="day${idx}">
-    <div class="dayttl"><i></i>📅 ${thFull(dt)}</div>
-    <div style="margin-bottom:12px">
+  return `<div class="dayttl"><i></i>📅 แผนอาหารประจำสัปดาห์ · Week ${c.week}</div>
+    <div class="note" style="margin-top:0">ทานตามแผนนี้ซ้ำได้ทุกวันตลอดสัปดาห์ · ${thFull(c.start)} ถึง ${thFull(addDay(c.start,6))}</div>
+    <div style="margin:10px 0 12px">
       <span class="pill p-acc">👤 ${esc(c.who)}</span>
       <span class="pill p-blue" style="margin-left:6px">Week ${c.week}</span>
       <span class="pill p-acc" style="margin-left:6px">Period ${per.id} · ${per.name}</span>
@@ -2576,7 +2574,7 @@ function dayBlock(p,idx){
       <div class="note">${per.desc}</div>
     </div>
     <div class="stat">
-      <div><b style="color:${kC}">${r0(p.K)}</b><small>🔥 kcal · เป้า ${c.kcal}</small>
+      <div><b style="color:${kC}">${r0(p.K)}</b><small>🔥 kcal/วัน · เป้า ${c.kcal}</small>
         <div class="bar"><div style="width:${Math.min(100,p.K/Math.max(1,c.kcal)*100)}%;background:${kC}"></div></div></div>
       <div><b style="color:${pC}">${r0(p.P)} ก.</b><small>💪 โปรตีน · ขั้นต่ำ ${c.prot}</small>
         <div class="bar"><div style="width:${Math.min(100,p.P/Math.max(1,c.prot)*100)}%;background:${pC}"></div></div></div>
@@ -2586,38 +2584,73 @@ function dayBlock(p,idx){
         <div class="bar"><div style="width:${Math.min(100,pe*2)}%;background:var(--pur)"></div></div></div>
     </div>
     ${box}`;
-
-  p.meals.forEach(m=>{
-    const okK=Math.abs(m.K-m.tK)<=m.tK*KTOL+0.5, okP=m.P>=m.tP-1.5;
-    const tag=m.type==='snack'
-      ? `<span class="pill p-pur">🍎 ${m.items.some(i=>PRODNAMES.has(i.n))?'โปรตีน + ของว่าง':'ของว่าง'}</span>`
-      : m.type==='shake'
-      ? `<span class="pill p-acc">🥤 ${m.bk?'บอดี้คีย์ + โปรตีน':'โปรตีน'}${m.topped?' + อาหารปกติ':''}</span>`
-      : '<span class="pill p-blue">🍽️ อาหารปกติ</span>';
-    const lk=ITEM_LOCKS[idx+'|'+m.slot]||[];
-    const hasFood=m.items.some(i=>!PRODNAMES.has(i.n));
-    h+=`<div class="meal ${(okK&&okP)?'':'bad'}">
-      <div class="mh"><b>${SLOTICON[m.slot]||'🍽️'} มื้อ${m.slot}</b>
-        <span>${tag}
-          <span class="pill ${okK?'p-acc':'p-warn'}" style="margin-left:6px">${r0(m.K)} / ${m.tK} kcal</span>
-          <span class="pill ${okP?'p-acc':'p-warn'}" style="margin-left:6px">โปรตีน ${r1(m.P)} / ${m.tP} ก.</span>
-          ${m.over?'<span class="pill p-warn" style="margin-left:6px">เลือกเมนูคาร์บต่ำสุดที่มี</span>':''}
-          ${hasFood&&!lk.length?`<button class="mbtn roll noprint" onclick="rerollMeal(${idx},'${m.slot}')">🔀 สุ่มมื้อนี้ใหม่</button>`:''}
-        </span>
-      </div>
-      <table><tr><th>รายการอาหาร</th><th>ปริมาณ</th><th>kcal</th><th>โปรตีน</th><th>คาร์บ</th></tr>`;
-    m.items.forEach((i,k)=>{
-      const on=lk.some(x=>x.n===i.n);
-      const mm=menuOf(i.n);
-      const eltag=(CFG.bazi&&mm)?` <span class="pill ${CFG.bazi.fav.includes(mm.el)?'p-acc':CFG.bazi.avoid.includes(mm.el)?'p-warn':'p-blue'}">ธาตุ${ELN[mm.el]}</span>`:'';
-      const lockBtn=PRODNAMES.has(i.n)?'':
-        `<button class="mbtn noprint ${on?'on':''}" onclick="toggleItemLock(${idx},'${m.slot}',${k})">${on?'🔒 ล็อกอยู่':'🔓 ล็อก'}</button>`;
-      h+=`<tr><td>${PRODNAMES.has(i.n)?'🥤 ':''}${esc(i.n)}${eltag}${i.d?`<span class="dsc">${esc(i.d)}</span>`:''}${lockBtn}</td>
-        <td>${r1(i.q)} ${esc(i.u)}</td><td>${r0(i.kcal)}</td><td>${r1(i.p)} ก.</td><td>${r1(i.c)} ก.</td></tr>`;
-    });
-    h+=`</table></div>`;
+}
+/* ตารางมื้อ: เชก/บอดี้คีย์/ไข่ต้ม แสดงชื่อจริง · อาหารอื่นทั้งหมดรวมเป็น "อาหารปกติ" (ตัวเลขโดยประมาณ) */
+function mealHtml(m,idx){
+  const okK=Math.abs(m.K-m.tK)<=m.tK*KTOL+0.5, okP=m.P>=m.tP-1.5;
+  const tag=m.type==='snack'
+    ? `<span class="pill p-pur">🍎 ${m.items.some(i=>PRODNAMES.has(i.n))?'โปรตีน + ของว่าง':'ของว่าง'}</span>`
+    : m.type==='shake'
+    ? `<span class="pill p-acc">🥤 ${m.bk?'บอดี้คีย์ + โปรตีน':'โปรตีน'}${m.topped?' + อาหารปกติ':''}</span>`
+    : '<span class="pill p-blue">🍽️ อาหารปกติ</span>';
+  const hasFood=m.items.some(i=>!PRODNAMES.has(i.n));
+  let h=`<div class="meal ${(okK&&okP)?'':'bad'}">
+    <div class="mh"><b>${SLOTICON[m.slot]||'🍽️'} มื้อ${m.slot}</b>
+      <span>${tag}
+        <span class="pill ${okK?'p-acc':'p-warn'}" style="margin-left:6px">${r0(m.K)} / ${m.tK} kcal</span>
+        <span class="pill ${okP?'p-acc':'p-warn'}" style="margin-left:6px">โปรตีน ${r1(m.P)} / ${m.tP} ก.</span>
+        ${m.over?'<span class="pill p-warn" style="margin-left:6px">เลือกเมนูคาร์บต่ำสุดที่มี</span>':''}
+        ${hasFood?`<button class="mbtn roll noprint" onclick="rerollMeal(${idx},'${m.slot}')">🔀 สุ่มข้อเสนอแนะมื้อนี้ใหม่</button>`:''}
+      </span>
+    </div>
+    <table><tr><th>รายการอาหาร</th><th>ปริมาณ</th><th>kcal</th><th>โปรตีน</th><th>คาร์บ</th></tr>`;
+  m.items.filter(i=>!isNormalItem(i)).forEach(i=>{
+    const egg=i.n===FILL_EGG.n;
+    h+=`<tr><td>${egg?'🥚 ไข่ต้ม':'🥤 '+esc(i.n)}${egg?'<span class="dsc">เสริมแคลอรี่และโปรตีนให้พอดีเป้ามื้อ (ใช้แทนโปรตีนเชคได้)</span>':''}</td>
+      <td>${r1(i.q)} ${esc(i.u)}</td><td>${r0(i.kcal)}</td><td>${r1(i.p)} ก.</td><td>${r1(i.c)} ก.</td></tr>`;
   });
-  return h+`</div>`;
+  const nf=m.items.filter(isNormalItem);
+  if(nf.length){
+    const K=nf.reduce((a,i)=>a+(+i.kcal||0),0), P=nf.reduce((a,i)=>a+(+i.p||0),0), C=nf.reduce((a,i)=>a+(+i.c||0),0);
+    h+=`<tr><td>🍽️ อาหารปกติ<span class="dsc">เลือกเมนูจากรายการอาหารที่แนะนำด้านล่าง ให้พลังงานรวมใกล้เคียง ≈ ${r0(K)} kcal (ค่าโดยประมาณ)</span></td>
+      <td>≈ 1 มื้อ</td><td>≈ ${r0(K)}</td><td>≈ ${r0(P)} ก.</td><td>≈ ${r0(C)} ก.</td></tr>`;
+  }
+  return h+`</table></div>`;
+}
+function planCard(p){
+  return `<div class="card dayblock" id="day0">${planHead(p)}${p.meals.map(m=>mealHtml(m,0)).join('')}</div>`;
+}
+/* ---------- พาแนล "อาหารที่แนะนำ" ---------- */
+function recIntro(){
+  return `<h2><i></i>🍽️ อาหารที่แนะนำ — สไตล์: ${esc(STYLE_NAME[CFG.style]||'ทั่วไป')}</h2>
+    <div class="note" style="margin-top:0">รายการเมนูเรียงจากแคลอรี่น้อยไปมาก (ไม่แบ่งตามมื้อ) · เลือกเมนูที่พลังงานใกล้เคียงกับ "อาหารปกติ ≈ … kcal" ของแต่ละมื้อในตารางด้านบน · สลับกับเมนูอื่นที่พลังงานใกล้เคียงกันได้ · ปริมาณและค่าสารอาหารเป็นค่าโดยประมาณ</div>`;
+}
+/* รวมเมนูอาหารปกติของทุกมื้อเป็นลิสต์เดียว (เมนู+ปริมาณเดียวกันรวมเป็นแถวเดียว) เรียงพลังงานน้อย → มาก */
+function recFoods(p){
+  const map=new Map();
+  p.meals.forEach(m=>m.items.filter(isNormalItem).forEach(i=>{
+    const key=i.n+'|'+i.q;
+    if(!map.has(key)) map.set(key,{...i});
+  }));
+  return [...map.values()].sort((a,b)=>(a.kcal-b.kcal)||(a.n<b.n?-1:a.n>b.n?1:0));
+}
+function recListHtml(p){
+  const list=recFoods(p);
+  if(!list.length){
+    const sh=p.meals.some(m=>m.items.some(i=>PRODNAMES.has(i.n)));
+    return `<div class="meal rmeal"><div class="note" style="margin:0">${sh?'โปรตีนเชค/บอดี้คีย์ให้พลังงานและโปรตีนครบตามเป้าทุกมื้อแล้ว ไม่ต้องเติมอาหารปกติ':'ไม่ต้องเติมอาหารเพิ่ม'}</div></div>`;
+  }
+  let rows='';
+  list.forEach(i=>{
+    const mm=menuOf(i.n);
+    const eltag=(CFG.bazi&&mm)?` <span class="pill ${CFG.bazi.fav.includes(mm.el)?'p-acc':CFG.bazi.avoid.includes(mm.el)?'p-warn':'p-blue'}">ธาตุ${ELN[mm.el]}</span>`:'';
+    rows+=`<tr><td>${esc(i.n)}${eltag}${i.d?`<span class="dsc">${esc(i.d)}</span>`:''}</td>
+      <td>${r1(i.q)} ${esc(i.u)}</td><td>${r0(i.kcal)}</td><td>${r1(i.p)} ก.</td><td>${r1(i.c)} ก.</td></tr>`;
+  });
+  return `<div class="meal rmeal"><table><tr><th>เมนูแนะนำ (เรียงแคลอรี่น้อย → มาก)</th><th>ปริมาณ</th><th>kcal</th><th>โปรตีน</th><th>คาร์บ</th></tr>${rows}</table></div>`;
+}
+function recCard(p){
+  return `<div class="card" id="recs">${recIntro()}${recListHtml(p)}</div>`;
 }
 
 function baziCard(){
@@ -2635,7 +2668,7 @@ function baziCard(){
   </div>`;
 }
 
-/* อาหารเสริมกินเหมือนกันทุกวัน → แสดงครั้งเดียวก่อนวันแรก (หน้าจอ/พิมพ์/PDF/LINE) */
+/* อาหารเสริมกินเหมือนกันทุกวัน → แสดงครั้งเดียวก่อนตารางมื้อ (หน้าจอ/พิมพ์/PDF/LINE) */
 function suppRows(){
   const present=new Set(CFG.slots.map(s=>s.slot));
   const rows=[],orphan=[];
@@ -2660,49 +2693,23 @@ function suppTable(){
     เครื่องมือนี้ใช้ช่วยคำนวณเชิงโภชนาการทั่วไป ไม่ใช่คำแนะนำทางการแพทย์ ผู้มีโรคประจำตัว ตั้งครรภ์ ให้นมบุตร หรือใช้ยาประจำ ควรปรึกษาแพทย์หรือนักกำหนดอาหารก่อนเริ่มโปรแกรม</div></div>`;
 }
 
-function renderAll(day){
-  CURDAY=day;
-  let h=`<div class="card noprint" style="padding:14px 18px;margin-bottom:14px">
-    <div class="tabs">${DAYS.map((d,i)=>{const lv=dayStatus(d,CFG).level;const ic=lv==='pass'?'✅':lv==='warn'?'⚠️':'⛔';
-      return `<div class="tab ${i===day?'on':''}" id="tab${i}" onclick="showDay(${i})">${ic} ${thMid(addDay(CFG.start,i))}</div>`;}).join('')}</div>
-    <div class="note" id="pmnote"></div></div>`;
-  h+=suppTable();
-  h+=DAYS.map((p,i)=>dayBlock(p,i)).join('');
+function renderAll(){
+  const p=DAYS[0]; if(!p||!CFG) return;
+  let h=suppTable()+planCard(p)+recCard(p);
   if(CFG.style==='bazi') h+=baziCard();
   out.innerHTML=h;
-  DAYS.forEach((_,k)=>{document.getElementById('day'+k).classList.toggle('dhide',k!==day);});
-  pmNote();
-}
-function showDay(i){
-  CURDAY=i;
-  DAYS.forEach((_,k)=>{
-    document.getElementById('day'+k).classList.toggle('dhide',k!==i);
-    document.getElementById('tab'+k).classList.toggle('on',k===i);
-  });
-}
-function applyPrintMode(){
-  const c=pmode.value==='compact';
-  document.body.classList.toggle('pcompact',c);
-  document.body.classList.toggle('pfull',!c);
-  pmNote(); save();
-}
-function pmNote(){
-  const el=document.getElementById('pmnote'); if(!el) return;
-  el.innerHTML=pmode.value==='compact'
-    ? '🖨️ หน้าจอแสดงทีละวัน · เมื่อสั่งพิมพ์จะได้ครบ 7 วัน แบบกระชับ 2 วัน/หน้า'
-    : '🖨️ หน้าจอแสดงทีละวัน · เมื่อสั่งพิมพ์จะได้ครบ 7 วัน แบบเต็มรูปแบบ 1 วัน/หน้า';
 }
 
 /* ================= LINE ================= */
 function lineText(){
-  const c=CFG, scope=document.getElementById('lscope').value;
-  const idx=scope==='all'?DAYS.map((_,i)=>i):[CURDAY];
+  const c=CFG, p=DAYS[0];
   const t=[];
-  t.push(`🥗 NutriPlan 24 — Week ${c.week} | Period ${c.per.id} ${c.per.name}`);
+  const DASH='┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄';
+  t.push(`🥗 NutriPlan 24 — แผนอาหารประจำสัปดาห์ (Week ${c.week} | Period ${c.per.id} ${c.per.name})`);
   t.push(`👤 ผู้รับแผน: ${c.who}`);
+  t.push(`📅 ทานตามแผนนี้ซ้ำได้ทุกวัน ${thMid(c.start)} – ${thMid(addDay(c.start,6))}`);
   t.push(`🎯 เป้าหมาย ${c.kcal} kcal · โปรตีนขั้นต่ำ ${c.prot} ก./วัน · คาร์บรวมไม่เกิน ${r0(c.carbG)} ก.`);
   if(c.bazi) t.push(`☯️ ดวงจีน (ประเมินเบื้องต้น) ดิถี ${c.bzprofile.cn} ${c.bzprofile.yy}${ELN[c.bzprofile.el]} · เสริมธาตุ ${c.bazi.fav.map(e=>ELN[e]).join(' ')}`);
-  const DASH='┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄';
   const sr=suppRows();
   if(sr.rows.length||sr.orphan.length){
     t.push(''); t.push(DASH);
@@ -2710,16 +2717,25 @@ function lineText(){
     sr.rows.forEach(([l,x])=>t.push(`${l}: ${x}`));
     sr.orphan.forEach(x=>t.push(`⚠️ ไม่มีมื้อรองรับ ${x}`));
   }
-  idx.forEach(i=>{
-    const p=DAYS[i];
-    t.push(''); t.push(DASH);
-    t.push(`📅 ${thFull(addDay(c.start,i))}`);
-    t.push(`📊 รวม ${r0(p.K)} kcal · โปรตีน ${r0(p.P)} ก. · คาร์บ ${r0(p.C)} ก.`);
-    p.meals.forEach(m=>{
-      t.push(`${SLOTICON[m.slot]||'🍽️'} [มื้อ${m.slot}] ${r0(m.K)} kcal · โปรตีน ${r1(m.P)} ก. · คาร์บ ${r1(m.C)} ก.`);
-      m.items.forEach(x=>t.push(`   • ${x.n} ${r1(x.q)} ${x.u}${x.d?` (${x.d})`:''}`));
-    });
+  t.push(''); t.push(DASH);
+  t.push(`📊 รวมต่อวัน ${r0(p.K)} kcal · โปรตีน ${r0(p.P)} ก. · คาร์บ ${r0(p.C)} ก.`);
+  p.meals.forEach(m=>{
+    t.push(`${SLOTICON[m.slot]||'🍽️'} [มื้อ${m.slot}] ${r0(m.K)} kcal · โปรตีน ${r1(m.P)} ก. · คาร์บ ${r1(m.C)} ก.`);
+    m.items.filter(i=>!isNormalItem(i)).forEach(x=>t.push(`   • ${x.n===FILL_EGG.n?'ไข่ต้ม':x.n} ${r1(x.q)} ${x.u}`));
+    const nf=m.items.filter(isNormalItem);
+    if(nf.length){
+      const K=nf.reduce((a,i)=>a+i.kcal,0), P=nf.reduce((a,i)=>a+i.p,0), C=nf.reduce((a,i)=>a+i.c,0);
+      t.push(`   • อาหารปกติ ≈ ${r0(K)} kcal · โปรตีน ≈ ${r0(P)} ก. · คาร์บ ≈ ${r0(C)} ก.`);
+    }
   });
+  t.push(''); t.push(DASH);
+  t.push(`🍽️ อาหารที่แนะนำ (${STYLE_NAME[c.style]||'ทั่วไป'}) — เรียงแคลอรี่น้อย → มาก`);
+  const rl=recFoods(p);
+  if(!rl.length) t.push('   • ไม่ต้องเติมอาหารปกติ (เชกครบเป้าแล้ว)');
+  else{
+    rl.forEach(x=>t.push(`   • ${x.n} ${r1(x.q)} ${x.u} — ${r0(x.kcal)} kcal · P ${r1(x.p)} · C ${r1(x.c)}`));
+    t.push('   (เลือกเมนูที่พลังงานใกล้เคียงกับ "อาหารปกติ ≈ … kcal" ของแต่ละมื้อ)');
+  }
   t.push('');
   t.push('💧 ดื่มน้ำ 2–3 ลิตร/วัน 💪 ฝึกแรงต้าน 3–4 ครั้ง/สัปดาห์');
   return t.join('\n');
@@ -2730,7 +2746,7 @@ function buildLineText(){
   if(!CFG||!DAYS.length) return;
   const txt=lineText();
   document.getElementById('ltext').value=txt;
-  document.getElementById('lnote').innerHTML=`ความยาว ${txt.length} ตัวอักษร · กดคัดลอกแล้ววางในแชท LINE ได้ทันที`;
+  document.getElementById('lnote').innerHTML=`ความยาว ${txt.length} ตัวอักษร`+(txt.length>4800?' <span style="color:var(--warn)">· ยาวใกล้เพดาน 5,000 ตัวอักษรของ LINE แนะนำส่งเป็น PDF แทน</span>':' · กดคัดลอกแล้ววางในแชท LINE ได้ทันที');
 }
 function copyLine(){
   const el=document.getElementById('ltext'); el.select(); el.setSelectionRange(0,999999);
@@ -2775,24 +2791,28 @@ function pdfDownload(){
 async function pdfShareAgain(){
   if(!PDFFILE) return;
   try{ await navigator.share({files:[PDFFILE],title:'NutriPlan 24'}); pdfMsg('✅ เปิดหน้าส่งแล้ว — เลือก LINE แล้วเลือกแชทที่ต้องการ'); }
-  catch(e){ if(e&&e.name==='AbortError') pdfMsg(pdfBtns('ยกเลิกการส่ง ')); else pdfMsg(pdfBtns('เปิดหน้าแชร์ไม่สำเร็จ ลองดาวน์โหลดแล้วแนบใน LINE เอง ')); }
+  catch(e){ if(e&&e.name==='AbortError') pdfMsg(pdfBtns('ยกเลิกการส่ง ')); else pdfMsg(pdfBtns('✅ สร้าง PDF เสร็จแล้ว กดปุ่มด้านล่างเพื่อเลือก LINE '));   /* เบราว์เซอร์ขอให้กดซ้ำอีกครั้งหลังสร้างไฟล์เสร็จ */ }
 }
-/* PDF: แยกเป็นบล็อก (ส่วนหัว+อาหารเสริม, แต่ละวัน) เรนเดอร์ทีละบล็อก แล้วจัดลงหน้า A4 เอง
+/* PDF: แยกเป็นบล็อก (หัวแผน+อาหารเสริม, หัวตารางมื้อ, แต่ละมื้อ, หัวอาหารแนะนำ, แต่ละมื้อที่แนะนำ) เรนเดอร์ทีละบล็อก แล้วจัดลงหน้า A4 เอง
    บล็อกไม่ถูกตัดกลางมื้อ · ถ้าบล็อกเดียวสูงเกินหน้า จะย่อให้พอดี */
-function buildPdfBlocks(scope){
-  const c=CFG, idx=scope==='all'?DAYS.map((_,i)=>i):[CURDAY];
+function buildPdfBlocks(){
+  const c=CFG, p=DAYS[0];
   const mk=html=>{
     const r=document.createElement('div'); r.className='pdfdoc'; r.innerHTML=html;
     r.querySelectorAll('.dhide').forEach(e=>e.classList.remove('dhide'));
     r.querySelectorAll('.noprint,.mbtn,.box').forEach(e=>e.remove());
-    r.querySelectorAll('.pbreak').forEach(e=>e.classList.remove('pbreak'));
     return r;
   };
-  const blocks=[mk(`<div class="pdfhead"><div class="pdft">🥗 NutriPlan 24</div>
+  const blocks=[mk(`<div class="pdfhead"><div class="pdft">🥗 NutriPlan 24 — แผนอาหารประจำสัปดาห์</div>
     <div class="pdfs">ผู้รับแผน: <b>${esc(c.who)}</b> · Week ${c.week} · Period ${c.per.id} ${esc(c.per.name)}</div>
+    <div class="pdfs">ทานตามแผนนี้ซ้ำได้ทุกวัน ${esc(thFull(c.start))} ถึง ${esc(thFull(addDay(c.start,6)))}</div>
     <div class="pdfs">เป้าหมาย ${c.kcal} kcal · โปรตีนขั้นต่ำ ${c.prot} ก./วัน · คาร์บรวมไม่เกิน ${r0(c.carbG)} ก. · ${c.slots.length} มื้อ/วัน</div>
     ${suppTable()}</div>`)];
-  idx.forEach(i=>blocks.push(mk(dayBlock(DAYS[i],i))));
+  blocks.push(mk(`<div class="card">${planHead(p)}</div>`));
+  p.meals.forEach(m=>blocks.push(mk(mealHtml(m,0))));
+  blocks.push(mk(`<div class="card">${recIntro()}</div>`));
+  blocks.push(mk(recListHtml(p)));
+  blocks.push(mk(`<div class="note">ค่าพลังงาน โปรตีน และคาร์บของอาหารปกติเป็นค่าประมาณ · เครื่องมือนี้ใช้ช่วยคำนวณเชิงโภชนาการทั่วไป ไม่ใช่คำแนะนำทางการแพทย์</div>`));
   return blocks;
 }
 /* เรนเดอร์บล็อกด้วย html2canvas โดยตรง ที่ความกว้างคงที่ 760px (ไม่ขึ้นกับหน้าจอ/มือถือ) */
@@ -2807,8 +2827,8 @@ async function renderPdfBlock(el,scale){
   }finally{ holder.remove(); }
 }
 /* สร้าง PDF แนวตั้ง A4 (portrait) ด้วย jsPDF: จัดบล็อกลงหน้าเอง ไม่ตัดกลางมื้อ · บล็อกเดียวสูงเกินหน้าจะย่อให้พอดี */
-async function buildPdfBlob(scope,opt){
-  const blocks=buildPdfBlocks(scope);
+async function buildPdfBlob(opt){
+  const blocks=buildPdfBlocks();
   const m=opt.margin, scale=opt.scale, q=opt.quality;
   const PW=210, PH=297, iw=PW-m[1]-m[3], ih=PH-m[0]-m[2];
   const jsPDF=window.jspdf.jsPDF;
@@ -2847,20 +2867,19 @@ async function buildPdfBlob(scope,opt){
   flush();
   return pdf.output('blob');
 }
-async function sharePdfLine(forceScope){
+async function sharePdfLine(){
   if(!DAYS.length) run();
   if(!DAYS.length||!CFG) return;
-  const scope=forceScope||document.getElementById('lscope').value;
   const btns=document.querySelectorAll('[data-pdfbtn]');
   btns.forEach(b=>b.disabled=true);
   pdfMsg('⏳ กำลังสร้างไฟล์ PDF… (ครั้งแรกต้องโหลดตัวสร้าง PDF ใช้เวลาสักครู่)');
   try{
     await loadH2P();
-    const dt=addDay(CFG.start,CURDAY), pad=n=>String(n).padStart(2,'0');
+    const dt=CFG.start, pad=n=>String(n).padStart(2,'0');
     const who=String(CFG.who||'plan').replace(/[\\\/:*?"<>|\s]+/g,'_').slice(0,30);
-    const name=`NutriPlan24_${who}_W${CFG.week}${scope==='all'?'_7days':`_${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}`}.pdf`;
+    const name=`NutriPlan24_${who}_W${CFG.week}_${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}.pdf`;
     const opt={margin:[8,8,10,8],scale:1.5,quality:0.92};
-    const blob=await buildPdfBlob(scope,opt);
+    const blob=await buildPdfBlob(opt);
     PDFFILE=new File([blob],name,{type:'application/pdf'});
     if(navigator.canShare&&navigator.canShare({files:[PDFFILE]})){
       try{
@@ -3011,8 +3030,8 @@ function save(){
   const d={schema:SCHEMA,w:week.value,sd:sdate.value,k:kcal.value,p:prot.value,m:meals.value,gm:dmodel.value,v:vis.value,
     pt1:pt1.value,ps1:ps1.value,pt2:pt2.value,ps2:ps2.value,pt3:pt3.value,ps3:ps3.value,
     af:document.getElementById('autop').checked,
-    dm:dm.value,ds:dmstr.value,s:style.value,b:breakslot.value,pm:pmode.value,
-    sup:[...SON],supps:SUPPS,locks:ITEM_LOCKS,
+    dm:dm.value,ds:dmstr.value,s:style.value,b:breakslot.value,
+    sup:[...SON],supps:SUPPS,
     body:{wt:hwt.value,bf:hbf.value,mm:hmm.value,bw:hbw.value,bmr:hbmr.value,at:BODYAT},act:actlv.value,
     bazi:{d:bdate.value,t:btime.value,m:getTMode(),pv:document.getElementById('bprov').value,
       ln:document.getElementById('blon').value,tz:document.getElementById('btz').value,dst:document.getElementById('bdst').checked},rows:{}};
@@ -3028,7 +3047,7 @@ function upd(){
   pinfo.innerHTML=`<span class="pill p-acc">Period ${p.id} · ${p.name}</span> ${p.desc}`;
   breakwrap.className=p.mode==='one'?'':'hide';
   const st=parseDate(sdate.value);
-  dnote.innerHTML=`แผนนี้ครอบคลุม <b>${thFull(st)}</b> ถึง <b>${thFull(addDay(st,6))}</b>`;
+  dnote.innerHTML=`แผนนี้ใช้ได้ตลอดสัปดาห์ <b>${thFull(st)}</b> ถึง <b>${thFull(addDay(st,6))}</b>`;
   const v=+vis.value, pct=v>12?18:v>=10?25:40;
   const g=r0((+kcal.value)*pct/100/4);
   visnote.innerHTML=(v>12?'<span style="color:var(--dan)">ระดับสูงมาก</span>'
@@ -3079,6 +3098,8 @@ function upd(){
     el.addEventListener('input',bodyPreview);
     el.addEventListener('change',id==='actlv'?onTargetInputs:onBodyChange);
   });
+  /* ผู้ใช้แก้วันที่เอง → ไม่ดึงกลับเป็นวันนี้ระหว่างเปิดแอปค้างไว้ (เข้าแอปครั้งถัดไปจะเป็นวันนี้เสมอ) */
+  document.getElementById('sdate').addEventListener('change',()=>{ DATE_USER=true; });
   ['vis','breakslot','style','sdate','pt1','ps1','pt2','ps2','pt3','ps3','dm','dmstr','autop'].forEach(id=>
     document.getElementById(id).addEventListener('change',()=>{ upd(); run(); }));
   /* เปลี่ยนเป้ารายวันหรือโมเดล → คำนวณจำนวนมื้อใหม่ แล้วกระจายเป้ารายมื้อให้ตรงอัตโนมัติ */
@@ -3090,8 +3111,6 @@ function upd(){
     el.addEventListener('change',()=>{ if(id==='bprov') syncTMode(); else tpvRender(); save(); });
   });
   document.querySelectorAll('input[name=tmode]').forEach(r=>r.addEventListener('change',()=>{ syncTMode(); save(); }));
-  
-  pmode.addEventListener('change',applyPrintMode);
   restoreSession();
 })();
 </script>

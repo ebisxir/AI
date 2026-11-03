@@ -40,6 +40,9 @@ button{width:100%;padding:12px;border:none;border-radius:12px;font-size:14px;fon
 .btnblue{background:linear-gradient(90deg,#38bdf8,#0ea5e9);color:#04121f}
 .btnblue:hover,.btnred:hover{filter:brightness(1.1)}
 .btnred{background:#dc2626;color:#fff}
+/* ปุ่มส่งออก 3 ปุ่ม: ขนาดเล็ก เรียงแถวเดียว */
+.actsm{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px}
+.actsm button{width:auto;flex:1 1 140px;padding:7px 10px;font-size:12px;margin-top:0;border-radius:10px}
 /* ไอคอนปฏิทินช่อง "วันเริ่มต้นของสัปดาห์" — จากสีดำเป็นสีเหลือง (ซ่อนไอคอนเดิมของเบราว์เซอร์ แต่ยังกดเปิดปฏิทินได้) */
 #sdate{color-scheme:dark}
 @supports selector(::-webkit-calendar-picker-indicator){
@@ -433,11 +436,11 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
 
   <!-- ต่อจากพาแนล 2: บันทึกประวัติ → คำนวณแผน → สลับเมนู -->
   <div class="card noprint" id="actcard">
-    <button type="button" class="btn2" style="margin-top:0" onclick="histManual()">📌 บันทึกประวัติครั้งนี้</button>
-    <div id="histst" class="note"></div>
-    <button class="btnblue" onclick="run()">🧮 คำนวณแผนอาหาร</button>
+    <button class="btnblue" style="margin-top:0" onclick="run()">🧮 คำนวณแผนอาหาร</button>
     <button class="btnblue" onclick="reroll()">🔀 สลับเมนูแนะนำใหม่ทั้งแผน</button>
     <div id="lockinfo" class="note"></div>
+    <button type="button" class="btn2" onclick="histManual()">📌 บันทึกประวัติครั้งนี้</button>
+    <div id="histst" class="note"></div>
   </div>
 
   <div class="card">
@@ -1932,21 +1935,7 @@ const MENUS=[
  M('สลัดผักรวมน้ำสลัดใส','ผักสลัด 1 จาน + น้ำสลัดใสเล็กน้อย',70,3,9,'snack','plant','wood'),
  M('โยเกิร์ตธรรมชาติไม่หวาน + ถั่ว','โยเกิร์ต 1 ถ้วยเล็ก + ถั่วอบ 1 ช้อนโต๊ะ',120,8,9,'snack','plant','earth'),
  M('สลัดผักรวม + ไข่ต้ม 1 ฟอง','ผักสลัด 1 จาน + ไข่ต้ม 1 ฟอง + น้ำสลัดใส',140,9,10,'snack','egg','wood',1),
- M('ขนมปังโฮลวีต 1 แผ่น + ไข่ต้ม 1 ฟอง','ของว่างที่หาทานง่าย',150,10,13,'snack','egg','earth',1),
- /* ----- เมนูเดี่ยว (ไม่ใช่คอมบิเนชั่น) พลังงานต่ำกว่า 150 kcal ใช้ระบุชื่อในมื้อได้เลย ----- */
- M('ไข่ต้ม 2 ฟอง','ไข่ไก่ต้มสุก 2 ฟอง',144,13,1,'snack','egg','earth',2),
- M('ไข่ตุ๋น 2 ฟอง','ไข่ตุ๋นนึ่ง ไม่ใช้น้ำมัน',150,13,3,'snack','egg','water',2),
- M('ไข่ลวก 2 ฟอง','ไข่ลวกยางมะตูม',144,13,1,'snack','egg','metal',2),
- M('ขนมปังโฮลวีต 2 แผ่น','ไม่ทาเนย/แยม',150,8,26,'snack','plant','earth'),
- M('ปลาเส้นอบไม่หวาน','ปลาเส้นอบ 40 ก.',130,18,8,'snack','fish','water'),
- M('อกไก่ต้ม 80 ก.','ต้มสุก ไม่ปรุงเพิ่ม',130,25,0,'snack','meat','metal'),
- M('สลัดผักอกไก่ต้ม','ผักสลัด + อกไก่ต้ม 60 ก. + น้ำสลัดใส',130,16,8,'snack','meat','wood'),
- M('กุ้งต้ม 8 ตัว','กุ้งลวกสุก จิ้มน้ำจิ้มซีฟู้ดเล็กน้อย',110,22,2,'snack','fish','fire'),
- M('ต้มยำเห็ดน้ำใส','เห็ดรวม สมุนไพรต้มยำ',100,6,10,'snack','plant','fire'),
- M('นมถั่วเหลืองไม่หวาน 300 มล.','1 กล่อง',105,10,6,'snack','plant','earth'),
- M('เต้าหู้ขาวนึ่งซีอิ๊ว','เต้าหู้แข็ง 150 ก.',130,13,4,'snack','plant','earth'),
- M('ทูน่าในน้ำแร่ 1 กระป๋อง','ระบายน้ำ',130,28,0,'snack','fish','water'),
- M('กรีกโยเกิร์ตไม่หวาน','1 ถ้วย 200 ก.',120,20,7,'snack','plant','earth')
+ M('ขนมปังโฮลวีต 1 แผ่น + ไข่ต้ม 1 ฟอง','ของว่างที่หาทานง่าย',150,10,13,'snack','egg','earth',1)
 ];
 /* ตัวช่วยปรับแคลอรี่ (tag 'fill'): ไข่ต้ม + ขนมปังโฮลวีต — ใช้เมื่ออาหารปกติเติมแล้วไม่ถึง/เกินเป้ามื้อ
    q = จำนวนหน่วย (ฟอง/แผ่น) · ไข่ 1 ฟอง ≈ 72 kcal โปรตีน 6.3 ก. · ขนมปังโฮลวีต 1 แผ่น (~30 ก.) ≈ 75 kcal โปรตีน 3.5 ก. คาร์บ 13 ก. */
@@ -1956,6 +1945,22 @@ MENUS.push(
 );
 const MENUMAP=new Map(MENUS.map(m=>[m.n,m]));
 const FILL_EGG=MENUMAP.get('ไข่ต้ม (เสริม)'), FILL_BREAD=MENUMAP.get('ขนมปังโฮลวีต (เสริม)');
+/* ===== อาหารว่างแบบ "หน่วย × จำนวน" (tag 'unit') — ไม่ใช่เมนูทำยาก: ไข่ นม โยเกิร์ต ขนมปัง สลัด ปลาเส้น
+   ใช้เติมช่องว่างพลังงานของมื้อที่ต่ำกว่า 150 kcal โดยคูณจำนวนหน่วยให้ได้พลังงานตามที่มื้อต้องการ ===== */
+const SNACK_UNITS=[
+  ['ไข่ต้ม','ฟอง',FILL_EGG.kcal,FILL_EGG.p,FILL_EGG.c,'egg','earth',1],
+  ['ขนมปังโฮลวีต','แผ่น',FILL_BREAD.kcal,FILL_BREAD.p,FILL_BREAD.c,'plant','earth',0],
+  ['นมพร่องมันเนย','กล่อง (200 มล.)',90,7,10,'plant','metal',0],
+  ['นมถั่วเหลืองไม่หวาน','กล่อง (200 มล.)',70,6,4,'plant','metal',0],
+  ['กรีกโยเกิร์ตไม่หวาน','ถ้วย (100 ก.)',60,10,4,'plant','metal',0],
+  ['ถั่วแระต้ม','ถ้วยเล็ก (50 ก.)',60,5.5,4.5,'plant','wood',0],
+  ['สลัดผักน้ำสลัดใส','จาน',70,3,9,'plant','wood',0],
+  ['ปลาเส้นอบไม่หวาน','ซอง (20 ก.)',65,9,4,'fish','water',0]
+].map(([n,u,kcal,p,c,diet,el,egg])=>{
+  const m=Object.assign(M(n,'',kcal,p,c,'unit',diet,el,egg),{u});
+  MENUS.push(m); MENUMAP.set(n,m); return m;
+});
+const isUnitItem=i=>{ const m=MENUMAP.get(i.n); return !!m&&m.tag==='unit'; };
 const FILLS=[];   /* ชุดเสริมทุกแบบ: ไข่ 0–2 ฟอง × ขนมปัง 0–4 แผ่น */
 for(let e=0;e<=2;e++) for(let b=0;b<=4;b++) if(e||b) FILLS.push({e,b,egg:e,
   K:e*FILL_EGG.kcal+b*FILL_BREAD.kcal, P:e*FILL_EGG.p+b*FILL_BREAD.p, C:e*FILL_EGG.c+b*FILL_BREAD.c});
@@ -1968,8 +1973,14 @@ function dietOK(m,s){
 const foodItem=(m,q)=>({n:m.n,d:m.d,q,u:m.u||'ที่',kcal:m.kcal*q,p:m.p*q,c:m.c*q});
 /* รายการในมื้อ: โปรตีนเชก/บอดี้คีย์ และไข่ต้ม แสดงชื่อจริง · อย่างอื่นทั้งหมดรวมเป็น "อาหารปกติ" */
 const FILL_NAMES=new Set([FILL_EGG.n,FILL_BREAD.n]);
-const isNormalItem=i=>!PRODNAMES.has(i.n)&&!FILL_NAMES.has(i.n);   /* อาหารปกติ = เมนูอาหารจริงเท่านั้น (ไม่รวมไข่ต้ม/ขนมปังเสริม) */
+const isNormalItem=i=>!PRODNAMES.has(i.n)&&!FILL_NAMES.has(i.n)&&!isUnitItem(i);   /* อาหารปกติ = เมนูอาหารจริงเท่านั้น (ไม่รวมไข่ต้ม/ขนมปังเสริม) */
 const isFillItem=i=>FILL_NAMES.has(i.n);
+/* อาหารของมื้อ (ไม่รวมเชกและไข่/ขนมปังเสริม): snack=true เมื่อเป็นอาหารว่าง (หน่วย×จำนวน หรือพลังงานรวมต่ำกว่า 150 kcal) */
+function foodInfo(m){
+  const items=m.items.filter(i=>isNormalItem(i)||isUnitItem(i));
+  const K=items.reduce((a,i)=>a+(+i.kcal||0),0), P=items.reduce((a,i)=>a+(+i.p||0),0), C=items.reduce((a,i)=>a+(+i.c||0),0);
+  return {items,K,P,C,snack:items.length>0&&(items.some(isUnitItem)||K<LOW_NORMAL)};
+}
 
 /* ================= อาหารเสริม ================= */
 const TIMES=[['เช้า','ก่อน'],['เช้า','หลัง'],['กลางวัน','ก่อน'],['กลางวัน','หลัง'],['เย็น','ก่อน'],['เย็น','หลัง']];
@@ -2005,8 +2016,8 @@ const perOf=w=>PERIODS.find(p=>w>=p.w[0]&&w<=p.w[1]);
 /* ================= UTILS ================= */
 let SEED=1, USED={}, LASTDAY={}, ELC={}, CURDAY=0, ROLLED=0;   /* ELC = จำนวนเมนูแต่ละธาตุที่ใช้แล้ว (ไว้บาลานซ์ธาตุเสริม) */
 const r0=x=>Math.round(x), r1=x=>Math.round(x*10)/10;
-/* ความคลาดเคลื่อนพลังงานรายมื้อที่ยอมรับได้ = ±10% ของเป้ามื้อ (เกินนี้ถือว่าไม่ผ่าน) */
-const KTOL=0.10;
+/* ความคลาดเคลื่อนพลังงานรายมื้อที่ยอมรับได้ = ±15% ของเป้ามื้อ (เกินนี้ถือว่าไม่ผ่าน) */
+const KTOL=0.15;
 const SLOTSET={2:['เช้า','เย็น'],3:['เช้า','กลางวัน','เย็น'],4:['เช้า','สาย','กลางวัน','เย็น'],
  5:['เช้า','สาย','กลางวัน','บ่าย','เย็น']};
 /* ข้อมูลที่บันทึกไว้ก่อนหน้านี้ใช้ชื่อมื้อเดิม (ว่างเช้า/ว่างบ่าย) → แปลงเป็นชื่อใหม่ตอนโหลด */
@@ -2184,7 +2195,7 @@ function blendSummary(){
   blendnote.innerHTML=`บอดี้คีย์มาจาก Period อัตโนมัติ ไม่ต้องเลือกเอง<br>
     🥤 ตั้งต้นต่อมื้อเชก: ${esc(a.map(x=>x.n.replace('โปรตีน','')+' '+x.q+' ช้อน').join(' + ')||'—')}
     <span class="pill p-blue">${r0(K)} kcal</span> <span class="pill p-acc">โปรตีน ${r1(P)} ก.</span> <span class="pill p-pur">คาร์บ ${r1(C)} ก.</span>${cut?' <span class="pill p-warn">ถูกตัดตามกฎจำนวนช้อน</span>':''}<br>
-    🎯 พลังงานรายมื้อต้องคลาดเคลื่อนไม่เกิน ±10% — ถ้าอาหารปกติเติมแล้วไม่พอดี ระบบใช้ไข่ต้ม/ขนมปังโฮลวีตเสริมให้พอดี<br>
+    🎯 พลังงานรายมื้อต้องคลาดเคลื่อนไม่เกิน ±15% — ช่องว่างต่ำกว่า 150 kcal เติมเป็นอาหารว่าง ตั้งแต่ 150 kcal ขึ้นไปเติมเป็นอาหารปกติ ถ้ายังไม่พอดีใช้ไข่ต้ม/ขนมปังโฮลวีตเสริม<br>
     ${document.getElementById('autop').checked?'⚡ ระบบปรับจำนวนช้อนให้เอง (เพิ่ม/ลด/สลับออลแพลนท์ ↔ รสชาติ จากชนิดที่เลือก) ให้พลังงานไม่เกินเป้ามื้อและโปรตีนถึงเป้า แล้วจึงเติมอาหารปกติ':'✋ ใช้จำนวนช้อนตามที่กรอกเท่านั้น'}<br>
     <span style="font-size:10.5px">กฎ: สูงสุด 3 ช้อน/มื้อ · ออลแพลนท์ล้วน ≤2 · รสชาติล้วนรวม ≤3 · ผสมกัน = ออลแพลนท์ 1 + รสชาติรวม 2</span>`;
 }
@@ -2199,7 +2210,7 @@ function blendSummary(){
    กฎเสริม: ถ้าอาหารปกติเติมแล้ว "ไม่ถึง" เป้า (ต่ำกว่าเป้าเกิน 5%) จะสร้างตัวเลือก อาหารปกติ + ไข่ต้ม/ขนมปังโฮลวีต
    ถ้าอาหารปกติ "เกิน" เป้า จะถูกตัดออกและเลือกอาหารปกติที่เบากว่า + ไข่ต้ม/ขนมปังโฮลวีตมาเติมส่วนที่เหลือแทน */
 /* ของว่างที่หาทานยาก/ต้องทำเอง ไม่ใช้ในมื้อสาย–บ่าย (ยังใช้เป็นเมนูเสริมในมื้อหลักได้) */
-const SNACK_NOT_EASY=new Set(['ต้มยำเห็ดน้ำใส','กุ้งต้ม 8 ตัว','เห็ดหูหนูดำยำ','ซุปใสเต้าหู้ไข่','เต้าหู้ไข่ลวก + น้ำจิ้มซีฟู้ด','งาดำบด 1 ชต. + นมถั่วเหลือง','สลัดผักรวมน้ำสลัดใส']);
+const SNACK_NOT_EASY=new Set(['เห็ดหูหนูดำยำ','ซุปใสเต้าหู้ไข่','เต้าหู้ไข่ลวก + น้ำจิ้มซีฟู้ด','งาดำบด 1 ชต. + นมถั่วเหลือง','สลัดผักรวมน้ำสลัดใส']);
 /* ปริมาณอาหารที่เติมเข้ามื้อต้องรวมไม่ต่ำกว่านี้ — ต่ำกว่า 100 kcal ในทางปฏิบัติทำไม่ได้ (เช่น ไข่ 1 ฟอง ≈ 72 kcal) */
 const MIN_ADD=100;
 /* อาหารปกติของมื้อที่ต่ำกว่านี้ (kcal) ไม่เรียกว่า "อาหารปกติ" — ระบุชื่ออาหารจริงลงในมื้อ (ไข่ต้ม ขนมปัง ปลาเส้น สลัด อกไก่ ฯลฯ) */
@@ -2272,7 +2283,9 @@ function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban,opt){
     });
   }
   /* ข้อกำหนด: ชุดที่เติมต้องให้พลังงานรวม ≥ MIN_ADD (100 kcal) — ไม่มีการเติมเศษแคลอรี่ต่ำกว่านี้ */
-  for(let i=cands.length-1;i>=0;i--) if(cands[i].K<MIN_ADD) cands.splice(i,1);
+  /* อาหารปกติต้อง ≥ 150 kcal (LOW_NORMAL) — ต่ำกว่านั้นเป็นอาหารว่าง ใช้ pickUnits · allowLow ใช้เฉพาะเมื่อไม่มีทางเลือกอื่น */
+  const floorK=opt.allowLow?MIN_ADD:LOW_NORMAL;
+  for(let i=cands.length-1;i>=0;i--) if(cands[i].K<floorK) cands.splice(i,1);
   if(!cands.length) return null;
 
   /* 3) กรองพลังงานก่อน: ต้องอยู่ในกรอบ ±tol ถ้าไม่มีเลยค่อยใช้ชุดที่ใกล้เป้าที่สุด */
@@ -2331,6 +2344,59 @@ function pickMenus(cfg,st,tK,tP,carbCap,snack,maxItems,day,salt,ban,opt){
     st.today.add(x.m.n);
   });
   best.over=best.C>carbCap+0.5;
+  return best;
+}
+
+/* ========== เลือกอาหารว่าง (หน่วย × จำนวน) ให้พลังงานตรงกับช่องว่างของมื้อ ==========
+   หน่วยเดียวก่อน (เช่น ไข่ต้ม 2 ฟอง) — ถ้าไม่มีหน่วยเดียวที่อยู่ในกรอบ ±tol จึงใช้ 2 อย่าง · พลังงานรวมต้อง ≥ MIN_ADD */
+function pickUnits(cfg,st,tK,tP,carbCap,day,salt,ban,opt){
+  opt=opt||{};
+  const tol=opt.tol>0?opt.tol:Infinity;
+  const us=SNACK_UNITS.filter(u=>dietOK(u,cfg.style)&&!(opt.hardBan&&ban&&ban.has(u.n)));
+  const mk=cb=>{let K=0,P=0,C=0,E=0;cb.forEach(x=>{K+=x.m.kcal*x.q;P+=x.m.p*x.q;C+=x.m.c*x.q;E+=x.m.egg*x.q;});return {cb,K,P,C,E};};
+  const okc=v=>v.K>=MIN_ADD&&Math.abs(v.K-tK)<=tol&&st.eggs+v.E<=4;
+  let cands=[];
+  us.forEach(u=>{ for(let q=1;q<=8;q++){ const v=mk([{m:u,q}]); if(okc(v)) cands.push(v); } });
+  if(!cands.length){
+    for(let i=0;i<us.length;i++) for(let j=i+1;j<us.length;j++)
+      for(let q1=1;q1<=3;q1++) for(let q2=1;q2<=3;q2++){
+        const v=mk([{m:us[i],q:q1},{m:us[j],q:q2}]); if(okc(v)) cands.push(v);
+      }
+  }
+  if(!cands.length) return null;
+  let pool=cands.filter(v=>v.C<=carbCap+0.5), carbW=40;
+  if(!pool.length){ pool=cands; carbW=12; }
+  let best=null;
+  pool.forEach(v=>{
+    let rep=0,bz=0;
+    v.cb.forEach(x=>{
+      const n=x.m.n;
+      rep+=(USED[n]||0)*130+hsh(n,day,salt);
+      const last=LASTDAY[n];
+      if(last!==undefined){const g=Math.abs(day-last); if(g<=1)rep+=420; else if(g<=2)rep+=240; else if(g<=3)rep+=120;}
+      if(st.today.has(n)) rep+=500;
+      if(ban&&ban.has(n)) rep+=600;
+      if(cfg.bazi){
+        const el=x.m.el;
+        if(cfg.bazi.fav.includes(el)) bz+=-120+45*(ELC[el]||0);
+        else if(cfg.bazi.avoid.includes(el)) bz+=200;
+        else bz+=100;
+      }
+    });
+    const sc=Math.abs(v.K-tK)*3+Math.max(0,tP-v.P)*9+Math.max(0,v.P-tP-20)*0.5+Math.max(0,v.C-carbCap)*carbW
+            +rep+bz+(v.cb.length-1)*150+(opt.jitter?Math.random()*150:0);
+    if(!best||sc<best.s) best={s:sc,cb:v.cb,K:v.K,P:v.P,C:v.C};
+  });
+  if(!best) return null;
+  if(opt.skipIfNoGain&&Math.abs(best.K-tK)>=Math.abs(tK)) return null;
+  best.over=best.C>carbCap+0.5;
+  if(opt.dry) return best;
+  best.cb.forEach(x=>{
+    st.eggs+=x.m.egg*x.q;
+    USED[x.m.n]=(USED[x.m.n]||0)+1; LASTDAY[x.m.n]=day;
+    ELC[x.m.el]=(ELC[x.m.el]||0)+1;
+    st.today.add(x.m.n);
+  });
   return best;
 }
 
@@ -2401,15 +2467,22 @@ function planDay(day,cfg){
     const pick=(gK,gP,dry)=>{
       const maxI=(m.type==='shake'?(gK>250?2:1):2);
       const a=[cfg,st,Math.max(0,gK),Math.max(0,gP)];
-      const o={strict:true,minPool:6,tol:tolK,skipIfNoGain:true,dry};   /* minPool: ต้องมีเมนูที่ไม่เกินโควตาอย่างน้อย 6 ชุด ไม่งั้นขยายพูล */
+      const low=gK<LOW_NORMAL;
+      /* ช่องว่างต่ำกว่า 150 kcal → อาหารว่าง (หน่วย × จำนวน) · ตั้งแต่ 150 kcal → อาหารปกติ */
+      if(low){
+        const uo={tol:tolK,skipIfNoGain:true,dry};
+        const u=pickUnits(cfg,st,Math.max(0,gK),Math.max(0,gP),share,day,0,null,uo)||pickUnits(cfg,st,Math.max(0,gK),Math.max(0,gP),free,day,0,null,uo);
+        if(u) return u;
+      }
+      const o={strict:true,minPool:6,tol:tolK,skipIfNoGain:true,dry,allowLow:low};   /* minPool: ต้องมีเมนูที่ไม่เกินโควตาอย่างน้อย 6 ชุด ไม่งั้นขยายพูล */
       let r=pickMenus(...a,share,snack,maxI,day,0,null,o);
       if(!r) r=pickMenus(...a,free,snack,maxI,day,0,null,o);
-      if(!r) r=pickMenus(...a,free,snack,maxI,day,0,null,{minPool:6,tol:tolK,skipIfNoGain:true,dry});
+      if(!r) r=pickMenus(...a,free,snack,maxI,day,0,null,{minPool:6,tol:tolK,skipIfNoGain:true,dry,allowLow:low});
       return r;
     };
     const needFood=(gK,gP)=>(gK>m.tK*0.05||(gP>2&&gK>m.tK*0.02));
 
-    /* มื้อเชก (ไม่ใช่มื้อสาย/บ่าย): ถ้าเติมอาหารตามปกติแล้วพลังงานยังคลาดเกิน ±10%
+    /* มื้อเชก (ไม่ใช่มื้อสาย/บ่าย): ถ้าเติมอาหารตามปกติแล้วพลังงานยังคลาดเกิน ±15%
        (เช่น เชกขาดอยู่ 40 kcal แต่อาหารที่เติมได้ต้องไม่ต่ำกว่า 100 kcal) → ลองลดจำนวนช้อนโปรตีน
        เพื่อเว้นที่ให้อาหารจริง ≥ MIN_ADD แล้วเลือกชุดที่พลังงานพอดีและโปรตีนใกล้เป้าที่สุด */
     if(!snack&&m.type==='shake'&&blends.length&&document.getElementById('autop').checked){
@@ -2481,7 +2554,7 @@ function planDay(day,cfg){
 /* ========== ชุดเมนูทางเลือกของแต่ละมื้อ (ทานแทนกันได้) ==========
    ชุดที่อยู่ในแผน + ทางเลือกอีก ALT_N ชุดที่พลังงาน (±12%) โปรตีน และคาร์บใกล้เคียงกัน ไม่ซ้ำเมนูกัน
    ไม่นับรวมในยอดของแผน — ใช้แสดงในรายการ "อาหารที่แนะนำ" เพื่อให้ทุกค่า kcal ในรายการตรงกับ "อาหารปกติ ≈ X kcal" ของมื้อ */
-const ALT_N=4;   /* ชุดทางเลือกต่อมื้อ (ไม่รวมชุดในแผน) */
+const ALT_N=6;   /* ชุดทางเลือกต่อมื้อ (ไม่รวมชุดในแผน) */
 function buildAlts(p,m,day,cfg){
   m.alts=[];
   const menus=m.items.filter(isNormalItem);
@@ -2557,9 +2630,11 @@ function rerollMeal(day,slot){
   const tolK=m.tK*KTOL;
   /* เมนูเดี่ยวก่อน — ใช้ชุด 2 เมนูเมื่อไม่มีเมนูเดี่ยวที่พอดีเท่านั้น */
   let r=null;
-  for(const mi of (maxI>1?[1,maxI]:[1])){
-    r=pickMenus(...A(mi),{strict:true,hardBan:true,jitter:true,minPool:6,tol:tolK});
-    if(!r) r=pickMenus(...A(mi),{hardBan:true,jitter:true,minPool:6,tol:tolK,strict:mi===1});
+  const lowGap=gK<LOW_NORMAL;
+  if(lowGap) r=pickUnits(CFG,st,Math.max(0,gK),Math.max(0,gP),free,day,ROLLED,ban,{hardBan:true,jitter:true,tol:tolK});
+  if(!r) for(const mi of (maxI>1?[1,maxI]:[1])){
+    r=pickMenus(...A(mi),{strict:true,hardBan:true,jitter:true,minPool:6,tol:tolK,allowLow:lowGap});
+    if(!r) r=pickMenus(...A(mi),{hardBan:true,jitter:true,minPool:6,tol:tolK,strict:mi===1,allowLow:lowGap});
     if(r) break;
   }
   if(!r){
@@ -2667,10 +2742,10 @@ function planHead(p){
 /* ตารางมื้อ: เชก/บอดี้คีย์/ไข่ต้ม แสดงชื่อจริง · อาหารอื่นทั้งหมดรวมเป็น "อาหารปกติ" (ตัวเลขโดยประมาณ) */
 function mealHtml(m,idx){
   const okK=Math.abs(m.K-m.tK)<=m.tK*KTOL+0.5, okP=m.P>=m.tP-1.5;
-  const nfK=m.items.filter(isNormalItem).reduce((a,i)=>a+(+i.kcal||0),0);
-  const foodWord=nfK>=LOW_NORMAL?'อาหารปกติ':'ของว่าง';   /* < 150 kcal ไม่เรียกว่าอาหารปกติ */
+  const fi=foodInfo(m);
+  const foodWord=fi.items.length&&!fi.snack?'อาหารปกติ':'อาหารว่าง';   /* ต่ำกว่า 150 kcal = อาหารว่าง */
   const tag=m.type==='snack'
-    ? `<span class="pill p-pur">🍎 ${m.items.some(i=>PRODNAMES.has(i.n))?'โปรตีน + ของว่าง':'ของว่าง'}</span>`
+    ? `<span class="pill p-pur">🍎 ${m.items.some(i=>PRODNAMES.has(i.n))?'โปรตีน + อาหารว่าง':'อาหารว่าง'}</span>`
     : m.type==='shake'
     ? `<span class="pill p-acc">🥤 ${m.bk?'บอดี้คีย์ + โปรตีน':'โปรตีน'}${m.topped?' + '+foodWord:''}</span>`
     : `<span class="pill p-blue">🍽️ ${foodWord}</span>`;
@@ -2690,19 +2765,13 @@ function mealHtml(m,idx){
     h+=`<tr><td>🥤 ${esc(i.n)}</td>
       <td>${r1(i.q)} ${esc(i.u)}</td><td>${r0(i.kcal)}</td><td>${r1(i.p)} ก.</td><td>${r1(i.c)} ก.</td></tr>`;
   });
-  const nf=m.items.filter(isNormalItem);
-  if(nf.length){
-    const K=nf.reduce((a,i)=>a+(+i.kcal||0),0), P=nf.reduce((a,i)=>a+(+i.p||0),0), C=nf.reduce((a,i)=>a+(+i.c||0),0);
-    if(K<LOW_NORMAL){
-      /* ต่ำกว่า 150 kcal: ระบุชื่ออาหารจริง + แสดงทางเลือกทานแทน */
-      const alt=(m.alts||[]).slice(0,3).map(a=>a.map(i=>i.n+(i.q!==1?' ×'+r1(i.q):'')).join(' + '));
-      nf.forEach((i,ix)=>{
-        h+=`<tr><td>🍴 ${esc(i.n)}${i.d?`<span class="dsc">${esc(i.d)}</span>`:''}${ix===0&&alt.length?`<span class="dsc">ทานแทนได้: ${esc(alt.join(' · '))}</span>`:''}</td>
-          <td>${r1(i.q)} ${esc(i.u)}</td><td>${r0(i.kcal)}</td><td>${r1(i.p)} ก.</td><td>${r1(i.c)} ก.</td></tr>`;
-      });
+  if(fi.items.length){
+    if(fi.snack){
+      h+=`<tr><td>🍎 อาหารว่าง<span class="dsc">เลือก 1 อย่างจากรายการอาหารว่างด้านล่าง ให้พลังงานใกล้เคียง ≈ ${r0(fi.K)} kcal (ค่าโดยประมาณ)</span></td>
+        <td>≈ 1 มื้อ</td><td>≈ ${r0(fi.K)}</td><td>≈ ${r0(fi.P)} ก.</td><td>≈ ${r0(fi.C)} ก.</td></tr>`;
     }else{
-      h+=`<tr><td>🍽️ อาหารปกติ<span class="dsc">เลือกชุดเมนูจากรายการอาหารที่แนะนำด้านล่าง ที่พลังงานใกล้เคียง ≈ ${r0(K)} kcal (ค่าโดยประมาณ)</span></td>
-        <td>≈ 1 มื้อ</td><td>≈ ${r0(K)}</td><td>≈ ${r0(P)} ก.</td><td>≈ ${r0(C)} ก.</td></tr>`;
+      h+=`<tr><td>🍽️ อาหารปกติ<span class="dsc">เลือกชุดเมนูจากรายการอาหารปกติด้านล่าง ที่พลังงานใกล้เคียง ≈ ${r0(fi.K)} kcal (ค่าโดยประมาณ)</span></td>
+        <td>≈ 1 มื้อ</td><td>≈ ${r0(fi.K)}</td><td>≈ ${r0(fi.P)} ก.</td><td>≈ ${r0(fi.C)} ก.</td></tr>`;
     }
   }
   m.items.filter(isFillItem).forEach(i=>{
@@ -2716,13 +2785,47 @@ function planCard(p){
   return `<div class="card dayblock" id="day0">${planHead(p)}${p.meals.map(m=>mealHtml(m,0)).join('')}</div>`;
 }
 /* ---------- พาแนล "อาหารที่แนะนำ" ---------- */
-function recIntro(){
-  const bz=CFG.bazi?` · เน้นธาตุ ${CFG.bazi.fav.map(e=>ELN[e]).join(' · ')} ผลัดกันทุกธาตุ`:'';
-  return `<h2><i></i>🍽️ อาหารที่แนะนำ — สไตล์: ${esc(STYLE_NAME[CFG.style]||'ทั่วไป')}</h2>
-    <div class="note" style="margin-top:0">แต่ละแถวคือเมนูสำหรับ 1 มื้อ (เน้นเมนูเดี่ยว) เรียงจากแคลอรี่น้อยไปมาก (ไม่แบ่งตามมื้อ) · มื้อที่ระบุว่า "อาหารปกติ ≈ … kcal" ให้เลือกเมนูที่ kcal ใกล้เคียงกัน ส่วนมื้อที่ต่ำกว่า 150 kcal ระบุชื่ออาหารไว้ในตารางแล้ว — ทุกมื้อมีชุดให้เลือกหลายแบบทานแทนกันได้${bz} · ปริมาณและค่าสารอาหารเป็นค่าโดยประมาณ</div>`;
+/* ---------- อาหารว่าง: หน่วย × จำนวน ให้ได้พลังงานตามมื้อ ---------- */
+function snackRows(T,tolK){
+  const gen=tol=>{
+    const rows=[];
+    const near=(unitK,egg)=>{   /* จำนวนหน่วยที่ทำให้พลังงานใกล้ T ที่สุดและอยู่ในกรอบ */
+      let best=null;
+      for(let q=1;q<=8;q++){
+        const K=q*unitK; if(K<MIN_ADD||Math.abs(K-T)>tol||q*egg>4) continue;
+        if(!best||Math.abs(K-T)<Math.abs(best*unitK-T)) best=q;
+      }
+      return best;
+    };
+    SNACK_UNITS.forEach(u=>{
+      if(!dietOK(u,CFG.style)) return;
+      const q=near(u.kcal,u.egg); if(!q) return;
+      rows.push({items:[{n:u.n,q,u:u.u,kcal:u.kcal*q,p:u.p*q,c:u.c*q,el:u.el}],K:u.kcal*q,P:u.p*q,C:u.c*q});
+    });
+    chosenTypes().forEach(t=>{          /* โปรตีนเชค: จำนวนช้อนตามกฎ (ออลแพลนท์ ≤2 · รสชาติ ≤3) */
+      const pr=PRODS[t], cap=t==='allplant'?2:3; let best=null;
+      for(let q=1;q<=cap;q++){ const K=q*pr.kcal; if(K<MIN_ADD||Math.abs(K-T)>tol) continue; if(!best||Math.abs(K-T)<Math.abs(best*pr.kcal-T)) best=q; }
+      if(best) rows.push({items:[{n:pr.n,q:best,u:pr.u,kcal:pr.kcal*best,p:pr.p*best,c:pr.c*best,shake:true}],K:pr.kcal*best,P:pr.p*best,C:pr.c*best});
+    });
+    return rows;
+  };
+  let rows=gen(tolK);
+  if(rows.length<4) rows=gen(tolK*1.6);   /* ตัวเลือกน้อยเกินไป ขยายกรอบเล็กน้อย */
+  return rows;
 }
-/* รวมชุดเมนูของทุกมื้อ (ชุดในแผน + ชุดทางเลือก) เป็นลิสต์เดียว เรียงพลังงานน้อย → มาก */
-function recOptions(p){
+function recSnackOptions(p){
+  const map=new Map();
+  p.meals.forEach(m=>{
+    const fi=foodInfo(m); if(!fi.items.length||!fi.snack) return;
+    snackRows(fi.K,m.tK*KTOL).forEach(o=>{ const k=o.items.map(i=>i.n+'|'+i.q).join('#'); if(!map.has(k)) map.set(k,o); });
+  });
+  let rows=[...map.values()];
+  /* ดวงจีน: ตัดอาหารว่างที่เป็นธาตุที่ควรลดทอนออก ถ้ายังเหลือตัวเลือกอย่างน้อย 4 อย่าง */
+  if(CFG&&CFG.bazi){ const f=rows.filter(o=>!(o.items[0].el&&CFG.bazi.avoid.includes(o.items[0].el))); if(f.length>=4) rows=f; }
+  return rows.sort((a,b)=>(a.K-b.K)||(a.items[0].n<b.items[0].n?-1:1));
+}
+/* ---------- อาหารปกติ: ชุดเมนู (≥150 kcal) ---------- */
+function recNormalOptions(p){
   const map=new Map();
   const add=items=>{
     if(!items||!items.length) return;
@@ -2730,30 +2833,45 @@ function recOptions(p){
     if(map.has(key)) return;
     map.set(key,{items,K:items.reduce((a,i)=>a+(+i.kcal||0),0),P:items.reduce((a,i)=>a+(+i.p||0),0),C:items.reduce((a,i)=>a+(+i.c||0),0)});
   };
-  p.meals.forEach(m=>{ add(m.items.filter(isNormalItem)); (m.alts||[]).forEach(add); });
+  p.meals.forEach(m=>{ const fi=foodInfo(m); if(!fi.items.length||fi.snack) return; add(fi.items); (m.alts||[]).forEach(add); });
   return [...map.values()].sort((a,b)=>(a.K-b.K)||(a.items[0].n<b.items[0].n?-1:1));
 }
 const optName=o=>o.items.map(i=>i.n+(i.q!==1?' ×'+r1(i.q):'')).join(' + ');
-function recListHtml(p){
-  const list=recOptions(p);
-  if(!list.length){
-    const sh=p.meals.some(m=>m.items.some(i=>PRODNAMES.has(i.n)));
-    return `<div class="meal rmeal"><div class="note" style="margin:0">${sh?'โปรตีนเชค/บอดี้คีย์ให้พลังงานและโปรตีนครบตามเป้าทุกมื้อแล้ว ไม่ต้องเติมอาหารเพิ่ม':'ไม่ต้องเติมอาหารเพิ่ม'}</div></div>`;
-  }
+const elPill=el=>{
+  if(!CFG.bazi||!el) return '';
+  return ` <span class="pill ${CFG.bazi.fav.includes(el)?'p-acc':CFG.bazi.avoid.includes(el)?'p-warn':'p-blue'}">ธาตุ${ELN[el]}</span>`;
+};
+function recSnackHtml(p){
+  const list=recSnackOptions(p); if(!list.length) return '';
+  let rows='';
+  list.forEach(o=>{
+    const i=o.items[0];
+    rows+=`<tr><td>${i.shake?'🥤 ':''}${esc(i.n)}${elPill(i.el)}</td><td>${r1(i.q)} ${esc(i.u)}</td><td><b>${r0(o.K)}</b></td><td>${r1(o.P)} ก.</td><td>${r1(o.C)} ก.</td></tr>`;
+  });
+  return `<div class="card" id="recs-snack"><h2><i></i>🍎 อาหารที่แนะนำ — อาหารว่าง</h2>
+    <div class="note" style="margin-top:0">ใช้กับมื้อที่ระบุ "อาหารว่าง ≈ … kcal" (ต่ำกว่า 150 kcal) · เลือก 1 อย่าง · จำนวนหน่วยคูณให้ได้พลังงานใกล้เคียงกับมื้อ · เรียงจากแคลอรี่น้อยไปมาก · ค่าโดยประมาณ</div>
+    <div class="meal rmeal"><table><tr><th>อาหารว่าง</th><th>จำนวน</th><th>kcal</th><th>โปรตีน</th><th>คาร์บ</th></tr>${rows}</table></div></div>`;
+}
+function recNormalHtml(p){
+  const list=recNormalOptions(p); if(!list.length) return '';
+  const bz=CFG.bazi?` · เน้นธาตุ ${CFG.bazi.fav.map(e=>ELN[e]).join(' · ')} ผลัดกันทุกธาตุ`:'';
   let rows='';
   list.forEach(o=>{
     const cell=o.items.map(i=>{
       const mm=menuOf(i.n);
-      const eltag=(CFG.bazi&&mm)?` <span class="pill ${CFG.bazi.fav.includes(mm.el)?'p-acc':CFG.bazi.avoid.includes(mm.el)?'p-warn':'p-blue'}">ธาตุ${ELN[mm.el]}</span>`:'';
-      return `<div>${esc(i.n)}${eltag}${i.d?`<span class="dsc">${esc(i.d)}</span>`:''}</div>`;
+      return `<div>${esc(i.n)}${mm?elPill(mm.el):''}${i.d?`<span class="dsc">${esc(i.d)}</span>`:''}</div>`;
     }).join('');
     const qty=o.items.map(i=>`<div>${r1(i.q)} ${esc(i.u)}</div>`).join('');
     rows+=`<tr><td>${cell}</td><td>${qty}</td><td><b>${r0(o.K)}</b></td><td>${r1(o.P)} ก.</td><td>${r1(o.C)} ก.</td></tr>`;
   });
-  return `<div class="meal rmeal"><table><tr><th>ชุดเมนูแนะนำ (เรียงแคลอรี่น้อย → มาก)</th><th>ปริมาณ</th><th>kcal</th><th>โปรตีน</th><th>คาร์บ</th></tr>${rows}</table></div>`;
+  return `<div class="card" id="recs-normal"><h2><i></i>🍽️ อาหารที่แนะนำ — อาหารปกติ (สไตล์: ${esc(STYLE_NAME[CFG.style]||'ทั่วไป')})</h2>
+    <div class="note" style="margin-top:0">ใช้กับมื้อที่ระบุ "อาหารปกติ ≈ … kcal" (ตั้งแต่ 150 kcal) · แต่ละแถวคือเมนูสำหรับ 1 มื้อ (เน้นเมนูเดี่ยว) เลือกที่ kcal ใกล้เคียงกับมื้อ · เรียงจากแคลอรี่น้อยไปมาก${bz} · ปริมาณและค่าสารอาหารเป็นค่าโดยประมาณ</div>
+    <div class="meal rmeal"><table><tr><th>ชุดเมนูแนะนำ (เรียงแคลอรี่น้อย → มาก)</th><th>ปริมาณ</th><th>kcal</th><th>โปรตีน</th><th>คาร์บ</th></tr>${rows}</table></div></div>`;
 }
 function recCard(p){
-  return `<div class="card" id="recs">${recIntro()}${recListHtml(p)}</div>`;
+  const a=recSnackHtml(p), b=recNormalHtml(p);
+  const none=(!a&&!b)?`<div class="card"><h2><i></i>🍽️ อาหารที่แนะนำ</h2><div class="note" style="margin-top:0">เชก/บอดี้คีย์ให้พลังงานและโปรตีนครบตามเป้าทุกมื้อแล้ว ไม่ต้องเติมอาหารเพิ่ม</div></div>`:'';
+  return `<div id="recs">${a}${b}${none}</div>`;
 }
 
 function baziCard(){
@@ -2798,11 +2916,11 @@ function suppTable(){
 
 /* ปุ่มพิมพ์ / ส่ง LINE / ส่ง PDF — อยู่ต่อจากรายการอาหารที่แนะนำ */
 function actionsHtml(){
-  return `<div class="card noprint" id="outacts">
-    <button class="btnred" style="margin-top:0" onclick="window.print()">🖨️ พิมพ์แผนประจำสัปดาห์ / บันทึกเป็น PDF</button>
-    <button class="btnline" onclick="openLine()">💬 ส่งแผนเข้า LINE</button>
+  return `<div class="card noprint actsm" id="outacts">
+    <button class="btnred" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
+    <button class="btnline" onclick="openLine()">💬 ส่งเข้า LINE</button>
     <button class="btnblue" data-pdfbtn onclick="sharePdfLine()">📄 ส่ง PDF ผ่าน LINE</button>
-    <div id="pdfst" class="note"></div>
+    <div id="pdfst" class="note" style="flex-basis:100%;margin:0"></div>
   </div>`;
 }
 function renderAll(){
@@ -2834,24 +2952,21 @@ function lineText(){
   p.meals.forEach(m=>{
     t.push(`${SLOTICON[m.slot]||'🍽️'} [มื้อ${m.slot}] ${r0(m.K)} kcal · โปรตีน ${r1(m.P)} ก. · คาร์บ ${r1(m.C)} ก.`);
     m.items.filter(i=>PRODNAMES.has(i.n)).forEach(x=>t.push(`   • ${x.n} ${r1(x.q)} ${x.u}`));
-    const nf=m.items.filter(isNormalItem);
-    if(nf.length){
-      const K=nf.reduce((a,i)=>a+i.kcal,0), P=nf.reduce((a,i)=>a+i.p,0), C=nf.reduce((a,i)=>a+i.c,0);
-      if(K<LOW_NORMAL){
-        nf.forEach(x=>t.push(`   • ${x.n}${x.q!==1?' ×'+r1(x.q):''} — ${r0(x.kcal)} kcal · P ${r1(x.p)} · C ${r1(x.c)}`));
-        const alt=(m.alts||[]).slice(0,3).map(a=>a.map(i=>i.n+(i.q!==1?' ×'+r1(i.q):'')).join(' + '));
-        if(alt.length) t.push(`     (ทานแทนได้: ${alt.join(' · ')})`);
-      }else t.push(`   • อาหารปกติ ≈ ${r0(K)} kcal · โปรตีน ≈ ${r0(P)} ก. · คาร์บ ≈ ${r0(C)} ก.`);
-    }
+    const fi=foodInfo(m);
+    if(fi.items.length) t.push(`   • ${fi.snack?'อาหารว่าง':'อาหารปกติ'} ≈ ${r0(fi.K)} kcal · โปรตีน ≈ ${r0(fi.P)} ก. · คาร์บ ≈ ${r0(fi.C)} ก.`);
     m.items.filter(isFillItem).forEach(x=>t.push(`   • ${x.n===FILL_EGG.n?'ไข่ต้ม':'ขนมปังโฮลวีต'} ${r1(x.q)} ${x.u} (เสริมส่วนที่ขาด)`));
   });
   t.push(''); t.push(DASH);
-  t.push(`🍽️ อาหารที่แนะนำ (${STYLE_NAME[c.style]||'ทั่วไป'}) — เรียงแคลอรี่น้อย → มาก`);
-  const rl=recOptions(p);
-  if(!rl.length) t.push('   • ไม่ต้องเติมอาหารเพิ่ม (เชกครบเป้าแล้ว)');
-  else{
-    rl.forEach(o=>t.push(`   • ${optName(o)} — ${r0(o.K)} kcal · P ${r1(o.P)} · C ${r1(o.C)}`));
-    t.push('   (ทุกแถวคือ 1 มื้อ เลือกชุดที่ kcal ใกล้เคียงกับเป้าของมื้อนั้น)');
+  const sl=recSnackOptions(p), nl=recNormalOptions(p);
+  if(!sl.length&&!nl.length) t.push('🍽️ อาหารที่แนะนำ: ไม่ต้องเติมอาหารเพิ่ม (เชกครบเป้าแล้ว)');
+  if(sl.length){
+    t.push('🍎 อาหารที่แนะนำ — อาหารว่าง (เลือก 1 อย่าง · เรียงแคลอรี่น้อย → มาก)');
+    sl.forEach(o=>{ const i=o.items[0]; t.push(`   • ${i.n} ${r1(i.q)} ${i.u} — ${r0(o.K)} kcal · P ${r1(o.P)} · C ${r1(o.C)}`); });
+  }
+  if(nl.length){
+    if(sl.length) t.push('');
+    t.push(`🍽️ อาหารที่แนะนำ — อาหารปกติ (${STYLE_NAME[c.style]||'ทั่วไป'}) เรียงแคลอรี่น้อย → มาก`);
+    nl.forEach(o=>t.push(`   • ${optName(o)} — ${r0(o.K)} kcal · P ${r1(o.P)} · C ${r1(o.C)}`));
   }
   t.push('');
   t.push('💧 ดื่มน้ำ 2–3 ลิตร/วัน 💪 ฝึกแรงต้าน 3–4 ครั้ง/สัปดาห์');
@@ -2927,8 +3042,7 @@ function buildPdfBlocks(){
     ${suppTable()}</div>`)];
   blocks.push(mk(`<div class="card">${planHead(p)}</div>`));
   p.meals.forEach(m=>blocks.push(mk(mealHtml(m,0))));
-  blocks.push(mk(`<div class="card">${recIntro()}</div>`));
-  blocks.push(mk(recListHtml(p)));
+  [recSnackHtml(p),recNormalHtml(p)].forEach(h=>{ if(h) blocks.push(mk(h)); });
   blocks.push(mk(`<div class="note">ค่าพลังงาน โปรตีน และคาร์บของอาหารที่แนะนำเป็นค่าประมาณ · เครื่องมือนี้ใช้ช่วยคำนวณเชิงโภชนาการทั่วไป ไม่ใช่คำแนะนำทางการแพทย์</div>`));
   return blocks;
 }

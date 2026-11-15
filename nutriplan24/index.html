@@ -4,6 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NutriPlan 24 — โปรแกรมวางแผนอาหาร 24 สัปดาห์</title>
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b1220">
+<meta name="application-name" content="NutriPlan 24">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NutriPlan 24">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="description" content="ผู้ช่วยวางแผนอาหาร 24 สัปดาห์">
+<meta property="og:type" content="website">
+<meta property="og:title" content="NutriPlan 24">
+<meta property="og:description" content="ผู้ช่วยวางแผนอาหาร 24 สัปดาห์">
+<meta property="og:image" content="icon.png">
 <style>
 :root{--bg:#0b1220;--card:#141d31;--card2:#1b2740;--line:#26334d;--txt:#e8edf7;--mut:#8b9ab5;
  --acc:#4ade80;--acc2:#38bdf8;--warn:#fbbf24;--dan:#f87171;--pur:#a78bfa}
@@ -146,6 +160,8 @@ td:first-child,th:first-child{text-align:left}
 .tpv .al.w{background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.35);color:var(--warn)}
 .tpv .al.i{background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.3);color:var(--acc2)}
 
+.useronly{display:inline-block}
+body.isadmin .useronly{display:none!important}
 .adminonly{display:none!important}
 body.isadmin .adminonly{display:block!important}
 .hide{display:none}
@@ -213,6 +229,7 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
 .chain .cl.res b{color:var(--acc);font-size:17px}
 .tpv .al.e{background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.4);color:var(--dan)}
 .hrow .hd small.hb{color:var(--acc2)}
+.pwin{text-align:center;font-size:20px;letter-spacing:8px}
 
 .hchart{margin:10px 0 4px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px}
 .htabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
@@ -246,24 +263,24 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
 <div id="pwgate" class="modal" style="z-index:100">
   <div class="inner" style="max-width:420px">
     <h2 style="font-size:18px;margin-bottom:4px">🥗 เข้าสู่ระบบ NutriPlan 24</h2>
-    <div class="note" style="margin:0 0 12px">โปรแกรมวางแผนโภชนาการ 24 สัปดาห์</div>
+    <div class="note" style="margin:0 0 12px">ผู้ช่วยวางแผนอาหาร 24 สัปดาห์ของคุณ</div>
     <div class="ltab">
       <div id="ltu" class="on" onclick="loginTab('user')">👤 ผู้ใช้งาน</div>
       <div id="lta" onclick="loginTab('admin')">🔑 ผู้ดูแลระบบ</div>
     </div>
     <div id="paneUser">
-      <label>ชื่อผู้ใช้งาน (ตามที่ผู้ดูแลระบบกำหนด)</label>
+      <label>ชื่อผู้ใช้ (ที่ผู้ดูแลระบบให้ไว้)</label>
       <input type="text" id="inUser" placeholder="เช่น somchai" onkeydown="if(event.key==='Enter')userLogin()">
       <label>รหัสผ่าน 4 หลัก</label>
       <input type="tel" id="inKey" maxlength="4" placeholder="0000"
         style="text-align:center;font-size:22px;letter-spacing:10px" onkeydown="if(event.key==='Enter')userLogin()">
-      <button class="btn1" onclick="userLogin()">เข้าใช้งาน</button>
+      <button class="btn1" onclick="userLogin()">เข้าสู่ระบบ</button>
     </div>
     <div id="paneAdmin" class="hide">
       <label>รหัสผู้ดูแลระบบ</label>
       <input type="password" id="inAdmin" placeholder="••••"
         style="text-align:center;font-size:20px;letter-spacing:8px" onkeydown="if(event.key==='Enter')adminLogin()">
-      <button class="btn1" onclick="adminLogin()">เข้าสู่คอนโซลผู้ดูแลระบบ</button>
+      <button class="btn1" onclick="adminLogin()">เข้าสู่ระบบผู้ดูแล</button>
     </div>
     <div id="pwerr" style="color:var(--dan);font-size:12px;margin-top:10px"></div>
   </div>
@@ -272,11 +289,13 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
 <div class="wrap" id="appwrap" style="opacity:0;transition:.3s">
 <header>
   <h1>🥗 NutriPlan <span>24</span></h1>
-  <p>วางแผนชนิด จำนวน และปริมาณอาหารให้สอดคล้องกับเป้าหมายรายวันและรายมื้อ ตลอดโปรแกรม 24 สัปดาห์</p>
+  <p>วางแผนอาหารให้พอดีกับเป้าหมายของคุณ ทั้งรายวันและรายมื้อ ตลอด 24 สัปดาห์</p>
   <div id="whoami" class="note" style="text-align:center"></div>
   <div id="syncst" class="note noprint" style="text-align:center"></div>
   <div class="rolebar noprint">
     <span class="pill p-blue" id="rolepill">—</span>
+    <button class="btn2 useronly" onclick="openChPw()">🔑 เปลี่ยนรหัสผ่าน</button>
+    <button class="btn2 hide" id="btninstall" onclick="installApp()">📲 ติดตั้งแอป</button>
     <button class="btn2" onclick="logout()">ออกจากระบบ</button>
   </div>
 </header>
@@ -284,14 +303,13 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
 <div class="grid">
 <div class="noprint">
   <div class="card">
-    <h2><i></i>1. 👤 ข้อมูลผู้ใช้งาน</h2>
+    <h2><i></i>1. 👤 ข้อมูลของคุณ</h2>
 
     <div class="sec" style="border-color:rgba(74,222,128,.5)">
-      <div class="st">👥 ผู้รับแผน — บันทึกได้หลายคนในรหัสเดียว</div>
+      <div class="st">👥 ผู้รับแผน — ใช้ได้หลายคนในบัญชีเดียว</div>
       <select id="profsel" onchange="switchProfile(this.value)"></select>
-      <input type="text" id="profname" maxlength="80" placeholder="พิมพ์ชื่อผู้รับแผน เช่น คุณเอ" style="margin-top:8px">
       <div class="row">
-        <button class="btn2" style="margin-top:8px" onclick="addProfile()">➕ เพิ่มเป็นคนใหม่</button>
+        <button class="btn2" style="margin-top:8px" onclick="addProfile()">➕ เพิ่มคนใหม่</button>
         <button class="btn2" style="margin-top:8px" onclick="renameProfile()">✏️ เปลี่ยนชื่อคนนี้</button>
       </div>
       <div class="row">
@@ -303,7 +321,7 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
 
     <div class="sec" style="border-color:rgba(56,189,248,.5)">
       <div class="st">📈 ข้อมูลร่างกายและประวัติการบันทึกของผู้รับแผน (ไว้ติดตามผล)</div>
-      <div class="note" style="margin-top:0">กรอกเท่าที่มี (ไม่บังคับ) · ค่าเหล่านี้ถูกจำไว้แยกตามผู้รับแผน และใช้คำนวณ TDEE กับเป้าหมายรายวันอัตโนมัติ</div>
+      <div class="note" style="margin-top:0">กรอกเท่าที่มีได้เลย ไม่บังคับ · ระบบจำค่าไว้แยกของแต่ละคน และใช้คำนวณ TDEE กับเป้าหมายรายวันให้เอง</div>
       <div class="rowb">
         <div><label for="hwt">⚖️ น้ำหนัก (กก.)</label><input type="number" id="hwt" inputmode="decimal" step="0.1" min="20" max="300" placeholder="เช่น 68.5"></div>
         <div><label for="hbf">🧈 ไขมัน (%)</label><input type="number" id="hbf" inputmode="decimal" step="0.1" min="2" max="70" placeholder="เช่น 24.5"></div>
@@ -315,7 +333,7 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
       <label for="hnote">📝 หมายเหตุ — ไม่บังคับ</label>
       <input type="text" id="hnote" maxlength="200" placeholder="เช่น หิวช่วงบ่าย">
       <div id="histlist"></div>
-      <div class="note">ประวัติจะถูกบันทึกเฉพาะเมื่อกดปุ่ม "บันทึกประวัติครั้งนี้" เท่านั้น (เก็บบน Supabase) · ค่าร่างกายที่กรอกยังคงอยู่ในช่องเพื่อใช้คำนวณต่อ แก้ไขได้เมื่อวัดครั้งใหม่ · กดที่รายการเพื่อดูรายละเอียดย้อนหลัง</div>
+      <div class="note">ระบบจะเก็บประวัติก็ต่อเมื่อคุณกด "บันทึกประวัติครั้งนี้" · ค่าที่กรอกจะยังอยู่ในช่องไว้ใช้คำนวณต่อ พอวัดครั้งใหม่ก็แก้ทับได้เลย · กดที่รายการเพื่อดูรายละเอียดย้อนหลัง</div>
     </div>
 
     <label>📅 วันเริ่มต้นของสัปดาห์นี้ (ตั้งเป็นวันนี้อัตโนมัติทุกครั้งที่เข้าแอป)</label>
@@ -481,8 +499,8 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
   </div>
 
   <div class="card adminonly">
-    <h2><i></i>4. 🔑 คอนโซลผู้ดูแลระบบ — ออกรหัสผู้ใช้งาน</h2>
-    <div class="note" style="margin-top:0">พิมพ์ชื่อผู้ใช้แล้วกดสร้าง ระบบจะสุ่มรหัส 4 หลักบนเซิร์ฟเวอร์ (Supabase) และแสดงให้เห็นเพียงครั้งเดียว ใช้ได้ทันทีทุกเครื่องโดยไม่ต้องแก้โค้ดหรืออัปโหลดไฟล์ใหม่</div>
+    <h2><i></i>4. 🔑 ผู้ดูแลระบบ — สร้างบัญชีและรหัสผู้ใช้</h2>
+    <div class="note" style="margin-top:0">พิมพ์ชื่อผู้ใช้แล้วกดสร้าง ระบบจะสุ่มรหัส 4 หลักให้ และโชว์ให้ดูแค่ครั้งเดียว ใช้ได้ทันทีทุกเครื่อง · ผู้ใช้เปลี่ยนรหัสเองได้ภายหลังจากปุ่ม "เปลี่ยนรหัสผ่าน" ด้านบน</div>
     <div class="sec">
       <div class="st">ออกรหัสใหม่</div>
       <input type="text" id="gname" maxlength="80" placeholder="ชื่อผู้ใช้ เช่น somchai" style="margin-top:8px" onkeydown="if(event.key==='Enter')genKey()">
@@ -502,6 +520,38 @@ input[readonly].auto{background:rgba(74,222,128,.07);border-style:dashed;color:v
 
 <div id="out"></div>
 </div>
+</div>
+
+<div id="dlg" class="modal hide noprint" style="z-index:120" role="dialog" aria-modal="true" aria-labelledby="dlgt">
+  <div class="inner" style="max-width:400px">
+    <h2 id="dlgt" style="font-size:16px;margin-bottom:6px"></h2>
+    <div id="dlgs" class="note" style="margin:0"></div>
+    <label for="dlgin" id="dlgl"></label>
+    <input type="text" id="dlgin" maxlength="80" autocomplete="off">
+    <div id="dlge" style="color:var(--dan);font-size:12px;min-height:16px;margin-top:6px"></div>
+    <div class="row">
+      <button type="button" class="btn2" id="dlgc">ยกเลิก</button>
+      <button type="button" class="btn1" id="dlgo">ตกลง</button>
+    </div>
+  </div>
+</div>
+
+<div id="pwmodal" class="modal hide noprint" style="z-index:120" role="dialog" aria-modal="true" aria-labelledby="pwt">
+  <div class="inner" style="max-width:400px">
+    <h2 id="pwt" style="font-size:16px;margin-bottom:6px">🔑 เปลี่ยนรหัสผ่าน</h2>
+    <div class="note" style="margin:0">ตั้งรหัสผ่านใหม่เป็นตัวเลข 4 หลักที่คุณจำง่าย พอเปลี่ยนแล้ว รหัสที่ผู้ดูแลให้ไว้จะใช้ไม่ได้อีก และเครื่องอื่นที่ล็อกอินค้างอยู่จะถูกออกจากระบบ</div>
+    <label for="pwold">รหัสผ่านปัจจุบัน</label>
+    <input type="password" id="pwold" class="pwin" inputmode="numeric" maxlength="4" autocomplete="current-password" placeholder="••••">
+    <label for="pwnew">รหัสผ่านใหม่ (ตัวเลข 4 หลัก)</label>
+    <input type="password" id="pwnew" class="pwin" inputmode="numeric" maxlength="4" autocomplete="new-password" placeholder="••••">
+    <label for="pwnew2">พิมพ์รหัสใหม่อีกครั้ง</label>
+    <input type="password" id="pwnew2" class="pwin" inputmode="numeric" maxlength="4" autocomplete="new-password" placeholder="••••">
+    <div id="pwmsg" class="note" style="min-height:18px"></div>
+    <div class="row">
+      <button type="button" class="btn2" id="pwcancel" onclick="closeChPw()">ปิด</button>
+      <button type="button" class="btn1" id="pwok" onclick="doChPw()">บันทึกรหัสใหม่</button>
+    </div>
+  </div>
 </div>
 
 <div id="lmodal" class="modal hide noprint">
@@ -567,9 +617,9 @@ async function rpc(fn,args){
   const {data,error}=await sb.rpc(fn,args);
   if(error){
     const m=String(error.message||'');
-    if(m.includes('NP_UNAUTH')){ onUnauth(); throw new Error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'); }
-    if(m.includes('NP_TOO_BIG')) throw new Error('ข้อมูลของผู้รับแผนคนนี้ใหญ่เกินกำหนด');
-    if(m.includes('NP_LIMIT')) throw new Error('จำนวนผู้รับแผนครบเพดานแล้ว');
+    if(m.includes('NP_UNAUTH')){ onUnauth(); throw new Error('ล็อกอินหมดอายุแล้ว เข้าสู่ระบบใหม่อีกครั้งนะ'); }
+    if(m.includes('NP_TOO_BIG')) throw new Error('ข้อมูลของคนนี้เยอะเกินกว่าที่ระบบจะเก็บได้');
+    if(m.includes('NP_LIMIT')) throw new Error('เพิ่มคนได้ครบจำนวนสูงสุดแล้ว (50 คน)');
     throw new Error(m||'เรียกใช้งานเซิร์ฟเวอร์ไม่สำเร็จ');
   }
   return data;
@@ -577,7 +627,7 @@ async function rpc(fn,args){
 function onUnauth(){
   if(UNAUTH_SHOWN) return; UNAUTH_SHOWN=true;
   lsDel(TOKEN_KEY);
-  alert('เซสชันหมดอายุหรือถูกยกเลิกโดยผู้ดูแลระบบ กรุณาเข้าสู่ระบบใหม่');
+  alert('ล็อกอินหมดอายุหรือถูกผู้ดูแลระบบยกเลิกแล้ว ขอให้เข้าสู่ระบบใหม่อีกครั้งนะ');
   location.reload();
 }
 
@@ -593,9 +643,9 @@ function stable(v){
 }
 function showSync(){
   const el=document.getElementById('syncst'); if(!el) return;
-  if(SYNCERR) el.innerHTML=`<span style="color:var(--dan)">⚠️ บันทึกขึ้นคลาวด์ไม่สำเร็จ: ${esc(SYNCERR)}</span> <button type="button" class="mbtn" onclick="retrySync()">ลองอีกครั้ง</button>`;
+  if(SYNCERR) el.innerHTML=`<span style="color:var(--dan)">⚠️ บันทึกไม่สำเร็จ: ${esc(SYNCERR)}</span> <button type="button" class="mbtn" onclick="retrySync()">ลองอีกครั้ง</button>`;
   else if(PENDING>0||DIRTY.size) el.innerHTML='<span style="color:var(--warn)">☁️ กำลังบันทึก…</span>';
-  else el.innerHTML='<span style="color:var(--acc)">☁️ บันทึกขึ้นคลาวด์แล้ว</span>';
+  else el.innerHTML='<span style="color:var(--acc)">☁️ บันทึกเรียบร้อยแล้ว</span>';
 }
 function enqueue(key,fn){
   PENDING++; showSync();
@@ -662,24 +712,24 @@ function loginTab(w){
   document.getElementById('pwerr').innerText='';
 }
 const LOGIN_MSG={
-  bad:'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
-  suspended:'บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ',
-  noadmin:'ยังไม่ได้ตั้งรหัสผู้ดูแลระบบในฐานข้อมูล (ดูขั้นตอนสุดท้ายในไฟล์ supabase_setup.sql)'
+  bad:'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง ลองตรวจอีกรอบนะ',
+  suspended:'บัญชีนี้ถูกระงับอยู่ ลองติดต่อผู้ดูแลระบบดูนะ',
+  noadmin:'ยังไม่ได้ตั้งรหัสผู้ดูแลระบบ (ดูขั้นตอนสุดท้ายท้ายไฟล์ supabase_setup.sql)'
 };
 function loginMsg(r){
-  if(r&&r.code==='locked') return `ลองผิดหลายครั้ง ระบบล็อกชั่วคราว กรุณารออีกประมาณ ${r.minutes||15} นาที`;
+  if(r&&r.code==='locked') return `กรอกผิดหลายครั้ง ระบบเลยล็อกไว้ชั่วคราว รออีกประมาณ ${r.minutes||15} นาทีแล้วลองใหม่`;
   return LOGIN_MSG[(r&&r.code)||'bad']||LOGIN_MSG.bad;
 }
 function setLoginBusy(b){
   document.querySelectorAll('#pwgate button').forEach(x=>{x.disabled=b;});
-  if(b) pwerr.innerText='กำลังเชื่อมต่อเซิร์ฟเวอร์…';
+  if(b) pwerr.innerText='กำลังเชื่อมต่อ…';
 }
 async function userLogin(){
   if(LOGGING) return;
   const u=clean(document.getElementById('inUser').value);
   const k=(document.getElementById('inKey').value||'').trim();
-  if(!normName(u)){ pwerr.innerText='กรุณากรอกชื่อผู้ใช้งาน'; return; }
-  if(!/^\d{4}$/.test(k)){ pwerr.innerText='รหัสผ่านต้องเป็นตัวเลข 4 หลัก'; return; }
+  if(!normName(u)){ pwerr.innerText='ใส่ชื่อผู้ใช้ก่อนนะ'; return; }
+  if(!/^\d{4}$/.test(k)){ pwerr.innerText='รหัสผ่านเป็นตัวเลข 4 หลักนะ'; return; }
   LOGGING=true; setLoginBusy(true);
   try{
     const r=await rpc('np_login',{p_user:u,p_pin:k});
@@ -696,7 +746,7 @@ async function userLogin(){
 async function adminLogin(){
   if(LOGGING) return;
   const v=(document.getElementById('inAdmin').value||'').trim();
-  if(!v){ pwerr.innerText='กรุณากรอกรหัสผู้ดูแลระบบ'; return; }
+  if(!v){ pwerr.innerText='ใส่รหัสผู้ดูแลก่อนนะ'; return; }
   LOGGING=true; setLoginBusy(true);
   try{
     const r=await rpc('np_admin_login',{p_pass:v});
@@ -732,7 +782,7 @@ async function enterApp(role,name){
 }
 async function logout(){
   try{ if(PID) save(); flushDirty(); await CHAIN; }catch(e){ console.warn(e); }
-  if(FAILED.size&&!confirm('ยังบันทึกข้อมูลล่าสุดขึ้นคลาวด์ไม่สำเร็จ ถ้าออกจากระบบตอนนี้ ข้อมูลที่ยังไม่ได้บันทึกจะหายไป ต้องการออกจากระบบต่อหรือไม่?')) return;
+  if(FAILED.size&&!confirm('ข้อมูลล่าสุดยังบันทึกไม่สำเร็จ ถ้าออกตอนนี้ สิ่งที่ยังไม่ได้บันทึกจะหายไป ยังจะออกจากระบบอยู่ไหม?')) return;
   try{ if(TOKEN) await rpc('np_logout',{p_token:TOKEN}); }catch(e){}
   lsDel(TOKEN_KEY);
   location.reload();
@@ -757,16 +807,16 @@ async function restoreSession(){
 /* ---------- คอนโซลผู้ดูแลระบบ: ออกรหัส / รีเซ็ต / ระงับ / ลบ (ทำงานบนเซิร์ฟเวอร์) ---------- */
 let KLIST=[];
 const ADMIN_MSG={
-  exists:'มีชื่อผู้ใช้นี้อยู่แล้ว ถ้าผู้ใช้ลืมรหัส ให้กดปุ่ม 🔑 รีเซ็ตรหัสในรายการด้านล่าง',
-  badname:'ชื่อผู้ใช้ไม่ถูกต้อง (ห้ามว่างและห้ามขึ้นต้นด้วย __)',
+  exists:'มีชื่อผู้ใช้นี้อยู่แล้ว ถ้าเจ้าของลืมรหัส ให้กดปุ่ม 🔑 รีเซ็ตรหัสในรายการด้านล่าง',
+  badname:'ชื่อนี้ใช้ไม่ได้ (ห้ามเว้นว่าง และห้ามขึ้นต้นด้วย __)',
   notfound:'ไม่พบชื่อผู้ใช้นี้'
 };
-const adminMsg=r=>ADMIN_MSG[(r&&r.code)||'']||'ทำรายการไม่สำเร็จ';
+const adminMsg=r=>ADMIN_MSG[(r&&r.code)||'']||'ทำรายการไม่สำเร็จ ลองอีกครั้งนะ';
 function showKey(u,k){
   INVITE={u,k};
   document.getElementById('gout').innerHTML=
     `<div class="keybox">รหัสผ่าน <b>${esc(k)}</b>
-      <div class="note" style="margin:4px 0 0">ชื่อผู้ใช้: <b>${esc(u)}</b> · รหัสนี้แสดงครั้งเดียว กรุณาคัดลอกส่งให้ผู้ใช้ทันที (หากลืมให้กดรีเซ็ตรหัส)</div>
+      <div class="note" style="margin:4px 0 0">ชื่อผู้ใช้: <b>${esc(u)}</b> · รหัสนี้โชว์ครั้งเดียว คัดลอกส่งให้ผู้ใช้ได้เลย (ถ้าลืมค่อยกดรีเซ็ตรหัสใหม่)</div>
       <button class="btn2" onclick="copyInvite()">📋 คัดลอกข้อความสำหรับส่งให้ผู้ใช้</button>
     </div>`;
 }
@@ -778,7 +828,7 @@ async function genKey(){
     const r=await rpc('np_admin_issue',{p_token:TOKEN,p_user:u});
     if(!r||!r.ok){ gerr.innerHTML=`<span style="color:var(--dan)">${esc(adminMsg(r))}</span>`; return; }
     showKey(r.name,r.pin);
-    gerr.innerHTML='<span style="color:var(--acc)">ออกรหัสเรียบร้อยแล้ว</span>';
+    gerr.innerHTML='<span style="color:var(--acc)">สร้างรหัสเรียบร้อยแล้ว</span>';
     document.getElementById('gname').value='';
     await renderKeyList();
   }catch(e){ gerr.innerHTML=`<span style="color:var(--dan)">${esc(e.message)}</span>`; }
@@ -863,6 +913,65 @@ async function delUser(i){
     gerr.innerHTML=`<span style="color:var(--acc)">ลบบัญชี "${esc(x.name)}" แล้ว</span>`;
     await renderKeyList();
   }catch(e){ gerr.innerHTML=`<span style="color:var(--dan)">${esc(e.message)}</span>`; }
+}
+
+/* ================= เปลี่ยนรหัสผ่านด้วยตัวเอง (เฉพาะบัญชีผู้ใช้) ================= */
+let CHPW=false;
+const PWMSG={
+  bad:'รหัสผ่านปัจจุบันไม่ถูกต้อง',
+  badnew:'รหัสใหม่ต้องเป็นตัวเลข 4 หลักนะ',
+  same:'รหัสใหม่ต้องไม่ซ้ำกับรหัสเดิม',
+  admin:'บัญชีผู้ดูแลระบบเปลี่ยนรหัสจากหน้านี้ไม่ได้ (ตั้งใน SQL Editor)'
+};
+function pwSay(h,col){ document.getElementById('pwmsg').innerHTML=h?`<span style="color:var(${col||'--mut'})">${h}</span>`:''; }
+function openChPw(){
+  if(ROLE!=='user') return;
+  ['pwold','pwnew','pwnew2'].forEach(id=>{ document.getElementById(id).value=''; });
+  pwSay('');
+  document.getElementById('pwmodal').classList.remove('hide');
+  setTimeout(()=>document.getElementById('pwold').focus(),30);
+}
+function closeChPw(){ document.getElementById('pwmodal').classList.add('hide'); }
+async function doChPw(){
+  if(CHPW) return;
+  const o=document.getElementById('pwold').value.trim(), n=document.getElementById('pwnew').value.trim(), c=document.getElementById('pwnew2').value.trim();
+  if(!/^\d{4}$/.test(o)){ pwSay('ใส่รหัสผ่านปัจจุบัน (ตัวเลข 4 หลัก) ก่อนนะ','--dan'); return; }
+  if(!/^\d{4}$/.test(n)){ pwSay('รหัสใหม่ต้องเป็นตัวเลข 4 หลักนะ','--dan'); return; }
+  if(n!==c){ pwSay('รหัสใหม่ทั้งสองช่องยังไม่ตรงกัน','--dan'); return; }
+  if(n===o){ pwSay('รหัสใหม่ต้องไม่ซ้ำกับรหัสเดิม','--dan'); return; }
+  CHPW=true; document.getElementById('pwok').disabled=true; pwSay('กำลังบันทึก…');
+  try{
+    const r=await rpc('np_change_pin',{p_token:TOKEN,p_old:o,p_new:n});
+    if(r&&r.ok){
+      ['pwold','pwnew','pwnew2'].forEach(id=>{ document.getElementById(id).value=''; });
+      pwSay('เปลี่ยนรหัสผ่านเรียบร้อยแล้ว ครั้งหน้าใช้รหัสใหม่ในการเข้าสู่ระบบ','--acc');
+      setTimeout(closeChPw,1800);
+    }else if(r&&r.code==='locked') pwSay(`กรอกรหัสเดิมผิดหลายครั้ง ระบบล็อกไว้ชั่วคราว รออีกประมาณ ${r.minutes||15} นาทีแล้วลองใหม่`,'--dan');
+    else pwSay(esc(PWMSG[(r&&r.code)||'bad']||'เปลี่ยนรหัสไม่สำเร็จ ลองอีกครั้งนะ'),'--dan');
+  }catch(e){
+    const m=String((e&&e.message)||'');
+    pwSay(/np_change_pin|schema cache|Could not find/i.test(m)?'ฐานข้อมูลยังไม่ได้อัปเดต — ให้รันไฟล์ supabase_setup.sql ใน SQL Editor ก่อน':esc(m||'เกิดข้อผิดพลาด'),'--dan');
+  }finally{ CHPW=false; document.getElementById('pwok').disabled=false; }
+}
+['pwold','pwnew','pwnew2'].forEach(id=>document.addEventListener('DOMContentLoaded',()=>{
+  const e=document.getElementById(id); if(!e) return;
+  e.addEventListener('input',()=>{ e.value=e.value.replace(/\D/g,'').slice(0,4); });
+  e.addEventListener('keydown',ev=>{ if(ev.key==='Enter') doChPw(); else if(ev.key==='Escape') closeChPw(); });
+}));
+
+/* ================= ติดตั้งเป็นแอป (Android/Chrome: ติดตั้งแบบแอปจริง ไม่ใช่ทางลัด) ================= */
+let DEFERRED_INSTALL=null;
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); DEFERRED_INSTALL=e; const b=document.getElementById('btninstall'); if(b) b.classList.remove('hide'); });
+window.addEventListener('appinstalled',()=>{ DEFERRED_INSTALL=null; const b=document.getElementById('btninstall'); if(b) b.classList.add('hide'); });
+async function installApp(){
+  if(!DEFERRED_INSTALL) return;
+  DEFERRED_INSTALL.prompt();
+  try{ await DEFERRED_INSTALL.userChoice; }catch(e){}
+  DEFERRED_INSTALL=null;
+  const b=document.getElementById('btninstall'); if(b) b.classList.add('hide');
+}
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(e=>console.warn('ลงทะเบียน service worker ไม่สำเร็จ',e)); });
 }
 
 /* ================= โปรไฟล์ผู้รับแผน ================= */
@@ -952,14 +1061,13 @@ async function bootData(){
   renderProfSel();
   applyData(curData());
   histLoad();
-  if(imported) profnote.innerHTML+=`<br><span style="color:var(--acc)">นำเข้าข้อมูลเดิมในเครื่องนี้ ${imported} คน ขึ้นคลาวด์เรียบร้อยแล้ว</span>`;
+  if(imported) profnote.innerHTML+=`<br><span style="color:var(--acc)">ย้ายข้อมูลเดิมในเครื่องนี้ ${imported} คน ขึ้นระบบเรียบร้อยแล้ว</span>`;
 }
 function renderProfSel(){
   profsel.innerHTML=PROF.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
   profsel.value=PID;
-  profname.value=profName();
   whoami.innerHTML=`แผนสำหรับ <b>${esc(profName())}</b>`;
-  profnote.innerHTML=`มีผู้รับแผนในบัญชีนี้ <b>${PROF.length}</b> คน · ข้อมูลของแต่ละคนแยกกันทั้งหมด ทั้งเป้าหมาย อาหารเสริม และธาตุประจำตัว`;
+  profnote.innerHTML=`ตอนนี้มี <b>${PROF.length}</b> คนในบัญชีนี้ · ข้อมูลของแต่ละคนแยกกันหมด ทั้งเป้าหมาย อาหารเสริม และธาตุประจำตัว`;
 }
 function switchProfile(id){
   if(id===PID) return;
@@ -971,35 +1079,63 @@ function switchProfile(id){
   applyData(curData());
   histLoad();
 }
-function addProfile(){
-  const nm=clean(profname.value);
-  if(!nm){ profnote.innerHTML='<span style="color:var(--dan)">กรุณาพิมพ์ชื่อผู้รับแผนก่อน</span>'; return; }
-  if(PROF.some(p=>p.name===nm)){ profnote.innerHTML='<span style="color:var(--dan)">มีชื่อนี้อยู่แล้ว</span>'; return; }
+/* กล่องป๊อบอัพรับข้อความ (ใช้ตอนเพิ่ม/เปลี่ยนชื่อ/ทำสำเนา) · คืนค่าเป็นข้อความ หรือ null ถ้ายกเลิก */
+function askText(o){
+  return new Promise(res=>{
+    const $=id=>document.getElementById(id);
+    const m=$('dlg'), inp=$('dlgin'), err=$('dlge'), ok=$('dlgo'), cc=$('dlgc');
+    $('dlgt').textContent=o.title||''; $('dlgs').textContent=o.sub||''; $('dlgl').textContent=o.label||'';
+    inp.value=o.value||''; inp.placeholder=o.placeholder||''; err.textContent=''; ok.textContent=o.ok||'ตกลง';
+    const close=v=>{ m.classList.add('hide'); inp.onkeydown=null; ok.onclick=null; cc.onclick=null; m.onmousedown=null; res(v); };
+    const submit=()=>{
+      const v=clean(inp.value);
+      if(!v){ err.textContent='ใส่ชื่อก่อนนะ'; inp.focus(); return; }
+      const bad=o.validate?o.validate(v):'';
+      if(bad){ err.textContent=bad; inp.focus(); return; }
+      close(v);
+    };
+    ok.onclick=submit; cc.onclick=()=>close(null);
+    inp.onkeydown=e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); submit(); } else if(e.key==='Escape') close(null); };
+    m.onmousedown=e=>{ if(e.target===m) close(null); };
+    m.classList.remove('hide');
+    setTimeout(()=>{ inp.focus(); inp.select(); },30);
+  });
+}
+const PROF_MAX=50;
+async function addProfile(){
+  if(PROF.length>=PROF_MAX){ profnote.innerHTML='<span style="color:var(--warn)">เพิ่มคนได้ครบ '+PROF_MAX+' คนแล้ว</span>'; return; }
+  const nm=await askText({title:'➕ เพิ่มคนใหม่',sub:'ใส่ชื่อคนที่จะวางแผนอาหารให้ ข้อมูลของแต่ละคนจะแยกกันทั้งหมด',label:'ชื่อผู้รับแผน',placeholder:'เช่น คุณเอ',ok:'เพิ่มเลย',
+    validate:v=>PROF.some(p=>p.name===v)?'มีชื่อนี้อยู่แล้ว ลองใช้ชื่ออื่นนะ':''});
+  if(!nm) return;
   save();
   const id=newId();
   PROF.push({id,name:nm}); DATA[id]=null;
-  setActive(id); CURDAY=0;
+  setActive(id); CURDAY=0; HSHOW=10;
   renderProfSel(); applyData(null);
   markDirty(id);
+  histLoad();
   profnote.innerHTML=`<span style="color:var(--acc)">เพิ่ม "${esc(nm)}" แล้ว เริ่มกรอกข้อมูลของคนนี้ได้เลย</span>`;
 }
-function dupProfile(){
-  let nm=clean(profname.value);
-  if(!nm||nm===profName()) nm=profName()+' (สำเนา)';
-  if(PROF.some(p=>p.name===nm)){ profnote.innerHTML='<span style="color:var(--dan)">มีชื่อนี้อยู่แล้ว พิมพ์ชื่อใหม่ก่อนกดทำสำเนา</span>'; return; }
+async function dupProfile(){
+  if(PROF.length>=PROF_MAX){ profnote.innerHTML='<span style="color:var(--warn)">เพิ่มคนได้ครบ '+PROF_MAX+' คนแล้ว</span>'; return; }
+  const nm=await askText({title:'📄 ทำสำเนา',sub:'คัดลอกข้อมูลของ "'+profName()+'" ไปเป็นคนใหม่ (ประวัติการบันทึกจะไม่ถูกคัดลอกไปด้วย)',label:'ชื่อของสำเนา',value:profName()+' (สำเนา)',ok:'ทำสำเนา',
+    validate:v=>PROF.some(p=>p.name===v)?'มีชื่อนี้อยู่แล้ว ลองใช้ชื่ออื่นนะ':''});
+  if(!nm) return;
   save();
   const src=curData();
   const id=newId();
   PROF.push({id,name:nm}); DATA[id]=src||null;
-  setActive(id);
+  setActive(id); HSHOW=10;
   renderProfSel(); applyData(curData());
   markDirty(id);
+  histLoad();
   profnote.innerHTML=`<span style="color:var(--acc)">ทำสำเนาเป็น "${esc(nm)}" แล้ว</span>`;
 }
-function renameProfile(){
-  const nm=clean(profname.value);
-  if(!nm){ profnote.innerHTML='<span style="color:var(--dan)">กรุณาพิมพ์ชื่อใหม่</span>'; return; }
-  if(PROF.some(p=>p.id!==PID&&p.name===nm)){ profnote.innerHTML='<span style="color:var(--dan)">ชื่อนี้ซ้ำกับคนอื่น</span>'; return; }
+async function renameProfile(){
+  const cur=profName();
+  const nm=await askText({title:'✏️ เปลี่ยนชื่อ',sub:'กำลังแก้ชื่อของ "'+cur+'"',label:'ชื่อใหม่',value:cur,ok:'บันทึกชื่อ',
+    validate:v=>PROF.some(p=>p.id!==PID&&p.name===v)?'ชื่อนี้ซ้ำกับคนอื่นในบัญชี ลองใช้ชื่ออื่นนะ':''});
+  if(!nm||nm===cur) return;
   const p=PROF.find(x=>x.id===PID); if(!p) return;
   p.name=nm; markDirty(PID); renderProfSel();
   if(CFG) CFG.who=nm;
@@ -1008,8 +1144,8 @@ function renameProfile(){
   profnote.innerHTML='<span style="color:var(--acc)">เปลี่ยนชื่อเรียบร้อยแล้ว</span>';
 }
 function delProfile(){
-  if(PROF.length<=1){ profnote.innerHTML='<span style="color:var(--warn)">เหลือคนสุดท้ายแล้ว ลบไม่ได้ ใช้วิธีเปลี่ยนชื่อแทน</span>'; return; }
-  if(!confirm('ลบผู้รับแผน "'+profName()+'" และข้อมูลทั้งหมดของคนนี้?')) return;
+  if(PROF.length<=1){ profnote.innerHTML='<span style="color:var(--warn)">เหลือคนสุดท้ายแล้ว ลบไม่ได้นะ ลองเปลี่ยนชื่อแทนได้</span>'; return; }
+  if(!confirm('ลบ "'+profName()+'" พร้อมข้อมูลและประวัติทั้งหมดของคนนี้เลยไหม? ย้อนกลับไม่ได้นะ')) return;
   const gone=PID;
   PROF=PROF.filter(p=>p.id!==gone); delete DATA[gone];
   DIRTY.delete(gone); FAILED.delete('save:'+gone);
@@ -1468,7 +1604,7 @@ async function histPrefetch(pid){
 function histMsg(h,col){ const el=document.getElementById('histst'); if(el) el.innerHTML=h?`<span style="color:var(${col||'--mut'})">${h}</span>`:''; }
 function histErrText(e){
   const m=String((e&&e.message)||'');
-  if(/np_log_history|np_history_list|np_history_get|np_history_delete|np_history_update|schema cache|Could not find/i.test(m)) return 'ยังไม่ได้ติดตั้ง/อัปเดตฟังก์ชันประวัติใน Supabase — ให้รันไฟล์ supabase_history.sql ใน SQL Editor ก่อน';
+  if(/np_log_history|np_history_list|np_history_get|np_history_delete|np_history_update|schema cache|Could not find/i.test(m)) return 'ฐานข้อมูลยังไม่ได้อัปเดต — ให้รันไฟล์ supabase_setup.sql ใน SQL Editor ก่อน';
   return m||'เกิดข้อผิดพลาด';
 }
 function fmtHT(v){
@@ -1577,7 +1713,7 @@ async function histToggle(id){
 function renderHist(){
   const el=document.getElementById('histlist'); if(!el) return;
   if(!HIST.length){
-    el.innerHTML=HOK?'<div class="note">ยังไม่มีประวัติของผู้รับแผนคนนี้ กดปุ่ม "บันทึกประวัติครั้งนี้" ด้านบนเพื่อเริ่มบันทึก</div>':'';
+    el.innerHTML=HOK?'<div class="note">ยังไม่มีประวัติของคนนี้ กด "บันทึกประวัติครั้งนี้" เพื่อเริ่มเก็บได้เลย</div>':'';
     return;
   }
   const lab={manual:'📌 บันทึกเอง',auto:'⚙️ อัตโนมัติ',create:'🆕 สร้างใหม่',duplicate:'📄 ทำสำเนา'};
@@ -2684,7 +2820,7 @@ function run(){
   const K=+kcal.value, P=+prot.value;
   if(!(K>=500&&K<=6000)||!(P>=0&&P<=400)){
     DAYS=[]; CFG=null;
-    out.innerHTML='<div class="card box b-warn">⚠️ กรุณากรอกแคลอรี่และโปรตีนรายวันให้ถูกต้องก่อนคำนวณ</div>';
+    out.innerHTML='<div class="card box b-warn">⚠️ เป้าแคลอรี่หรือโปรตีนรายวันยังไม่ถูกต้อง ลองตรวจอีกครั้งก่อนคำนวณนะ</div>';
     return;
   }
   const w=Math.min(24,Math.max(1,+week.value||1)), per=perOf(w);

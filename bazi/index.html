@@ -5,11 +5,28 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#060d1b">
+<meta name="color-scheme" content="dark light">
+<meta name="description" content="BaZi Precision Navigator — อ่านดวงชะตาจีน-ไทยแบบเข้าใจง่าย">
 <title>🏛️ BaZi Precision Navigator</title>
-<!-- แก้ไขรอบนี้: ดู CHANGELOG ท้ายไฟล์ -->
+<!-- ไอคอนแอป: ใช้ไฟล์ icon.png ในโฟลเดอร์เดียวกับไฟล์นี้ (แนะนำภาพสี่เหลี่ยมจัตุรัส PNG ขนาด 512×512 ขึ้นไป) -->
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="shortcut icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<!-- ติดตั้งเป็นแอป: Android (Chrome) ใช้ manifest.json + sw.js · iOS ใช้แท็ก apple-* ด้านล่าง -->
+<link rel="manifest" href="manifest.json">
+<meta name="application-name" content="BaZi Navigator">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BaZi">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<meta property="og:title" content="BaZi Precision Navigator">
+<meta property="og:description" content="อ่านดวงชะตาจีน-ไทยแบบเข้าใจง่าย">
+<meta property="og:image" content="icon.png">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@700&family=Noto+Serif+Thai:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
@@ -173,7 +190,7 @@ th{background:#f5efe6;color:var(--primary);font-weight:600;font-size:12.5px}
   --water:#2a6db5;--sapphire:#15386a;
   --card:#fcfaf5;--line:rgba(190,150,60,.38);
   --ink:#16202f;--muted:#586273;
-  --serif:'Noto Serif Thai','Noto Serif TC',Georgia,'Times New Roman',serif;
+  --serif:'Sarabun',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
 html{background:#060d1b}
 body{background:radial-gradient(1100px 620px at 78% -8%,rgba(21,56,106,.55),transparent 62%),radial-gradient(900px 560px at 8% 12%,rgba(11,110,87,.28),transparent 60%),linear-gradient(180deg,#050b18 0%,#081528 55%,#06101f 100%);
@@ -293,6 +310,30 @@ button.wide:not(.ghost):hover{background:linear-gradient(135deg,#fbeaae 0%,#e5c2
 @media(max-width:620px){#app>h1{font-size:22px}.card{border-radius:15px}}
 @media(prefers-reduced-motion:reduce){button::after{display:none}.card,.mfc,button{transition:none}}
 @media print{#lxBg{display:none!important}}
+
+/* ---- ฟอนต์ Sarabun ทุกองค์ประกอบ (ปุ่ม/ช่องกรอกไม่สืบทอดฟอนต์เองตามค่าเริ่มต้น) ---- */
+html,body,button,input,select,textarea,table,th,td,h1,h2,h3,h4{font-family:var(--th)}
+.cn,.pillar .cn,.mfc .cn,[style*="var(--cn)"]{font-family:var(--cn)}
+.keyout{font-family:var(--th);font-variant-numeric:tabular-nums}
+
+/* ---- พื้นที่ปลอดภัยของมือถือ (รอยบาก/แถบสถานะเมื่อเปิดเป็นแอป) ---- */
+body{padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom));
+  padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+@media(max-width:620px){body{padding-top:max(11px,env(safe-area-inset-top));padding-bottom:max(11px,env(safe-area-inset-bottom));
+  padding-left:max(11px,env(safe-area-inset-left));padding-right:max(11px,env(safe-area-inset-right))}}
+.tbbar{top:calc(env(safe-area-inset-top,0px) + 4px)}
+
+/* ---- หน้าต่างเปลี่ยนรหัสผ่าน ---- */
+.modal{position:fixed;inset:0;z-index:9998;display:none;align-items:center;justify-content:center;padding:18px;
+  background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+.modal.open{display:flex}
+.modal .gatebox{max-height:calc(100vh - 36px);overflow-y:auto}
+.pwshow{display:flex;gap:8px;align-items:center;justify-content:center;font-size:13px;margin:6px 0 2px;color:rgba(238,226,190,.88);cursor:pointer}
+.gatebox .pwshow input{width:auto;margin:0}
+.modal .btnrow button{flex:1 1 140px}
+.nudge{display:none;margin:0 0 14px;font-size:13.5px;line-height:1.75}
+.nudge .btnrow{justify-content:flex-start;margin-top:8px}
+#gateInstall{margin-top:10px;text-align:center}
 </style>
 </head>
 <body oncontextmenu="return false" ondragstart="return false">
@@ -304,22 +345,37 @@ button.wide:not(.ghost):hover{background:linear-gradient(135deg,#fbeaae 0%,#e5c2
 <div id="gate">
   <div class="gatebox">
     <h2>🏛️ BaZi Precision Navigator</h2>
-    <p class="small">ระบบวิเคราะห์ดวงชะตาจีน-ไทยเชิงลึก · เฉพาะผู้ได้รับสิทธิ์</p>
+    <p class="small">อ่านดวงชะตาจีน-ไทยแบบเข้าใจง่าย · สำหรับผู้ที่ได้รับสิทธิ์เข้าใช้งานเท่านั้น</p>
     <div class="tabs">
       <button id="tbUser" onclick="switchTab('user')">👤 ผู้ใช้งาน</button>
       <button id="tbAdmin" class="ghost" onclick="switchTab('admin')">🔑 แอดมิน</button>
     </div>
     <div id="paneUser">
-      <input id="inUser" placeholder="ชื่อผู้ใช้งาน" autocomplete="off" autocapitalize="off">
-      <input id="inKey" type="password" placeholder="รหัสผ่าน 4 หลัก" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)">
+      <input id="inUser" placeholder="ชื่อผู้ใช้" autocomplete="username" autocapitalize="off">
+      <input id="inKey" type="password" placeholder="รหัสผ่าน (ตัวเลข 4 หลัก)" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="current-password" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)">
       <button class="wide" style="margin-top:10px" onclick="userLogin()">🔓 เข้าสู่ระบบ</button>
-      <p class="small" style="margin-top:10px">🔒 ระบบจะจดจำการเข้าสู่ระบบ 30 วัน หรือจนกว่าจะกดออก · กรอกรหัสผิดครบ 5 ครั้งจะถูกล็อก 15 นาที</p>
+      <p class="small" style="margin-top:10px">🔒 เครื่องนี้จะจำการเข้าสู่ระบบของคุณไว้ 30 วัน หรือจนกว่าคุณจะกดออกจากระบบ · ถ้ากรอกรหัสผิดครบ 5 ครั้ง ระบบจะพักการเข้าใช้ไว้ 15 นาที</p>
     </div>
     <div id="paneAdmin" style="display:none">
-      <input id="inAdmin" type="password" placeholder="รหัสผ่านแอดมิน" autocomplete="off">
+      <input id="inAdmin" type="password" placeholder="รหัสผ่านผู้ดูแลระบบ" autocomplete="off">
       <button class="wide" style="margin-top:10px" onclick="adminLogin()">🛡️ เข้าสู่โหมดแอดมิน</button>
     </div>
     <div id="gateMsg" class="msg"></div>
+    <div id="gateInstall"><button type="button" class="mini ghost btnInstall" style="display:none" onclick="installApp()">📲 ติดตั้งเป็นแอปบนหน้าจอโฮม</button></div>
+  </div>
+</div>
+
+<!-- ================= เปลี่ยนรหัสผ่าน (ผู้ใช้เปลี่ยนเองได้) ================= -->
+<div id="pwModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="pwTitle" onclick="if(event.target===this)closePw()">
+  <div class="gatebox">
+    <h2 id="pwTitle">🔑 เปลี่ยนรหัสผ่าน</h2>
+    <p class="small">ตั้งรหัสผ่านใหม่เป็นตัวเลข 4 หลักที่คุณจำได้ง่าย แต่คนอื่นเดาไม่ออก รหัสใหม่ใช้เข้าสู่ระบบแทนรหัสเดิมได้ทันที</p>
+    <input id="pwOld" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="รหัสผ่านปัจจุบัน" autocomplete="current-password" oninput="digitsOnly(this)">
+    <input id="pwNew" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="รหัสผ่านใหม่ (ตัวเลข 4 หลัก)" autocomplete="new-password" oninput="digitsOnly(this)">
+    <input id="pwNew2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="พิมพ์รหัสผ่านใหม่อีกครั้ง" autocomplete="new-password" oninput="digitsOnly(this)">
+    <label class="pwshow"><input type="checkbox" id="pwShow" onchange="pwToggle()"> แสดงตัวเลขที่พิมพ์</label>
+    <div class="btnrow"><button type="button" class="wide" id="pwSave" onclick="submitPw()">💾 บันทึกรหัสใหม่</button><button type="button" class="wide ghost" onclick="closePw()">ยกเลิก</button></div>
+    <div id="pwMsg" class="msg"></div>
   </div>
 </div>
 
@@ -328,14 +384,19 @@ button.wide:not(.ghost):hover{background:linear-gradient(135deg,#fbeaae 0%,#e5c2
   <h1>🏛️ BaZi Precision Navigator</h1>
   <div class="topbar">
     <span class="small">👋 <b id="whoami"></b></span>
+    <button class="ghost mini" id="btnPw" style="display:none" onclick="openPw()">🔑 เปลี่ยนรหัสผ่าน</button>
+    <button class="ghost mini btnInstall" style="display:none" onclick="installApp()">📲 ติดตั้งแอป</button>
     <button class="ghost mini" onclick="logout()">🚪 ออกจากระบบ</button>
+  </div>
+  <div class="tip nudge" id="pinNudge">🔐 <b>ตั้งรหัสผ่านของคุณเองสักหน่อยไหม?</b> รหัสที่ผู้ดูแลระบบสร้างให้เป็นรหัสตั้งต้น ลองเปลี่ยนเป็นเลข 4 หลักที่คุณจำได้ง่ายและไม่บอกใคร จะปลอดภัยกว่า
+    <div class="btnrow"><button type="button" class="mini" onclick="openPw()">🔑 ตั้งรหัสใหม่เลย</button><button type="button" class="mini ghost" onclick="snoozeNudge()">ไว้ก่อน</button></div>
   </div>
 
   <!-- ADMIN -->
   <div class="card" id="adminCard" style="display:none;border-color:var(--primary)">
-    <h2>🛡️ แผงควบคุมแอดมิน · ฐานข้อมูลจริง (Supabase)</h2>
+    <h2>🛡️ จัดการผู้ใช้ (สำหรับผู้ดูแลระบบ)</h2>
     <div class="form-grid">
-      <div class="fld" style="grid-column:span 2"><label>👤 ชื่อผู้ใช้งาน</label><input id="agUser" placeholder="เช่น somchai" autocapitalize="off"></div>
+      <div class="fld" style="grid-column:span 2"><label>👤 ชื่อผู้ใช้</label><input id="agUser" placeholder="เช่น somchai" autocapitalize="off"></div>
       <div class="fld"><label>📝 หมายเหตุ</label><input id="agNote" placeholder="ไม่บังคับ"></div>
       <div class="fld"><label>⌛ วันหมดอายุ (ไม่บังคับ)</label><input type="text" id="agExp" inputmode="numeric" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off"></div>
       <div class="fld"><button class="wide" onclick="genKey()">⚙️ สร้างรหัส</button></div>
@@ -343,12 +404,12 @@ button.wide:not(.ghost):hover{background:linear-gradient(135deg,#fbeaae 0%,#e5c2
     </div>
     <div id="keyResult"></div>
     <div id="keyList"></div>
-    <p class="small">💡 ระบบสุ่มรหัสผ่าน 4 หลักบนเซิร์ฟเวอร์ (Supabase) และแสดงให้เห็นครั้งเดียว · ฐานข้อมูลเก็บเฉพาะค่าเข้ารหัสทางเดียว จึงดูรหัสย้อนหลังไม่ได้ (ลืมให้กดรีเซ็ต) · ใช้ล็อกอินได้ทุกเครื่องทันที</p>
+    <p class="small">💡 ระบบจะสุ่มรหัสผ่านเริ่มต้น 4 หลักให้ และแสดงให้ดูแค่ครั้งเดียว จึงควรจดหรือส่งให้ผู้ใช้ทันที · รหัสถูกเก็บแบบเข้ารหัสทางเดียว ดูย้อนหลังไม่ได้ ถ้าผู้ใช้ลืมให้กด “รีเซ็ตรหัส” · ผู้ใช้เปลี่ยนรหัสของตัวเองได้หลังเข้าสู่ระบบ (ปุ่ม “เปลี่ยนรหัสผ่าน”) · ใช้เข้าสู่ระบบได้ทุกเครื่องทันที</p>
   </div>
 
   <!-- 1. INPUT -->
   <div class="card">
-    <h2>⚙️ ตั้งค่าดวงกำเนิด · Four Pillars Engine (ระบบไทย)</h2>
+    <h2>⚙️ ข้อมูลวันเกิดของคุณ</h2>
     <div class="profilebar">
       <div class="fld"><label>👥 ดวงที่กำลังดู</label><select id="profileSel" onchange="switchProfile(this.value)"></select></div>
       <button class="mini" onclick="addProfile()">➕ เพิ่มดวง</button>
@@ -365,16 +426,16 @@ button.wide:not(.ghost):hover{background:linear-gradient(135deg,#fbeaae 0%,#e5c2
       <div class="fld d1 m1"><label>📆 วันที่</label><input type="number" id="bd" value="1" min="1" max="31" oninput="updateConfirm()"></div>
       <div class="fld d1 m1"><label>📅 เดือน</label><input type="number" id="bm" value="1" min="1" max="12" oninput="updateConfirm()"></div>
       <div class="fld d1 m1"><label>🗓️ ปี ค.ศ.</label><input type="number" id="by" value="2000" min="1900" max="2100" step="1" oninput="updateConfirm()"></div>
-      <div class="fld d1 m1"><label>⏰ เวลาตกฟาก (24 ชม.)</label><input type="text" id="bt" value="09:00" inputmode="numeric" maxlength="5" placeholder="ชม:นาที เช่น 14:30" autocomplete="off" oninput="fmtTimeInput(this);updateConfirm()" onblur="normTimeInput(this);updateConfirm()"></div>
+      <div class="fld d1 m1"><label>⏰ เวลาเกิด (24 ชม.)</label><input type="text" id="bt" value="09:00" inputmode="numeric" maxlength="5" placeholder="เช่น 14:30" autocomplete="off" oninput="fmtTimeInput(this);updateConfirm()" onblur="normTimeInput(this);updateConfirm()"></div>
       <div class="fld d1 m2"><label>🚻 เพศกำเนิด</label><select id="gender" onchange="updateConfirm()"><option value="M">ชาย</option><option value="F">หญิง</option></select></div>
       <div class="fld d1 m1"><label>📍 ละติจูด</label><input type="text" id="lat" readonly></div>
       <div class="fld d1 m1"><label>📍 ลองจิจูด</label><input type="text" id="lon" readonly></div>
-      <div class="fld d3 m2"><label>🕰️ Time Zone</label><input type="text" id="tz" value="+7 (ประเทศไทย)" readonly></div>
+      <div class="fld d3 m2"><label>🕰️ เขตเวลา</label><input type="text" id="tz" value="+7 (ประเทศไทย)" readonly></div>
       <div class="fld d6 m2"><label>🧮 การคำนวณเวลา</label>
-        <select id="tmode" style="display:none" onchange="updateConfirm()"><option value="solar">☀️ เวลาสุริยะจริงเต็มรูปแบบ (ลองจิจูด + EoT)</option><option value="clock">🕐 เวลานาฬิกาตรง ๆ (+7)</option></select>
+        <select id="tmode" style="display:none" onchange="updateConfirm()"><option value="solar">☀️ เวลาสุริยะจริง (ปรับตามตำแหน่งจังหวัดที่เกิด)</option><option value="clock">🕐 เวลานาฬิกาตรง ๆ (+7)</option></select>
         <div class="seg" id="tmodeSeg" role="group" aria-label="การคำนวณเวลา">
-          <button type="button" data-v="solar" onclick="setTmode('solar')"><b>☀️ เวลาสุริยะจริง</b><span>ลองจิจูด + EoT (แนะนำ)</span></button>
-          <button type="button" data-v="clock" onclick="setTmode('clock')"><b>🕐 เวลานาฬิกา</b><span>ตรง ๆ (+7)</span></button>
+          <button type="button" data-v="solar" onclick="setTmode('solar')"><b>☀️ เวลาสุริยะจริง</b><span>ปรับตามตำแหน่งจังหวัดที่เกิด (แนะนำ)</span></button>
+          <button type="button" data-v="clock" onclick="setTmode('clock')"><b>🕐 เวลานาฬิกา</b><span>ใช้ตามนาฬิกาตรง ๆ (+7)</span></button>
         </div>
         <div class="tmnote" id="tmodeHint"></div>
       </div>
@@ -382,7 +443,7 @@ button.wide:not(.ghost):hover{background:linear-gradient(135deg,#fbeaae 0%,#e5c2
     </div>
     <div class="confirm" id="confirmLine">📋 …</div>
     <div class="savebar">
-      <span class="small" id="saveState">💾 ข้อมูลจะถูกบันทึกลงดวงที่เลือกอัตโนมัติ</span>
+      <span class="small" id="saveState">💾 สิ่งที่คุณแก้ไขจะบันทึกลงดวงที่เลือกให้อัตโนมัติ</span>
       <span class="small" id="syncSt"></span>
     </div>
     <div class="btnrow">
@@ -393,7 +454,7 @@ button.wide:not(.ghost):hover{background:linear-gradient(135deg,#fbeaae 0%,#e5c2
 
   <!-- 2. CHART -->
   <div class="card">
-    <h2>📌 โครงสร้างดวงกำเนิด · ธาตุแฝง · สิบเทพ</h2>
+    <h2>📌 ดวงกำเนิดของคุณ · ธาตุแฝง · สิบเทพ</h2>
     <div class="chartwho" id="chartWho">-</div>
     <div class="grid4">
       <div class="pillar"><div class="tag">⏰ เสาเวลา</div><div class="cn" id="p0">-</div><div class="sub" id="s0">-</div><div class="hid" id="h0">-</div></div>
@@ -421,33 +482,33 @@ button.wide:not(.ghost):hover{background:linear-gradient(135deg,#fbeaae 0%,#e5c2
 
   <!-- 2.6 LUCK PILLARS -->
   <div class="card">
-    <h2>🌀 ดวงโคจรช่วง 10 ปี (大運)</h2>
+    <h2>🌀 จังหวะชีวิตรอบ 10 ปี</h2>
     <div id="luckBox">-</div>
   </div>
 
   <!-- 2.7 LIFE READING -->
   <div class="card">
-    <h2>🧭 วิเคราะห์ชีวิต 9 มิติ · BaZi × ลัคนา</h2>
+    <h2>🧭 ชีวิตของคุณ 9 ด้าน · ศาสตร์จีน × ลัคนา</h2>
     <div id="lifeBox">-</div>
   </div>
 
   <!-- 3. NAVIGATOR -->
   <div class="card">
-    <h2>📅 ตรวจวันจรเทียบดวงกำเนิด</h2>
+    <h2>📅 วันนี้ (หรือวันไหน) ดีกับคุณแค่ไหน</h2>
     <div class="form-grid" style="max-width:440px;margin:0 auto">
       <div class="fld" style="grid-column:span 2"><label>เลือกวันที่</label><input type="date" id="navDate" onchange="onNavChange()"></div>
       <div class="fld"><button class="wide ghost" onclick="setToday()">📍 วันนี้</button></div>
     </div>
     <div class="box" id="dailyBox" style="margin-top:16px">-</div>
 
-    <h3 style="margin-top:22px">📊 พยากรณ์กระแสพลังงาน 7 วันล่วงหน้า</h3>
+    <h3 style="margin-top:22px">📊 7 วันข้างหน้าเป็นอย่างไร</h3>
     <div class="tbwrap">
       <table class="rtable">
         <thead><tr>
-          <th>📅 วันที่</th><th>🥢 เสาวันจร</th><th>🐉 นักษัตร + ธาตุแฝง</th>
+          <th>📅 วันที่</th><th>🥢 เสาประจำวัน</th><th>🐉 นักษัตร + ธาตุแฝง</th>
           <th>🌟 สิบเทพ</th><th>⚖️ คะแนน</th>
-          <th>🎨 สีมงคล</th><th>🚫 สีกาลกิณี</th>
-          <th>✅ ควรทำ</th><th>⚠️ ควรเลี่ยง</th><th>🍲 โภชนาการ</th>
+          <th>🎨 สีเสริมดวง</th><th>🚫 สีที่ควรเลี่ยง</th>
+          <th>✅ ควรทำ</th><th>⚠️ ควรเลี่ยง</th><th>🍲 อาหารแนะนำ</th>
         </tr></thead>
         <tbody id="wk"><tr><td colspan="10">⏳ รอข้อมูล…</td></tr></tbody>
       </table>
@@ -478,25 +539,61 @@ try{
   }
 }catch(e){console.warn('Supabase init failed',e);sb=null;}
 
-let CURRENT_USER='', ROLE=null, TOKEN=null, LOGGING=false, UNAUTH_SHOWN=false, INVITE=null;
+let CURRENT_USER='', ROLE=null, TOKEN=null, LOGGING=false, UNAUTH_SHOWN=false, INVITE=null, PIN_CHANGED=true;
+
+/* ---------- ติดตั้งเป็นแอป (ตั้งตัวรับเหตุการณ์ไว้ก่อนเพื่อไม่พลาด beforeinstallprompt) ---------- */
+let DEFERRED_INSTALL=null;
+const UA=navigator.userAgent||'';
+const IS_IOS=/iPad|iPhone|iPod/.test(UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const IS_ANDROID=/Android/i.test(UA);
+const IN_CHAT_BROWSER=/\b(Line|FBAN|FBAV|Instagram|MicroMessenger|Messenger)\b/i.test(UA);   // เบราว์เซอร์ในแอปแชท ติดตั้งแอปไม่ได้
+function isStandalone(){try{return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true;}catch(e){return false;}}
+function refreshInstallUI(){
+  const show=!isStandalone()&&(!!DEFERRED_INSTALL||IS_IOS||IN_CHAT_BROWSER);
+  document.querySelectorAll('.btnInstall').forEach(b=>{b.style.display=show?'':'none';});
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();DEFERRED_INSTALL=e;refreshInstallUI();});
+window.addEventListener('appinstalled',()=>{DEFERRED_INSTALL=null;refreshInstallUI();toast('✅ ติดตั้งแอปเรียบร้อยแล้ว');});
+async function installApp(){
+  if(DEFERRED_INSTALL){
+    const ev=DEFERRED_INSTALL;DEFERRED_INSTALL=null;
+    try{ev.prompt();const c=await ev.userChoice;if(c&&c.outcome==='accepted')toast('📲 กำลังติดตั้งแอป…');}catch(e){console.warn(e);}
+    refreshInstallUI();return;
+  }
+  if(IN_CHAT_BROWSER){
+    alert(IS_IOS
+      ?'ตอนนี้คุณเปิดลิงก์อยู่ในแอปแชท ซึ่งติดตั้งแอปไม่ได้\n\nกดปุ่มแชร์หรือเมนู ⋯ แล้วเลือก “เปิดใน Safari” จากนั้นค่อยเพิ่มลงหน้าจอโฮม'
+      :'ตอนนี้คุณเปิดลิงก์อยู่ในแอปแชท ซึ่งติดตั้งแอปไม่ได้\n\nกดเมนู ⋮ มุมขวาบน แล้วเลือก “เปิดในเบราว์เซอร์” (แนะนำ Chrome) จากนั้นกด “ติดตั้งแอป”');
+    return;
+  }
+  if(IS_IOS){
+    alert('วิธีเพิ่มลงหน้าจอโฮมบน iPhone / iPad\n\n1) กดปุ่มแชร์ (สี่เหลี่ยมมีลูกศรชี้ขึ้น) ของ Safari\n2) เลื่อนลงแล้วเลือก “เพิ่มไปยังหน้าจอโฮม”\n3) กด “เพิ่ม” ที่มุมขวาบน');
+    return;
+  }
+  alert('ถ้ายังไม่เห็นปุ่มติดตั้ง ให้กดเมนู ⋮ ของ Chrome แล้วเลือก “ติดตั้งแอป” (หรือ “เพิ่มลงในหน้าจอหลัก”)');
+}
+function appUrl(){   // ลิงก์ที่ส่งทางไลน์: ใส่ openExternalBrowser เพื่อให้ไลน์เปิดด้วย Chrome/Safari (ติดตั้งแอปได้) แทนเบราว์เซอร์ในไลน์
+  try{if(/^https?:/.test(location.origin)){const x=new URL(location.origin+location.pathname);x.searchParams.set('openExternalBrowser','1');return x.toString();}}catch(e){}
+  return '';
+}
 
 async function rpc(fn,args){
-  if(!sb)throw new Error(!CFG_OK?'ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_ANON_KEY ในไฟล์':'โหลดไลบรารี Supabase ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต');
+  if(!sb)throw new Error(!CFG_OK?'ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_ANON_KEY ในไฟล์':'โหลดระบบเชื่อมต่อไม่สำเร็จ ลองตรวจอินเทอร์เน็ตแล้วลองใหม่นะ');
   const {data,error}=await sb.rpc(fn,args);
   if(error){
     const m=String(error.message||'');
-    if(m.includes('BZ_UNAUTH')){onUnauth();throw new Error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');}
-    if(m.includes('BZ_TOO_BIG'))throw new Error('ข้อมูลของดวงนี้ใหญ่เกินกำหนด');
-    if(m.includes('BZ_LIMIT'))throw new Error('จำนวนดวงครบเพดาน '+MAX_PROFILES+' ดวงแล้ว');
-    if(/Could not find the function|PGRST202|schema cache/i.test(m))throw new Error('ยังไม่ได้รันไฟล์ supabase_setup.sql ในฐานข้อมูล');
-    throw new Error(m||'เรียกใช้งานเซิร์ฟเวอร์ไม่สำเร็จ');
+    if(m.includes('BZ_UNAUTH')){onUnauth();throw new Error('เซสชันหมดอายุแล้ว ลองเข้าสู่ระบบใหม่อีกครั้งนะ');}
+    if(m.includes('BZ_TOO_BIG'))throw new Error('ข้อมูลของดวงนี้ใหญ่เกินที่ระบบรับได้');
+    if(m.includes('BZ_LIMIT'))throw new Error('บันทึกได้สูงสุด '+MAX_PROFILES+' ดวง ตอนนี้เต็มแล้ว');
+    if(/Could not find the function|PGRST202|schema cache/i.test(m))throw new Error('ฐานข้อมูลยังไม่ได้อัปเดต ให้รันไฟล์ SQL ล่าสุดใน Supabase ก่อนนะ');
+    throw new Error(m||'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ');
   }
   return data;
 }
 function onUnauth(){
   if(UNAUTH_SHOWN)return;UNAUTH_SHOWN=true;
   LSdel(TOKEN_KEY);
-  alert('เซสชันหมดอายุหรือถูกยกเลิกโดยผู้ดูแลระบบ กรุณาเข้าสู่ระบบใหม่');
+  alert('การเข้าสู่ระบบหมดอายุแล้ว หรือผู้ดูแลระบบยกเลิกไว้ ลองเข้าสู่ระบบใหม่อีกครั้งนะ');
   location.reload();
 }
 
@@ -521,9 +618,9 @@ function stable(v){
 }
 function showSync(){
   const el=document.getElementById('syncSt');if(!el)return;
-  if(SYNCERR)el.innerHTML='<span style="color:#b91c1c;font-weight:600">⚠️ บันทึกขึ้นคลาวด์ไม่สำเร็จ: '+esc(SYNCERR)+'</span> <button type="button" class="mini" onclick="retrySync()">ลองอีกครั้ง</button>';
+  if(SYNCERR)el.innerHTML='<span style="color:#b91c1c;font-weight:600">⚠️ ยังบันทึกขึ้นคลาวด์ไม่สำเร็จ: '+esc(SYNCERR)+'</span> <button type="button" class="mini" onclick="retrySync()">ลองอีกครั้ง</button>';
   else if(PENDING>0||SYNC_T)el.innerHTML='<span style="color:#b45309">☁️ กำลังบันทึก…</span>';
-  else if(ROLE)el.innerHTML='<span style="color:#15803d">☁️ บันทึกขึ้นคลาวด์แล้ว</span>';
+  else if(ROLE)el.innerHTML='<span style="color:#15803d">☁️ บันทึกแล้ว</span>';
   else el.innerHTML='';
 }
 function enqueue(key,fn){
@@ -588,54 +685,54 @@ function switchTab(t){
   gmsg('');
 }
 const LOGIN_MSG={
-  bad:'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
-  suspended:'บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ',
-  noadmin:'ยังไม่ได้ตั้งรหัสผู้ดูแลระบบในฐานข้อมูล (ดูขั้นตอนสุดท้ายในไฟล์ supabase_setup.sql)'
+  bad:'ชื่อผู้ใช้หรือรหัสผ่านไม่ตรงกัน ลองตรวจดูอีกครั้งนะ',
+  suspended:'บัญชีนี้ถูกพักการใช้งานอยู่ ติดต่อผู้ดูแลระบบได้เลย',
+  noadmin:'ยังไม่ได้ตั้งรหัสผู้ดูแลระบบในฐานข้อมูล (ดูขั้นตอนสุดท้ายในไฟล์ SQL)'
 };
 function loginMsg(r){
-  if(r&&r.code==='locked')return '🔒 ลองผิดหลายครั้ง ระบบล็อกชั่วคราว กรุณารออีกประมาณ '+(r.minutes||15)+' นาที';
-  if(r&&r.code==='expired')return '⌛ รหัสหมดอายุเมื่อ '+(fmtDMY(r.date)||'');
+  if(r&&r.code==='locked')return '🔒 กรอกรหัสผิดหลายครั้ง ระบบเลยพักการเข้าใช้ไว้ชั่วคราว รออีกประมาณ '+(r.minutes||15)+' นาทีแล้วลองใหม่ได้เลย';
+  if(r&&r.code==='expired')return '⌛ สิทธิ์การใช้งานของคุณหมดอายุเมื่อ '+(fmtDMY(r.date)||'')+' ติดต่อผู้ดูแลระบบเพื่อต่ออายุได้เลย';
   return LOGIN_MSG[(r&&r.code)||'bad']||LOGIN_MSG.bad;
 }
 function setLoginBusy(b){
   document.querySelectorAll('#gate button').forEach(x=>{x.disabled=b;});
-  if(b)gmsg('⏳ กำลังเชื่อมต่อเซิร์ฟเวอร์…');
+  if(b)gmsg('⏳ รอสักครู่ กำลังเชื่อมต่อ…');
 }
 async function userLogin(){
   if(LOGGING)return;
   const u=clean(document.getElementById('inUser').value);
   const k=(document.getElementById('inKey').value||'').trim();
-  if(!u){gerrTxt('❌ กรุณากรอกชื่อผู้ใช้งาน');return;}
-  if(!/^\d{4}$/.test(k)){gerrTxt('❌ รหัสผ่านต้องเป็นตัวเลข 4 หลัก');return;}
-  if(!sb){gerrTxt(!CFG_OK?'⚠️ ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_ANON_KEY':'⚠️ โหลดไลบรารี Supabase ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรชหน้า');return;}
+  if(!u){gerrTxt('ยังไม่ได้กรอกชื่อผู้ใช้ ลองกรอกก่อนนะ');return;}
+  if(!/^\d{4}$/.test(k)){gerrTxt('รหัสผ่านต้องเป็นตัวเลข 4 หลักนะ');return;}
+  if(!sb){gerrTxt(!CFG_OK?'ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_ANON_KEY':'โหลดระบบเชื่อมต่อไม่สำเร็จ ลองตรวจอินเทอร์เน็ตแล้วรีเฟรชหน้านี้อีกครั้งนะ');return;}
   LOGGING=true;setLoginBusy(true);
   try{
     const r=await rpc('bz_login',{p_user:u,p_pin:k});
-    if(!r||!r.ok){gerrTxt('❌ '+loginMsg(r));return;}
+    if(!r||!r.ok){gerrTxt(loginMsg(r));return;}
     TOKEN=r.token;LS(TOKEN_KEY,TOKEN);
     document.getElementById('inKey').value='';
-    gmsg('<span class="ok">✅ เข้าสู่ระบบสำเร็จ</span>');
-    await enterApp(r.role,r.name);
+    gmsg('<span class="ok">✅ ยินดีต้อนรับ เข้าสู่ระบบเรียบร้อยแล้ว</span>');
+    await enterApp(r.role,r.name,r.pin_changed);
   }catch(e){
-    gerrTxt('⚠️ เข้าสู่ระบบไม่สำเร็จ: '+e.message);
+    gerrTxt('เข้าสู่ระบบไม่สำเร็จ: '+e.message);
     abortLogin();
   }finally{LOGGING=false;setLoginBusy(false);}
 }
 async function adminLogin(){
   if(LOGGING)return;
   const v=(document.getElementById('inAdmin').value||'').trim();
-  if(!v){gerrTxt('❌ กรุณากรอกรหัสผู้ดูแลระบบ');return;}
-  if(!sb){gerrTxt(!CFG_OK?'⚠️ ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_ANON_KEY':'⚠️ โหลดไลบรารี Supabase ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรชหน้า');return;}
+  if(!v){gerrTxt('ยังไม่ได้กรอกรหัสผ่านผู้ดูแลระบบ');return;}
+  if(!sb){gerrTxt(!CFG_OK?'ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_ANON_KEY':'โหลดระบบเชื่อมต่อไม่สำเร็จ ลองตรวจอินเทอร์เน็ตแล้วรีเฟรชหน้านี้อีกครั้งนะ');return;}
   LOGGING=true;setLoginBusy(true);
   try{
     const r=await rpc('bz_admin_login',{p_pass:v});
-    if(!r||!r.ok){gerrTxt('❌ '+loginMsg(r));return;}
+    if(!r||!r.ok){gerrTxt(loginMsg(r));return;}
     TOKEN=r.token;LS(TOKEN_KEY,TOKEN);
     document.getElementById('inAdmin').value='';
-    gmsg('<span class="ok">✅ เข้าสู่ระบบสำเร็จ</span>');
+    gmsg('<span class="ok">✅ ยินดีต้อนรับ เข้าสู่ระบบเรียบร้อยแล้ว</span>');
     await enterApp('admin',r.name);
   }catch(e){
-    gerrTxt('⚠️ เข้าสู่ระบบไม่สำเร็จ: '+e.message);
+    gerrTxt('เข้าสู่ระบบไม่สำเร็จ: '+e.message);
     abortLogin();
   }finally{LOGGING=false;setLoginBusy(false);}
 }
@@ -645,13 +742,15 @@ function abortLogin(){
   LSdel(TOKEN_KEY);
   if(t&&sb)sb.rpc('bz_logout',{p_token:t}).then(()=>{},()=>{});
 }
-async function enterApp(role,name){
-  ROLE=role;CURRENT_USER=name||'';
+async function enterApp(role,name,pinChanged){
+  ROLE=role;CURRENT_USER=name||'';PIN_CHANGED=pinChanged!==false;
   await loadCloud();
   document.getElementById('gate').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('whoami').textContent=(role==='admin'?'🛡️ ADMIN · ':'')+CURRENT_USER;
   document.getElementById('adminCard').style.display=role==='admin'?'block':'none';
+  document.getElementById('btnPw').style.display=role==='user'?'':'none';
+  refreshInstallUI();showNudge();
   if(role==='admin')renderKeyList();
   const imported=initProfiles();
   calculateBazi();
@@ -662,9 +761,9 @@ async function enterApp(role,name){
   showSync();
 }
 async function logout(){
-  if(!confirm('ออกจากระบบ? (ดวงที่บันทึกไว้ทั้งหมดจะยังอยู่)'))return;
+  if(!confirm('ออกจากระบบตอนนี้เลยไหม? ดวงที่คุณบันทึกไว้ทั้งหมดยังอยู่ครบ'))return;
   try{flushSync();await CHAIN;}catch(e){console.warn(e);}
-  if(FAILED.size&&!confirm('ยังบันทึกข้อมูลล่าสุดขึ้นคลาวด์ไม่สำเร็จ ถ้าออกจากระบบตอนนี้ ข้อมูลที่ยังไม่ได้บันทึกจะหายไป ต้องการออกจากระบบต่อหรือไม่?'))return;
+  if(FAILED.size&&!confirm('ข้อมูลล่าสุดยังบันทึกขึ้นคลาวด์ไม่สำเร็จ ถ้าออกตอนนี้ สิ่งที่ยังไม่ได้บันทึกจะหายไป ยังอยากออกจากระบบอยู่ไหม?'))return;
   try{if(TOKEN)await rpc('bz_logout',{p_token:TOKEN});}catch(e){}
   LSdel(TOKEN_KEY);
   location.reload();
@@ -672,17 +771,85 @@ async function logout(){
 async function restoreSession(){
   LSdel('bz_ses');
   const t=LS(TOKEN_KEY);if(!t)return;
-  if(!sb){gerrTxt(!CFG_OK?'⚠️ ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_ANON_KEY':'⚠️ โหลดไลบรารี Supabase ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรชหน้า');return;}
+  if(!sb){gerrTxt(!CFG_OK?'ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_ANON_KEY':'โหลดระบบเชื่อมต่อไม่สำเร็จ ลองตรวจอินเทอร์เน็ตแล้วรีเฟรชหน้านี้อีกครั้งนะ');return;}
   TOKEN=t;LOGGING=true;setLoginBusy(true);
   try{
     const r=await rpc('bz_whoami',{p_token:t});
-    if(r&&r.ok){gmsg('');await enterApp(r.role,r.name);}
-    else{TOKEN=null;LSdel(TOKEN_KEY);gmsg('');}
+    if(r&&r.ok){gmsg('');await enterApp(r.role,r.name,r.pin_changed);}
+    else{
+      TOKEN=null;LSdel(TOKEN_KEY);gmsg('');
+      if(r&&(r.code==='suspended'||r.code==='expired'))gerrTxt(loginMsg(r));
+    }
   }catch(e){
-    gerrTxt('⚠️ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้: '+e.message);
+    gerrTxt('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้: '+e.message);
     TOKEN=null;ROLE=null;
   }finally{LOGGING=false;setLoginBusy(false);}
 }
+
+/* ============================================================
+   เปลี่ยนรหัสผ่านด้วยตนเอง (ผู้ใช้ทั่วไป) — เรียก bz_change_pin บนเซิร์ฟเวอร์
+   ============================================================ */
+const NUDGE_KEY=()=>'bz_nudge_until_'+String(CURRENT_USER||'').toLowerCase();
+function digitsOnly(el){el.value=el.value.replace(/\D/g,'').slice(0,4);}
+function pwMsg(html){document.getElementById('pwMsg').innerHTML=html;}
+const pwErr=t=>pwMsg('<span class="err">'+esc(t)+'</span>');
+function pwToggle(){
+  const t=document.getElementById('pwShow').checked?'text':'password';
+  ['pwOld','pwNew','pwNew2'].forEach(id=>{document.getElementById(id).type=t;});
+}
+function openPw(){
+  if(ROLE!=='user')return;
+  ['pwOld','pwNew','pwNew2'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('pwShow').checked=false;pwToggle();pwMsg('');
+  document.getElementById('pwSave').disabled=false;
+  document.getElementById('pwModal').classList.add('open');
+  setTimeout(()=>{try{document.getElementById('pwOld').focus();}catch(e){}},60);
+}
+function closePw(){document.getElementById('pwModal').classList.remove('open');}
+function showNudge(){
+  const el=document.getElementById('pinNudge');if(!el)return;
+  let snoozed=false;try{snoozed=Number(LS(NUDGE_KEY())||0)>Date.now();}catch(e){}
+  el.style.display=(ROLE==='user'&&!PIN_CHANGED&&!snoozed)?'block':'none';
+}
+function snoozeNudge(){LS(NUDGE_KEY(),String(Date.now()+7*864e5));showNudge();toast('ได้เลย เดี๋ยวเตือนอีกทีในอีก 7 วัน');}
+function weakPin(p){
+  if(/^(\d)\1{3}$/.test(p))return true;                       // 0000, 7777 …
+  const d=p.split('').map(Number);
+  return d.every((x,i)=>i===0||x-d[i-1]===1)||d.every((x,i)=>i===0||d[i-1]-x===1);   // 1234, 6789, 4321 …
+}
+let PW_BUSY=false;
+async function submitPw(){
+  if(PW_BUSY||ROLE!=='user')return;
+  const v=id=>(document.getElementById(id).value||'').trim();
+  const o=v('pwOld'),n=v('pwNew'),n2=v('pwNew2');
+  if(!/^\d{4}$/.test(o)){pwErr('กรอกรหัสผ่านปัจจุบัน (ตัวเลข 4 หลัก) ให้ครบก่อนนะ');return;}
+  if(!/^\d{4}$/.test(n)){pwErr('รหัสผ่านใหม่ต้องเป็นตัวเลข 4 หลักเท่านั้นนะ');return;}
+  if(n!==n2){pwErr('รหัสผ่านใหม่ทั้งสองช่องยังไม่ตรงกัน ลองพิมพ์อีกครั้งนะ');return;}
+  if(n===o){pwErr('รหัสใหม่ซ้ำกับรหัสเดิม ลองตั้งเป็นเลขอื่นดูนะ');return;}
+  if(weakPin(n)){pwErr('รหัสนี้เดาง่ายเกินไป (เช่น 1234 หรือ 1111) ลองตั้งเป็นเลขที่เดายากกว่านี้นะ');return;}
+  PW_BUSY=true;document.getElementById('pwSave').disabled=true;pwMsg('⏳ รอสักครู่ กำลังบันทึก…');
+  try{
+    const r=await rpc('bz_change_pin',{p_token:TOKEN,p_old:o,p_new:n});
+    if(r&&r.ok){
+      PIN_CHANGED=true;showNudge();closePw();
+      toast(r.others>0?'✅ เปลี่ยนรหัสผ่านแล้ว เครื่องอื่นที่เคยเข้าไว้จะถูกออกจากระบบ':'✅ เปลี่ยนรหัสผ่านเรียบร้อยแล้ว');
+      return;
+    }
+    const code=(r&&r.code)||'';
+    if(code==='bad')pwErr('รหัสผ่านปัจจุบันไม่ถูกต้อง'+(r.left>0?' (ลองได้อีก '+r.left+' ครั้ง)':''));
+    else if(code==='locked')pwErr('กรอกรหัสผิดหลายครั้ง ระบบเลยพักไว้ชั่วคราว รออีกประมาณ '+(r.minutes||15)+' นาทีแล้วลองใหม่ได้เลย');
+    else if(code==='same')pwErr('รหัสใหม่ซ้ำกับรหัสเดิม ลองตั้งเป็นเลขอื่นดูนะ');
+    else if(code==='weak')pwErr('รหัสนี้เดาง่ายเกินไป ลองตั้งเป็นเลขที่เดายากกว่านี้นะ');
+    else if(code==='badnew')pwErr('รหัสผ่านใหม่ต้องเป็นตัวเลข 4 หลักเท่านั้นนะ');
+    else if(code==='notuser')pwErr('บัญชีผู้ดูแลระบบเปลี่ยนรหัสผ่านจากหน้านี้ไม่ได้');
+    else pwErr('เปลี่ยนรหัสผ่านไม่สำเร็จ ลองใหม่อีกครั้งนะ');
+  }catch(e){pwErr(e.message||'เปลี่ยนรหัสผ่านไม่สำเร็จ ลองใหม่อีกครั้งนะ');}
+  finally{PW_BUSY=false;const b=document.getElementById('pwSave');if(b)b.disabled=false;}
+}
+document.addEventListener('keydown',e=>{
+  const m=document.getElementById('pwModal');if(!m||!m.classList.contains('open'))return;
+  if(e.key==='Escape')closePw();else if(e.key==='Enter')submitPw();
+});
 
 /* ============================================================
    SECTION 0.5 : MULTI-PROFILE
@@ -765,7 +932,7 @@ function saveActiveProfile(){
   const ps=getProfiles(),aid=getActiveId();const i=ps.findIndex(x=>x.id===aid);if(i<0)return;
   Object.assign(ps[i],pickFields(fieldsObj()));
   setProfiles(ps);
-  document.getElementById('saveState').innerHTML=`💾 บันทึกลงดวง <b>${esc(ps[i].name)}</b> เรียบร้อย ✅`;
+  document.getElementById('saveState').innerHTML=`💾 บันทึกลงดวง <b>${esc(ps[i].name)}</b> เรียบร้อยแล้ว ✅`;
   renderProfiles();
 }
 function switchProfile(id){
@@ -773,12 +940,12 @@ function switchProfile(id){
   const ps=getProfiles(),p=ps.find(x=>x.id===id);if(!p)return;
   setActiveId(id);applyFields(p);renderProfiles();calculateBazi();toast('👥 เปลี่ยนเป็นดวงของ '+p.name);
 }
-function limitHit(){if(getProfiles().length>=MAX_PROFILES){toast('⚠️ จำนวนดวงครบเพดาน '+MAX_PROFILES+' ดวงแล้ว');return true;}return false;}
+function limitHit(){if(getProfiles().length>=MAX_PROFILES){toast('⚠️ บันทึกได้สูงสุด '+MAX_PROFILES+' ดวง ตอนนี้เต็มแล้ว');return true;}return false;}
 function addProfile(){
   if(limitHit())return;
   persistNow();
   const n=clean(prompt('ตั้งชื่อดวงใหม่ (เช่น คุณแม่ / ลูกชาย)','')||'');if(!n)return;
-  const ps=getProfiles();if(ps.some(x=>x.name.toLowerCase()===n.toLowerCase())){toast('⚠️ มีชื่อนี้อยู่แล้ว');return;}
+  const ps=getProfiles();if(ps.some(x=>x.name.toLowerCase()===n.toLowerCase())){toast('⚠️ มีดวงชื่อนี้อยู่แล้ว ลองตั้งชื่ออื่นนะ');return;}
   const p=Object.assign({id:newId(),name:n},DEFAULT_FIELDS);
   ps.push(p);setProfiles(ps);setActiveId(p.id);applyFields(p);renderProfiles();calculateBazi();
   toast('➕ เพิ่มดวง '+n+' แล้ว');
@@ -798,9 +965,9 @@ function renameProfile(){
 }
 function delProfile(){
   const ps=getProfiles(),aid=getActiveId();
-  if(ps.length<=1){toast('⚠️ ต้องเหลืออย่างน้อย 1 ดวง');return;}
+  if(ps.length<=1){toast('⚠️ ต้องเหลือไว้อย่างน้อย 1 ดวงนะ');return;}
   const i=ps.findIndex(x=>x.id===aid);if(i<0)return;
-  if(!confirm('ลบดวง "'+ps[i].name+'" ถาวร?'))return;
+  if(!confirm('ลบดวง "'+ps[i].name+'" ถาวรเลยไหม? ย้อนกลับไม่ได้นะ'))return;
   const nm=ps[i].name;ps.splice(i,1);setProfiles(ps);setActiveId(ps[0].id);
   applyFields(ps[0]);renderProfiles();calculateBazi();toast('🗑️ ลบดวง '+nm+' แล้ว');
 }
@@ -824,7 +991,7 @@ function importProfiles(el){
       });
       setProfiles(ps);renderProfiles();
       toast('📥 นำเข้า '+add+' ดวงเรียบร้อย'+(add<inc.length?' (ข้ามบางรายการ เพดาน '+MAX_PROFILES+' ดวง)':''));
-    }catch(e){toast('⚠️ ไฟล์ไม่ถูกต้อง');}
+    }catch(e){toast('⚠️ ไฟล์นี้อ่านไม่ได้ ลองเลือกไฟล์สำรองที่ได้จากแอปนี้นะ');}
     el.value='';
   };
   r.readAsText(f);
@@ -896,17 +1063,17 @@ const GOD_MEAN={
  "อำนาจ":"หน้าที่การงาน ตำแหน่ง กฎเกณฑ์ แรงกดดัน · สิ่งที่ควบคุมเรา",
  "ทรัพยากร":"ความรู้ การเรียน ผู้ใหญ่อุปถัมภ์ สุขภาพ · สิ่งที่หล่อเลี้ยงเรา"};
 const GOD_HIGH={
- "เพื่อน":"มากไป = เสียเงินให้คนใกล้ตัว แย่งงานแย่งโอกาส",
- "แสดงออก":"มากไป = พูดมากจนเสียงาน ขัดแย้งกับผู้บังคับบัญชา",
- "ทรัพย์":"มากไป = หมกมุ่นเรื่องเงิน ทำงานหนักจนสุขภาพพัง",
- "อำนาจ":"มากไป = กดดันตัวเองสูง เครียดสะสม",
- "ทรัพยากร":"มากไป = คิดเยอะไม่ลงมือ พึ่งคนอื่น"};
+ "เพื่อน":"ถ้ามากไป มักเสียเงินให้คนใกล้ตัว หรือต้องแย่งงานแย่งโอกาสกันเอง",
+ "แสดงออก":"ถ้ามากไป มักพูดมากจนเสียงาน หรือขัดแย้งกับผู้บังคับบัญชา",
+ "ทรัพย์":"ถ้ามากไป มักหมกมุ่นเรื่องเงินและทำงานหนักจนสุขภาพทรุด",
+ "อำนาจ":"ถ้ามากไป มักกดดันตัวเองสูงและเครียดสะสม",
+ "ทรัพยากร":"ถ้ามากไป มักคิดเยอะแต่ไม่ลงมือ หรือพึ่งพาคนอื่นมากเกินไป"};
 const GOD_LOW={
- "เพื่อน":"น้อยไป = โดดเดี่ยว ต้องสู้คนเดียว",
- "แสดงออก":"น้อยไป = เก็บกด ผลงานไม่ถูกมองเห็น",
- "ทรัพย์":"น้อยไป = หาเงินยาก มองไม่เห็นโอกาส",
- "อำนาจ":"น้อยไป = ขาดวินัย เหมาะงานอิสระมากกว่า",
- "ทรัพยากร":"น้อยไป = ขาดคนหนุนหลัง ต้องพึ่งตัวเอง"};
+ "เพื่อน":"ถ้าน้อยไป มักรู้สึกโดดเดี่ยวและต้องสู้คนเดียว",
+ "แสดงออก":"ถ้าน้อยไป มักเก็บกด และผลงานไม่ค่อยถูกมองเห็น",
+ "ทรัพย์":"ถ้าน้อยไป มักหาเงินยากหรือมองไม่เห็นโอกาส",
+ "อำนาจ":"ถ้าน้อยไป มักขาดวินัย และเหมาะกับงานอิสระมากกว่างานที่มีกรอบ",
+ "ทรัพยากร":"ถ้าน้อยไป มักขาดคนหนุนหลังและต้องพึ่งตัวเองเป็นหลัก"};
 const GOD_FIX_HIGH={
  "เพื่อน":["💸 แยกบัญชีส่วนตัวกับกองกลาง งดค้ำประกัน","📄 ทุกความร่วมมือต้องมีสัญญาเป็นลายลักษณ์อักษร","🤝 เปลี่ยนคู่แข่งเป็นพันธมิตร","🙏 ทำบุญร่วมหมู่คณะ"],
  "แสดงออก":["🤐 หยุดคิด 3 วินาทีก่อนพูดกับหัวหน้า","🎯 โฟกัสงานเดียวให้จบก่อนเริ่มใหม่","🙏 ถวายดอกไม้ขอสติในการใช้คำพูด"],
@@ -1076,7 +1243,7 @@ const RASHI_DESC=[
 "☀️ <b>ลัคนาราศีสิงห์</b> (ดาวอาทิตย์เป็นเจ้าเรือน) — บุคลิกมั่นใจ สง่างาม ชอบเป็นจุดเด่นและมีภาวะผู้นำสูง ใจกว้างและกล้าตัดสินใจ จุดที่ควรระวังคือความหยิ่งทะนงและต้องการคำชมมากเกินไป ควรฝึกรับฟังความเห็นต่าง เหมาะกับงานบริหารหรืองานที่เป็นศูนย์กลางความสนใจ",
 "🌾 <b>ลัคนาราศีกันย์</b> (ดาวพุธเป็นเจ้าเรือน) — บุคลิกละเอียดรอบคอบ มีระเบียบ วิเคราะห์เก่งและใส่ใจรายละเอียด จุดที่ควรระวังคือความจู้จี้และวิจารณ์ตัวเองหรือผู้อื่นมากเกินไป ควรผ่อนคลายมาตรฐานลงบ้าง เหมาะกับงานตรวจสอบ บัญชี หรือวิจัยที่ต้องการความแม่นยำสูง",
 "⚖️ <b>ลัคนาราศีตุล</b> (ดาวศุกร์เป็นเจ้าเรือน) — บุคลิกมีเสน่ห์ รักความยุติธรรมและความสมดุล เข้ากับคนง่ายและเจรจาเก่ง จุดที่ควรระวังคือความลังเลจนตัดสินใจช้า ควรฝึกความเด็ดขาดในเรื่องสำคัญ เหมาะกับงานเจรจา กฎหมาย หรือการทูต",
-"🦂 <b>ลัคนาราศีพิจิก</b> (ดาวอังคารเป็นเจ้าเรือน) — บุคลิกลึกซึ้ง มุ่งมั่น มีพลังภายในสูงและไม่ยอมแพ้าง่าย มองคนทะลุปรุโปร่ง จุดที่ควรระวังคือความหวงแหนและเก็บกดความรู้สึก ควรเปิดใจไว้วางใจผู้อื่นมากขึ้น เหมาะกับงานสืบสวน วิจัยเชิงลึก หรือการแพทย์",
+"🦂 <b>ลัคนาราศีพิจิก</b> (ดาวอังคารเป็นเจ้าเรือน) — บุคลิกลึกซึ้ง มุ่งมั่น มีพลังภายในสูงและไม่ยอมแพ้ง่าย มองคนทะลุปรุโปร่ง จุดที่ควรระวังคือความหวงแหนและเก็บกดความรู้สึก ควรเปิดใจไว้วางใจผู้อื่นมากขึ้น เหมาะกับงานสืบสวน วิจัยเชิงลึก หรือการแพทย์",
 "🏹 <b>ลัคนาราศีธนู</b> (ดาวพฤหัสบดีเป็นเจ้าเรือน) — บุคลิกร่าเริง รักอิสระ ชอบเดินทางและแสวงหาความรู้ มองโลกในแง่ดี จุดที่ควรระวังคือความประมาทและพูดตรงเกินไป ควรฝึกความรอบคอบในรายละเอียด เหมาะกับงานการศึกษา การท่องเที่ยว หรือกฎหมาย",
 "🏔️ <b>ลัคนาราศีมังกร</b> (ดาวเสาร์เป็นเจ้าเรือน) — บุคลิกหนักแน่น ขยัน อดทน มีวินัยและวางแผนระยะยาวเก่ง จุดที่ควรระวังคือความเคร่งเครียดและมองโลกในแง่ร้ายเกินไป ควรหาเวลาผ่อนคลายบ้าง เหมาะกับงานบริหารองค์กรหรืองานที่ใช้ความอดทนระยะยาว",
 "💧 <b>ลัคนาราศีกุมภ์</b> (ดาวเสาร์เป็นเจ้าเรือน) — บุคลิกมีความคิดสร้างสรรค์ รักอิสระ ชอบสิ่งแปลกใหม่และมีแนวคิดก้าวหน้า จุดที่ควรระวังคือความดื้อและห่างเหินทางอารมณ์ ควรเชื่อมโยงความรู้สึกกับคนใกล้ชิดมากขึ้น เหมาะกับงานเทคโนโลยีหรือกิจกรรมเพื่อสังคม",
@@ -1206,17 +1373,19 @@ function analyse(P){
   const fol=folReal||folFalse,hua=!!(combo&&combo.state==="hua");
   const dom=!hua&&!fol&&support>=ASET.domSup&&(ds>=ASET.domDs||groups.some(g=>g.el===dm&&!g.broken))&&pc(pow)<=ASET.domPow&&!vis.some(v=>P[v].sEl===pow)&&pc(wea)<=ASET.domWea;
   let status,fav,unfav;
-  if(hua){status={t:"🌀 ดิถีเปลี่ยนธาตุ เป็นธาตุ"+combo.T+" (化氣格)",c:"#7c3aed",k:"hua"};fav=[combo.T,combo.genT,PRODUCE[combo.T]];unfav=[combo.ctrl,dm].filter((x,i,a)=>!fav.includes(x)&&a.indexOf(x)===i);}
-  else if(fol){status={t:folReal?"🌊 ดิถีตามกระแส (從格)":"🌊 ดิถีตามกระแส แบบรากอ่อน (假從)",c:"#0e7490",k:"follow"};fav=[out,wea,pow];unfav=[dm,res];}
-  else if(dom){status={t:"🔥 ดิถีรวมพลัง (專旺)",c:"#9a3412",k:"dom"};fav=[dm,res,out];unfav=[wea,pow];}
-  else if(support>55){status={t:"💪 ดิถีแกร่ง (Strong)",c:"#b91c1c",k:"strong"};fav=[out,wea,pow];unfav=[dm,res];}
-  else if(support<45){status={t:"🌱 ดิถีอ่อน (Weak)",c:"#1d4ed8",k:"weak"};fav=[res,dm];unfav=[out,wea,pow];}
-  else{status={t:"⚖️ ดิถีสมดุล (Balanced)",c:"#15803d",k:"bal"};
+  if(hua){status={t:"🌀 เปลี่ยนไปเป็นธาตุ"+combo.T,c:"#7c3aed",k:"hua"};fav=[combo.T,combo.genT,PRODUCE[combo.T]];unfav=[combo.ctrl,dm].filter((x,i,a)=>!fav.includes(x)&&a.indexOf(x)===i);}
+  else if(fol){status={t:folReal?"🌊 ไหลไปตามกระแส":"🌊 ไหลไปตามกระแส (แบบรากอ่อน)",c:"#0e7490",k:"follow"};fav=[out,wea,pow];unfav=[dm,res];}
+  else if(dom){status={t:"🔥 รวมพลังสูงมาก",c:"#9a3412",k:"dom"};fav=[dm,res,out];unfav=[wea,pow];}
+  else if(support>55){status={t:"💪 แกร่ง",c:"#b91c1c",k:"strong"};fav=[out,wea,pow];unfav=[dm,res];}
+  else if(support<45){status={t:"🌱 ค่อนบาง",c:"#1d4ed8",k:"weak"};fav=[res,dm];unfav=[out,wea,pow];}
+  else{status={t:"⚖️ สมดุล",c:"#15803d",k:"bal"};
        const so=Object.keys(sc).sort((a,b)=>sc[a]-sc[b]);fav=[so[0],so[1]];unfav=[so[4]];}
   // 調候: เกิดหน้าหนาวต้องการไฟอุ่น เกิดหน้าร้อนต้องการน้ำเย็น (เดือนสุดขั้ว 子/午 มีน้ำหนักสูงกว่า)
   const TJ={"亥":["ไฟ",1],"子":["ไฟ",2],"丑":["ไฟ",1.5],"巳":["น้ำ",1],"午":["น้ำ",2],"未":["น้ำ",1.5]},tj=TJ[P.month.branch];
   if(tj){const el=tj[0],w=tj[1],sp=["follow","hua","dom"].includes(status.k),conflict=(sp||status.k==="weak"||status.k==="bal")&&!fav.includes(el)&&unfav.includes(el);
     if(!conflict||(w>=2&&!sp)){fav=fav.filter(x=>x!==el);if(w>=2)fav.unshift(el);else fav.push(el);unfav=unfav.filter(x=>x!==el);}}
+  // กันกรณีธาตุที่ควรลดถูกปรับจนว่าง (เช่น ดวงสมดุลที่เกิดเดือนสุดขั้ว) — เดิมทำให้หน้าวิเคราะห์ล่มทั้งหน้า: เลือกธาตุที่มีมากที่สุดนอกกลุ่มธาตุที่หนุน
+  if(!unfav.length){const rest=Object.keys(sc).filter(x=>!fav.includes(x)).sort((a,b)=>sc[b]-sc[a]);unfav=[rest[0]];}
   const season={el:se,ds,tj:tj?tj[0]:null,tjw:tj?tj[1]:0};
   const cat={"เพื่อน":0,"แสดงออก":0,"ทรัพย์":0,"อำนาจ":0,"ทรัพยากร":0};
   ["year","month","hour"].forEach(k=>cat[tenGod(P.day.si,P[k].si).c]+=W_S[k]);
@@ -1257,31 +1426,31 @@ const DX_REL={
 };
 const dxPick=(arr,n,off)=>{const o=[];for(let i=0;i<n&&i<arr.length;i++)o.push(arr[(off+i)%arr.length]);return o;};
 const dxUniq=a=>[...new Set(a.filter(Boolean))];
-const dxTag=(A,el)=>A.fav.includes(el)?'ธาตุให้คุณ':A.unfav.includes(el)?'ธาตุให้โทษ':'ธาตุกลาง';
+const dxTag=(A,el)=>A.fav.includes(el)?'ธาตุที่หนุนคุณ':A.unfav.includes(el)?'ธาตุที่ควรลด':'ธาตุกลาง ๆ';
 
 function dxColors(A,dp,s,dom){
   const tot=DX_EL.reduce((a,e)=>a+s[e],0)||1, sh={};
   DX_EL.forEach(e=>sh[e]=s[e]/tot);
   const sc={},why={};DX_EL.forEach(e=>{sc[e]=0;why[e]=[];});
   const add=(e,v,t)=>{if(!e)return;sc[e]+=v;why[e].push({t,v});};
-  A.fav.forEach((e,i)=>add(e,DX_FAV_W[i]||1.4,'ธาตุให้คุณของดวง'));
-  A.unfav.forEach((e,i)=>add(e,-(DX_UNFAV_W[i]||2.2),'ธาตุให้โทษของดวง'));
+  A.fav.forEach((e,i)=>add(e,DX_FAV_W[i]||1.4,'เป็นธาตุที่หนุนดวงคุณ'));
+  A.unfav.forEach((e,i)=>add(e,-(DX_UNFAV_W[i]||2.2),'เป็นธาตุที่ควรลดสำหรับดวงคุณ'));
   DX_EL.forEach(e=>{
     if(A.fav.includes(e)){
-      if(sh[e]===0)add(e,0.8,'วันนี้ธาตุนี้ขาด ควรเติม');
-      else if(sh[e]>=0.5)add(e,-0.6,'วันจรมีธาตุนี้มากอยู่แล้ว เสริมพอประมาณ');
+      if(sh[e]===0)add(e,0.8,'วันนี้ยังไม่มีธาตุนี้เลย เติมได้เต็มที่');
+      else if(sh[e]>=0.5)add(e,-0.6,'วันนี้มีธาตุนี้มากอยู่แล้ว เสริมแค่พอประมาณ');
     }
     if(A.unfav.includes(e)){
-      if(sh[e]===0)add(e,1.4,'วันจรไม่มีธาตุนี้ แรงลบต่ำ');
-      else if(sh[e]>=0.35)add(e,-1.2,'วันจรมีธาตุนี้มาก ซ้ำเติมจุดอ่อน');
+      if(sh[e]===0)add(e,1.4,'วันนี้ไม่มีธาตุนี้มารบกวน ผลเสียจึงน้อย');
+      else if(sh[e]>=0.35)add(e,-1.2,'วันนี้มีธาตุนี้มาก จะซ้ำเติมจุดอ่อนของคุณ');
     }
   });
   if(A.unfav.includes(dom)){
-    add(dxCtrlOf(dom),1.6,'ช่วยสกัดธาตุ'+dom+'ที่ล้นในวันนี้');
+    add(dxCtrlOf(dom),1.6,'ช่วยกดธาตุ'+dom+'ที่ล้นในวันนี้');
     add(PRODUCE[dom],1.0,'ช่วยระบายธาตุ'+dom+'ที่ล้นในวันนี้');
   }
   if(CLASH[dp.branch]===A.P.day.branch){
-    add(dxBridge(BR_EL[dp.bi],A.P.day.bEl),1.2,'ธาตุเชื่อม (通關) ลดแรงปะทะวันชง');
+    add(dxBridge(BR_EL[dp.bi],A.P.day.bEl),1.2,'เป็นธาตุตัวกลางที่ช่วยลดแรงชนของวันนี้');
   }
   const desc=[...DX_EL].sort((a,b)=>sc[b]-sc[a]);
   let lucky=desc.filter(e=>sc[e]>=1).slice(0,2);
@@ -1314,7 +1483,7 @@ function dxActs(A,dp,sv){
   if(HARM[db]===nd)B.push(DX_REL.harm.b);
   if(db===nd){G.push(DX_REL.fuyin.g);B.push(DX_REL.fuyin.b);}
   G=dxUniq(G).slice(0,4);B=dxUniq(B).slice(0,4);
-  const modeTxt=sv>=75?'🚀 วันเหมาะลงมือเรื่องสำคัญ':sv<30?'🛑 วันลดความเสี่ยง ทำเฉพาะงานจำเป็น':sv<45?'🕊️ โหมดประคองตัว':'';
+  const modeTxt=sv>=75?'🚀 วันนี้เหมาะลงมือทำเรื่องสำคัญ':sv<30?'🛑 วันนี้เน้นลดความเสี่ยง ทำเฉพาะงานที่จำเป็น':sv<45?'🕊️ วันนี้เน้นประคองตัวไว้ก่อน':'';
   return {gS,gB,G,B,modeTxt,sTag:dxTag(A,dp.sEl),bTag:dxTag(A,mh.el)};
 }
 
@@ -1323,24 +1492,24 @@ function evaluateDay(dp){
   s[dp.sEl]+=2; dp.hidden.forEach(h=>s[h.el]+=2*h.w/100);
   const dom=Object.keys(s).reduce((a,b)=>s[a]>=s[b]?a:b);
   let sv=50; const tags=[];
-  if(A.fav.includes(dom)){sv+=20;tags.push("✨ ธาตุเด่นวันนี้เป็นธาตุให้คุณ");}
-  if(A.unfav.includes(dom)){sv-=18;tags.push("🌀 ธาตุเด่นวันนี้ซ้ำเติมจุดอ่อนดวง");}
+  if(A.fav.includes(dom)){sv+=20;tags.push("✨ ธาตุเด่นของวันนี้เป็นธาตุที่หนุนคุณ");}
+  if(A.unfav.includes(dom)){sv-=18;tags.push("🌀 ธาตุเด่นของวันนี้ซ้ำเติมจุดอ่อนของคุณ");}
   if(A.fav.includes(dp.sEl))sv+=10;
   if(A.unfav.includes(dp.sEl))sv-=9;
   const db=dp.branch;
-  if(CLASH[db]===A.P.day.branch){sv-=26;tags.push("💥 ชงดิถี");}
-  else if(CLASH[db]===A.P.year.branch){sv-=15;tags.push("⚡ ชงปีเกิด");}
-  else if(CLASH[db]===A.P.month.branch){sv-=12;tags.push("⚡ ชงเดือนเกิด");}
-  if(COMBINE[db]===A.P.day.branch){sv+=14;tags.push("🤝 ฮะดิถี");}
-  else if(COMBINE[db]===A.P.year.branch){sv+=8;tags.push("🤝 ฮะปีเกิด");}
-  if(HARM[db]===A.P.day.branch){sv-=8;tags.push("🩹 ไห่ดิถี");}
+  if(CLASH[db]===A.P.day.branch){sv-=26;tags.push("💥 วันนี้ชนกับตัวคุณ");}
+  else if(CLASH[db]===A.P.year.branch){sv-=15;tags.push("⚡ วันนี้ชนกับปีเกิดของคุณ");}
+  else if(CLASH[db]===A.P.month.branch){sv-=12;tags.push("⚡ วันนี้ชนกับเดือนเกิดของคุณ");}
+  if(COMBINE[db]===A.P.day.branch){sv+=14;tags.push("🤝 วันนี้เข้ากับตัวคุณ");}
+  else if(COMBINE[db]===A.P.year.branch){sv+=8;tags.push("🤝 วันนี้เข้ากับปีเกิดของคุณ");}
+  if(HARM[db]===A.P.day.branch){sv-=8;tags.push("🩹 วันนี้กระทบกระทั่งเบา ๆ กับตัวคุณ");}
   sv=Math.max(5,Math.min(95,Math.round(sv)));
   let lv;
-  if(sv>=75)lv={e:"🟢",t:"วันมงคลเยี่ยม",c:"#15803d"};
-  else if(sv>=60)lv={e:"🟩",t:"วันราบรื่น",c:"#16a34a"};
-  else if(sv>=45)lv={e:"🟡",t:"วันปานกลาง",c:"#ca8a04"};
-  else if(sv>=30)lv={e:"🟠",t:"วันท้าทาย",c:"#ea580c"};
-  else lv={e:"🔴",t:"วันต้องระวัง",c:"#b91c1c"};
+  if(sv>=75)lv={e:"🟢",t:"วันดีมาก",c:"#15803d"};
+  else if(sv>=60)lv={e:"🟩",t:"วันค่อนข้างราบรื่น",c:"#16a34a"};
+  else if(sv>=45)lv={e:"🟡",t:"วันธรรมดา",c:"#ca8a04"};
+  else if(sv>=30)lv={e:"🟠",t:"วันที่ต้องใช้แรงหน่อย",c:"#ea580c"};
+  else lv={e:"🔴",t:"วันที่ควรระวัง",c:"#b91c1c"};
   const C=dxColors(A,dp,s,dom), X=dxActs(A,dp,sv);
   return {s,dom,god:X.gS,godB:X.gB,sTag:X.sTag,bTag:X.bTag,sv,lv,tags,
     lucky:C.lucky,bad:C.bad,relaxed:C.relaxed,why:C.why,sh:C.sh,
@@ -1351,7 +1520,7 @@ function evaluateDay(dp){
 }
 function dxWhy(ev,e,pos){
   const r=(ev.why[e]||[]).filter(x=>pos?x.v>0:x.v<0).map(x=>x.t);
-  return r.length?dxUniq(r).join(' · '):(pos?'ธาตุเสริมสมดุลวันนี้':'ธาตุให้โทษของดวง');
+  return r.length?dxUniq(r).join(' · '):(pos?'ช่วยเสริมสมดุลของวันนี้':'เป็นธาตุที่ควรลดสำหรับดวงคุณ');
 }
 
 /* ============================================================
@@ -1393,7 +1562,7 @@ const LF_CAREER={'อำนาจ':'องค์กรที่มีโคร�
  'ทรัพยากร':'งานวิชาการ วิจัย ที่ปรึกษา การศึกษา หรืองานที่อาศัยความเชี่ยวชาญเฉพาะทาง',
  'เพื่อน':'งานที่ต้องร่วมมือเป็นทีม หุ้นส่วน เครือข่าย หรือธุรกิจครอบครัว'};
 const lfFv=(A,e)=>A.fav.includes(e)?1:A.unfav.includes(e)?-1:0;
-const lfFvTag=v=>v>0?'ธาตุให้คุณ':v<0?'ธาตุให้โทษ':'ธาตุกลาง';
+const lfFvTag=v=>v>0?'ธาตุที่หนุนคุณ':v<0?'ธาตุที่ควรลด':'ธาตุกลาง ๆ';
 
 function lfCtx(P,A,LK,LP,y,m,d,gender){
   const g={};LF_GOD.forEach(k=>g[k]=0);
@@ -1430,7 +1599,7 @@ function lfHouse(X,h){
     rel===1?'เป็นมิตรกับเจ้าลัคนา เรื่องนี้เดินคล่อง':rel===-1?'เป็นศัตรูกับเจ้าลัคนา เรื่องนี้มีแรงเสียดทาน':'เป็นกลางกับเจ้าลัคนา';
   return {h,name:LF_HOUSE[h],sign:sg.n,lord,el,fv,rel,pts,relTxt};
 }
-const lfHouseTxt=o=>`เรือน${o.name} (ภพ ${o.h}) ตกราศี${o.sign} · เจ้าเรือนคือดาว${o.lord} ธาตุจีน ${EL_EMO[o.el]}${o.el} (${lfFvTag(o.fv)}) · ${o.relTxt}`;
+const lfHouseTxt=o=>`เรือน${o.name} (ภพ ${o.h}) อยู่ราศี${o.sign} · มีดาว${o.lord}เป็นเจ้าเรือน ตรงกับธาตุ ${EL_EMO[o.el]}${o.el} (${lfFvTag(o.fv)}) · ${o.relTxt}`;
 
 // ผลของดวงโคจร 10 ปีที่กำลังเดินอยู่ต่อแต่ละหัวข้อ
 function lfLuckAdj(X,key){
@@ -1444,11 +1613,11 @@ function lfLuckAdj(X,key){
 }
 function lfVerdict(base,avg){
   const b=base>=58?1:base<=42?-1:0,l=avg>=4?1:avg<=-4?-1:0;
-  if(b>0&&l>0)return '✅ <b>สองระบบชี้ตรงกัน</b> — เรื่องนี้เป็นจุดแข็งของคุณ ลงแรงได้เต็มที่';
-  if(b<0&&l<0)return '⚠️ <b>สองระบบเตือนตรงกัน</b> — เรื่องนี้ควรวางแผนรับมือล่วงหน้า อย่าประมาท';
-  if(b>0&&l<0)return '🔀 BaZi หนุนแต่ลัคนาแสดงแรงเสียดทาน — ศักยภาพมี ต้องใช้ความอดทนและเลือกจังหวะ';
-  if(b<0&&l>0)return '🔀 ลัคนาหนุนแต่ BaZi แสดงแรงกด — โอกาสมี ต้องเสริมธาตุให้คุณและเลือกวันดี';
-  return '➖ สองระบบให้สัญญาณกลาง ๆ — ผลขึ้นกับจังหวะดวงจรและการวางแผนของคุณเอง';
+  if(b>0&&l>0)return '✅ <b>ทั้งศาสตร์จีนและโหราศาสตร์ไทยบอกตรงกัน</b> — เรื่องนี้เป็นจุดแข็งของคุณ ลงแรงได้เต็มที่';
+  if(b<0&&l<0)return '⚠️ <b>ทั้งสองศาสตร์เตือนตรงกัน</b> — เรื่องนี้ควรวางแผนรับมือไว้ล่วงหน้า อย่าชะล่าใจ';
+  if(b>0&&l<0)return '🔀 ศาสตร์จีนมองว่าคุณมีต้นทุนดี แต่โหราศาสตร์ไทยเห็นแรงเสียดทาน — ศักยภาพมีอยู่ เพียงต้องใจเย็นและเลือกจังหวะให้ดี';
+  if(b<0&&l>0)return '🔀 โหราศาสตร์ไทยมองว่ามีโอกาส แต่ศาสตร์จีนเห็นแรงกดดัน — โอกาสมีอยู่ ควรเสริมธาตุที่หนุนคุณและเลือกวันดี ๆ ลงมือ';
+  return '➖ สัญญาณจากทั้งสองศาสตร์ค่อนไปทางกลาง ๆ — ผลจะขึ้นกับจังหวะชีวิตและการวางแผนของคุณเอง';
 }
 function lfTopic(X,key,base){
   const hs=LF_TOPIC_H[key].map(h=>lfHouse(X,h));
@@ -1458,80 +1627,81 @@ function lfTopic(X,key,base){
 function lfDescribe(t,X){
   const A=X.A,P=X.P,L=X.L,g=X.g,f1=v=>v.toFixed(1),H=[],E=[];
   const elTag=e=>`${EL_EMO[e]}${e} (${lfFvTag(lfFv(A,e))})`;
+  const stT=A.status.t.replace(/^\S+\s+/,'');
   const topCat=Object.keys(A.cat).reduce((a,b)=>A.cat[a]>=A.cat[b]?a:b);
   let lead='';
   switch(t.key){
   case 'life':{
     const el=LF_PL_EL[L.lordL]||'ดิน',fv=lfFv(A,el);
-    lead=`ดิถี <b class="cn">${P.day.stem}</b> ${A.dm} (${A.status.t}) พลังหนุน ${A.support}% · ลัคนาราศี${L.sign.n} เจ้าเรือนดาว${L.lordL} ธาตุจีน ${elTag(el)}`;
-    E.push(fv>0?'เจ้าลัคนาเป็นธาตุให้คุณ — บุคลิกที่แสดงออกต่อโลก "หนุน" สิ่งที่ดวงต้องการ ใช้ตัวตนได้เป็นธรรมชาติ'
-      :fv<0?'เจ้าลัคนาเป็นธาตุให้โทษ — บุคลิกที่แสดงออกกับสิ่งที่ดวงต้องการ "ขัดกัน" จะเหนื่อยเมื่อฝืนบทบาทที่คนคาดหวัง ให้ชดเชยด้วยธาตุให้คุณในชีวิตประจำวัน'
-      :'เจ้าลัคนาเป็นธาตุกลาง — ตัวตนภายนอกไม่หนุนไม่ขัดดวงแกนใน');
-    if(X.fl.gy)E.push('โครงสร้างมี 官印相生 (อำนาจ+ทรัพยากรหนุนกัน) เป็นแต้มบวกด้านวาสนา');
-    if(X.fl.bj)E.push('หมวดเพื่อน/คู่แข่งหนาแน่นขณะทรัพย์บาง ต้องระวังการแย่งโอกาสและเงินรั่ว');
+    lead=`ธาตุประจำตัวของคุณคือ <b class="cn">${P.day.stem}</b> ${A.dm} (${stT} · พลังหนุน ${A.support}%) ส่วนลัคนาของคุณอยู่ราศี${L.sign.n} มีดาว${L.lordL}เป็นเจ้าเรือน ซึ่งตรงกับธาตุ ${elTag(el)}`;
+    E.push(fv>0?'ดาวเจ้าลัคนาของคุณเป็นธาตุที่หนุนคุณ ตัวตนที่คุณแสดงออกต่อโลกจึงสอดคล้องกับสิ่งที่ดวงต้องการ ใช้ความเป็นตัวเองได้อย่างเป็นธรรมชาติ'
+      :fv<0?'ดาวเจ้าลัคนาของคุณเป็นธาตุที่ควรลด ตัวตนที่แสดงออกกับสิ่งที่ดวงต้องการจึงขัดกันอยู่บ้าง คุณอาจเหนื่อยเวลาต้องฝืนเล่นบทที่คนอื่นคาดหวัง ลองชดเชยด้วยธาตุที่หนุนคุณในชีวิตประจำวัน'
+      :'ดาวเจ้าลัคนาของคุณเป็นธาตุกลาง ๆ ตัวตนภายนอกจึงไม่ได้หนุนหรือขัดกับแกนในของดวงมากนัก');
+    if(X.fl.gy)E.push('ในดวงมีทั้งพลังด้านหน้าที่การงานและผู้สนับสนุนคอยหนุนกัน ถือเป็นแต้มบวกด้านวาสนา');
+    if(X.fl.bj)E.push('ในดวงมีเพื่อนหรือคู่แข่งค่อนข้างเยอะ แต่เรื่องเงินทองมีน้อย ควรระวังการถูกแย่งโอกาสและเงินรั่วไหล');
     break;}
   case 'work':{
-    lead=`พลังอำนาจ ${f1(X.pow)}% (正官 ${f1(g['正官'])}% · 七殺 ${f1(g['七殺'])}%) · หมวดเด่นของดวงคือ <b>${topCat}</b> → เหมาะกับ${LF_CAREER[topCat]}`;
+    lead=`พลังด้านหน้าที่การงานในดวงคุณอยู่ที่ ${f1(X.pow)}% (แบบมีตำแหน่งชัดเจน ${f1(g['正官'])}% · แบบต้องรับแรงกดดันสูง ${f1(g['七殺'])}%) หมวดที่เด่นที่สุดในดวงคือ <b>${topCat}</b> จึงเหมาะกับ${LF_CAREER[topCat]}`;
     const m=RASHI_DESC[X.LK.idx].match(/เหมาะกับ[^<]*$/);
     if(m)E.push(`จากลัคนาราศี${L.sign.n}: ${m[0]}`);
-    if(X.fl.sg)E.push('มี 傷官見官 (วาจาตรงชนผู้มีอำนาจ) ระวังการโต้แย้งกับหัวหน้า ใช้ข้อมูลและลายลักษณ์อักษรแทนอารมณ์');
-    if(X.fl.gy)E.push('มี 官印相生 ผู้ใหญ่และระบบมักเปิดทางให้เมื่อทำงานเป็นระบบ');
+    if(X.fl.sg)E.push('คุณมีนิสัยพูดตรง ซึ่งอาจไปชนกับผู้ใหญ่หรือหัวหน้าได้ ลองใช้ข้อมูลและลายลักษณ์อักษรแทนการใช้อารมณ์ จะได้ผลกว่า');
+    if(X.fl.gy)E.push('ผู้ใหญ่และระบบมักเปิดทางให้เมื่อคุณทำงานอย่างเป็นระบบ');
     break;}
   case 'money':{
-    lead=`พลังทรัพย์ ${f1(X.wea)}% (偏財 ${f1(g['偏財'])}% · 正財 ${f1(g['正財'])}%) · ดิถี${A.status.t.replace(/^\S+\s+/,'')} · ทรัพย์เป็น${elTag(A.wea)}`;
-    if(X.st==='weak'&&X.wea>=26)E.push('ทรัพย์มากแต่ดิถีอ่อน (財多身弱) — โอกาสเยอะแต่แบกไม่ไหว ควรมีพันธมิตรหรือระบบช่วยจัดการ');
-    else if(X.st==='strong'&&X.wea<=15)E.push('ดิถีแกร่งแต่ทรัพย์บาง — แรงมีแต่ต้องหาช่องทางแปลงเป็นรายได้ ใช้ธาตุแสดงออก (ไอเดีย/ผลงาน) เป็นสะพาน');
-    if(X.fl.bj)E.push('比劫 (เพื่อน/คู่แข่ง) แย่งทรัพย์ — แยกบัญชี งดค้ำประกัน ทำสัญญาทุกครั้ง');
-    if(X.fl.ssc)E.push('食傷生財 (ผลงานแปลงเป็นเงิน) — รายได้เติบโตจากทักษะและความคิดสร้างสรรค์');
+    lead=`พลังด้านเงินทองในดวงคุณอยู่ที่ ${f1(X.wea)}% (ลาภลอย ${f1(g['偏財'])}% · รายได้มั่นคง ${f1(g['正財'])}%) ธาตุของเงินในดวงคุณคือ ${elTag(A.wea)} ส่วนพลังของตัวคุณเองอยู่ในระดับ: ${stT}`;
+    if(X.st==='weak'&&X.wea>=26)E.push('มีโอกาสเรื่องเงินเยอะ แต่พลังของคุณค่อนบางเลยอาจรับไม่ไหว ควรมีพันธมิตรหรือระบบช่วยจัดการ');
+    else if(X.st==='strong'&&X.wea<=15)E.push('คุณมีแรงเหลือเฟือ แต่เรื่องเงินในดวงค่อนข้างบาง ลองหาช่องทางเปลี่ยนความสามารถให้เป็นรายได้ โดยใช้ไอเดียหรือผลงานเป็นสะพาน');
+    if(X.fl.bj)E.push('คนใกล้ตัวอาจเข้ามาแบ่งเงินหรือโอกาสของคุณ แยกบัญชีส่วนตัวไว้ งดค้ำประกัน และทำสัญญาทุกครั้ง');
+    if(X.fl.ssc)E.push('ฝีมือและความคิดสร้างสรรค์ของคุณแปลงเป็นเงินได้จริง รายได้มักเติบโตจากทักษะของตัวเอง');
     break;}
   case 'love':{
-    const star=X.gender==='M'?X.wea:X.pow,sn=X.gender==='M'?'ดาวภรรยา (ทรัพย์)':'ดาวสามี (อำนาจ)';
+    const star=X.gender==='M'?X.wea:X.pow,sn=X.gender==='M'?'ดาวภรรยา (ดูจากธาตุเงินทอง)':'ดาวสามี (ดูจากธาตุหน้าที่การงาน)';
     const db=P.day.branch,mh=P.day.hidden[0],fvB=lfFv(A,P.day.bEl);
-    lead=`${sn} ${f1(star)}% · เรือนคู่ครองใน BaZi คือกิ่งวัน <b class="cn">${db}</b> ${P.day.animal} (ธาตุ${elTag(P.day.bEl)}) ซ่อน ${mh.s} ${mh.el}`;
-    E.push(fvB>0?'กิ่งวันเป็นธาตุให้คุณ — คู่ครองมักเป็นกำลังหนุนที่ทำให้ชีวิตมั่นคงขึ้น'
-      :fvB<0?'กิ่งวันเป็นธาตุให้โทษ — ความสัมพันธ์ใกล้ชิดมักมาพร้อมแรงกดดัน ต้องสื่อสารตรงและตั้งขอบเขตชัด':'กิ่งวันเป็นธาตุกลาง — ความสัมพันธ์ขึ้นกับการดูแลกันมากกว่าชะตา');
-    if(X.dayClash)E.push('กิ่งวันชงกับเสาอื่นในดวง — เรื่องคู่ครองมีความเปลี่ยนแปลงหรือระยะห่างเป็นช่วง ๆ');
-    if(X.dayCombine)E.push('กิ่งวัน合กับเสาอื่น — มีเสน่ห์ดึงดูดและมักมีคนเกี่ยวข้องในชีวิตคู่หลายทาง');
-    if(X.gender==='F'&&X.fl.sg)E.push('傷官ชนดาวสามี — ระวังคำพูดแรงกับคู่');
-    if(X.gender==='M'&&X.fl.bj)E.push('比劫แย่งดาวภรรยา — ระวังมือที่สามและการแข่งขันด้านหัวใจ');
+    lead=`${sn} ในดวงคุณอยู่ที่ ${f1(star)}% · ช่องคู่ครองในดวงคือกิ่งวัน <b class="cn">${db}</b> ${P.day.animal} (ธาตุ ${elTag(P.day.bEl)}) ซึ่งมี ${mh.s} ${mh.el} ซ่อนอยู่`;
+    E.push(fvB>0?'ช่องคู่ครองเป็นธาตุที่หนุนคุณ คู่ครองมักเป็นกำลังใจที่ทำให้ชีวิตมั่นคงขึ้น'
+      :fvB<0?'ช่องคู่ครองเป็นธาตุที่ควรลด ความสัมพันธ์ใกล้ชิดมักมีแรงกดดันแฝงอยู่ ควรคุยกันตรง ๆ และตั้งขอบเขตให้ชัด':'ช่องคู่ครองเป็นธาตุกลาง ๆ ความสัมพันธ์จึงขึ้นกับการดูแลกันมากกว่าโชคชะตา');
+    if(X.dayClash)E.push('ช่องคู่ครองของคุณมีแรงชนกับเสาอื่นในดวง เรื่องความรักอาจมีการเปลี่ยนแปลงหรือห่างกันเป็นช่วง ๆ');
+    if(X.dayCombine)E.push('ช่องคู่ครองของคุณจับคู่กับเสาอื่นในดวงได้ดี คุณมีเสน่ห์ดึงดูด และมักมีคนเข้ามาในชีวิตหลายทาง');
+    if(X.gender==='F'&&X.fl.sg)E.push('บางครั้งคุณพูดตรงเกินไปจนกระทบใจคู่ ลองเลือกคำให้นุ่มนวลขึ้นอีกนิด');
+    if(X.gender==='M'&&X.fl.bj)E.push('ระวังมือที่สามหรือการแข่งขันเรื่องหัวใจ');
     break;}
   case 'health':{
     const els=Object.keys(A.sc).sort((a,b)=>A.sc[a]-A.sc[b]),low=els[0],high=els[4];
     const body=e=>(((EL_MEAN[e]||'').split('ร่างกาย:')[1]||'').trim());
-    lead=`ธาตุอ่อนสุด ${EL_EMO[low]}${low} ${f1(A.pc(low))}% → ดูแล <b>${body(low)}</b> · ธาตุล้นสุด ${EL_EMO[high]}${high} ${f1(A.pc(high))}% → ระวังภาวะ "${EL_HIGH[high]}"`;
-    if(X.dayClash)E.push('กิ่งวันชงในดวง — ช่วงเปลี่ยนผ่านมักเหนื่อยล้าง่าย ระวังอุบัติเหตุและการพักผ่อนไม่พอ');
-    E.push('<span class="small">อวัยวะตามทฤษฎีธาตุจีนเป็นแนวทางดูแลตัวเองเท่านั้น ไม่ใช่การวินิจฉัยโรค ควรตรวจสุขภาพกับแพทย์</span>');
+    lead=`ธาตุที่อ่อนที่สุดในดวงคือ ${EL_EMO[low]}${low} (${f1(A.pc(low))}%) ลองดูแล <b>${body(low)}</b> เป็นพิเศษ ส่วนธาตุที่มากที่สุดคือ ${EL_EMO[high]}${high} (${f1(A.pc(high))}%) ซึ่งถ้ามากไปอาจมีอาการแบบ “${EL_HIGH[high]}”`;
+    if(X.dayClash)E.push('ช่วงที่ชีวิตเปลี่ยนผ่าน คุณมักเหนื่อยล้าง่าย ระวังอุบัติเหตุและการพักผ่อนไม่พอ');
+    E.push('<span class="small">เรื่องอวัยวะตามแนวคิดธาตุจีนเป็นเพียงแนวทางดูแลตัวเอง ไม่ใช่การวินิจฉัยโรค ควรตรวจสุขภาพกับแพทย์เป็นประจำ</span>');
     break;}
   case 'study':{
-    lead=`พลังทรัพยากร ${f1(X.res)}% (正印 ${f1(g['正印'])}% · 偏印 ${f1(g['偏印'])}%) · ทรัพยากรเป็น${elTag(A.res)}`;
-    if(X.fl.xs)E.push('偏印ปะทะ食神 — ความคิดลึกแต่ขาดสมาธิลงมือ ใช้การตั้งเดดไลน์ช่วย');
-    if(X.fl.gy)E.push('มี 官印相生 — เหมาะสอบแข่งขัน ใบรับรอง หรือเส้นทางที่มีผู้ใหญ่รับรอง');
+    lead=`พลังด้านความรู้และผู้สนับสนุนในดวงคุณอยู่ที่ ${f1(X.res)}% (แบบมีผู้ใหญ่อุปถัมภ์ ${f1(g['正印'])}% · แบบคิดลึกเฉพาะทาง ${f1(g['偏印'])}%) ธาตุนี้เป็น ${elTag(A.res)}`;
+    if(X.fl.xs)E.push('คุณคิดลึกและมีไอเดียเยอะ แต่บางครั้งขาดสมาธิตอนลงมือทำ ลองตั้งเดดไลน์ช่วย');
+    if(X.fl.gy)E.push('เหมาะกับการสอบแข่งขัน ใบรับรอง หรือเส้นทางที่มีผู้ใหญ่คอยรับรอง');
     break;}
   case 'luck':{
-    lead=`พลังแสดงออก ${f1(X.out)}% (食神 ${f1(g['食神'])}% · 傷官 ${f1(g['傷官'])}%) · พลังทรัพย์ ${f1(X.wea)}%`;
-    E.push('โชคตามแนวนี้คือ "โอกาสจากผลงาน คอนเนกชัน และจังหวะ" ไม่ใช่การรับประกันผลจากการเสี่ยงโชค — ไม่แนะนำให้พึ่งพนันหรือเก็งกำไรเกินตัว');
-    if(X.fl.cd)E.push('財多身弱 — ลาภที่มาเร็วมักมาพร้อมภาระ ควรตั้งเพดานความเสี่ยงล่วงหน้า');
+    lead=`พลังด้านการแสดงออกและผลงานอยู่ที่ ${f1(X.out)}% (สบายใจ/ไอเดียดี ${f1(g['食神'])}% · พูดตรง/ไอเดียแรง ${f1(g['傷官'])}%) ส่วนพลังด้านเงินอยู่ที่ ${f1(X.wea)}%`;
+    E.push('โชคในแนวนี้หมายถึง “โอกาสที่มาจากผลงาน คอนเนกชัน และจังหวะเวลา” ไม่ได้รับประกันผลจากการเสี่ยงโชค จึงไม่แนะนำให้พึ่งการพนันหรือเก็งกำไรเกินตัว');
+    if(X.fl.cd)E.push('โชคลาภที่มาเร็วมักมาพร้อมภาระ ควรตั้งเพดานความเสี่ยงไว้ล่วงหน้า');
     break;}
   case 'family':{
     const yc=X.cl('day','year'),ym=X.cm('day','year'),mc=X.cl('day','month'),mm=X.cm('day','month');
-    lead=`พลังทรัพยากร (ผู้ใหญ่/มารดา) ${f1(X.res)}% เป็น${elTag(A.res)} · เสาปี ${P.year.stem}${P.year.branch} (บรรพบุรุษ/ผู้ใหญ่) · เสาเดือน ${P.month.stem}${P.month.branch} (บิดามารดา/พี่น้อง)`;
-    if(yc)E.push('กิ่งวันชงกิ่งปี — ความเห็นต่างกับผู้ใหญ่หรือวงตระกูลตั้งแต่เด็ก');
-    if(ym)E.push('กิ่งวัน合กิ่งปี — ผูกพันกับผู้ใหญ่และรากเหง้าครอบครัว');
-    if(mc)E.push('กิ่งวันชงกิ่งเดือน — สัมพันธ์กับบิดามารดา/พี่น้องมีจังหวะห่างหรือขัดแย้งง่าย');
-    if(mm)E.push('กิ่งวัน合กิ่งเดือน — ได้แรงสนับสนุนจากบิดามารดา/พี่น้อง');
-    if(X.fl.bj)E.push('เรื่องเงินในครอบครัวควรชัดเจน เลี่ยงการกู้ยืมกันเอง');
+    lead=`ผู้ใหญ่และคุณแม่ในดวงคุณมีพลัง ${f1(X.res)}% เป็น ${elTag(A.res)} · เสาปี ${P.year.stem}${P.year.branch} แทนบรรพบุรุษและผู้ใหญ่ · เสาเดือน ${P.month.stem}${P.month.branch} แทนพ่อแม่และพี่น้อง`;
+    if(yc)E.push('ตั้งแต่เด็ก คุณอาจเห็นต่างจากผู้ใหญ่หรือวงศ์ตระกูลอยู่บ้าง');
+    if(ym)E.push('คุณผูกพันกับผู้ใหญ่และรากเหง้าของครอบครัว');
+    if(mc)E.push('ความสัมพันธ์กับพ่อแม่หรือพี่น้องอาจมีช่วงห่างกันหรือขัดแย้งได้ง่าย');
+    if(mm)E.push('คุณได้รับแรงสนับสนุนจากพ่อแม่หรือพี่น้อง');
+    if(X.fl.bj)E.push('เรื่องเงินในครอบครัวควรพูดให้ชัดเจน เลี่ยงการกู้ยืมกันเอง');
     break;}
   case 'crew':{
     const hs=P.hour.sEl,fvh=lfFv(A,hs);
-    lead=`พลังเพื่อน/比劫 ${f1(X.fr)}% (${elTag(A.dm)}) · เสาเวลา ${P.hour.stem}${P.hour.branch} (ลูกน้อง/ลูกหลาน) ก้าน ${elTag(hs)}`;
-    E.push(fvh>0?'เสาเวลาเป็นธาตุให้คุณ — ลูกน้อง ลูกหลาน หรือทีมมักให้แรงหนุนกลับมา':fvh<0?'เสาเวลาเป็นธาตุให้โทษ — ต้องใช้พลังดูแลลูกน้อง/ลูกหลานมากกว่าปกติ มอบหมายงานแบบชัดเจน':'เสาเวลาเป็นธาตุกลาง — ความสัมพันธ์กับทีมขึ้นกับวิธีบริหารของคุณ');
+    lead=`พลังของเพื่อนและคู่แข่งในดวงคุณอยู่ที่ ${f1(X.fr)}% (${elTag(A.dm)}) · เสาเวลา ${P.hour.stem}${P.hour.branch} แทนลูกน้องและลูกหลาน ซึ่งเป็นธาตุ ${elTag(hs)}`;
+    E.push(fvh>0?'ลูกน้อง ลูกหลาน หรือทีมของคุณมักให้แรงหนุนกลับมา':fvh<0?'คุณต้องใช้แรงดูแลลูกน้องหรือลูกหลานมากกว่าปกติ ลองมอบหมายงานให้ชัดเจน':'ความสัมพันธ์กับทีมขึ้นอยู่กับวิธีบริหารของคุณเอง');
     break;}
   }
   t.hs.forEach(o=>H.push(`<div class="small" style="margin:3px 0">🔯 ${lfHouseTxt(o)}</div>`));
   let luckLine='';
   if(X.luck&&t.la!==0){
     const it=X.luck.it;
-    luckLine=`<div class="small" style="margin:3px 0">🌀 ดวงโคจรปัจจุบัน <b class="cn">${it.stem}${it.branch}</b> (อายุ ${Math.floor(it.ageStart)}–${Math.floor(it.ageEnd)} ปี) ก้าน ${X.luck.god.n} ธาตุ ${elTag(it.sEl)} → ${t.la>0?'<b style="color:#15803d">หนุน</b>':'<b style="color:#b91c1c">กดดัน</b>'}เรื่องนี้ในทศวรรษนี้</div>`;
+    luckLine=`<div class="small" style="margin:3px 0">🌀 ช่วงชีวิต 10 ปีที่คุณอยู่ตอนนี้ (<b class="cn">${it.stem}${it.branch}</b> อายุ ${Math.floor(it.ageStart)}–${Math.floor(it.ageEnd)} ปี) เป็นธาตุ ${elTag(it.sEl)} → ${t.la>0?'<b style="color:#15803d">ช่วยหนุน</b>':'<b style="color:#b91c1c">เพิ่มแรงกดดัน</b>'}เรื่องนี้ในช่วงนี้</div>`;
   }
   return `<p>${lead}</p>`+E.map(x=>'<p>'+x+'</p>').join('')+H.join('')+luckLine+`<p style="margin-top:8px">${lfVerdict(t.base,t.avg)}</p>`;
 }
@@ -1561,22 +1731,22 @@ function lifeOverviewHTML(LF){
   const good=hs.filter(o=>o.fv>0),bad=hs.filter(o=>o.fv<0);
   const list=a=>a.length?a.map(o=>`ภพ ${o.h} ${o.name} <span class="small">(${MF_HOUSE[o.h].t})</span>`).join(' · '):'—';
   let h=`<div style="text-align:center;margin-bottom:10px"><span style="font-size:38px">${sym}</span><br>`+
-   `<b style="font-size:18px;color:var(--primary)">ลัคนาราศี${L.sign.n} · เจ้าเรือนดาว${L.lordL}</b><br>`+
-   `<span class="small">ธาตุราศี${L.sign.el} · ประเภท${L.sign.q} · ธาตุจีนของเจ้าลัคนา ${elEmoTag(A,el)}</span></div>`;
-  h+=`<div class="tip">🌉 <b>จุดเชื่อม BaZi × ลัคนา</b><br>`+
-   `• แกนในคือดิถี <b class="cn">${X.P.day.stem}</b> ${A.dm} (${A.status.t}) ธาตุให้คุณ ${A.fav.map(e=>EL_EMO[e]+e).join(' · ')} — `+
-   (fv>0?'เจ้าลัคนาเป็นธาตุให้คุณ บุคลิกภายนอกหนุนสิ่งที่ดวงต้องการ':fv<0?'เจ้าลัคนาเป็นธาตุให้โทษ บุคลิกภายนอกกับสิ่งที่ดวงต้องการขัดกัน ต้องชดเชยด้วยธาตุให้คุณ':'เจ้าลัคนาเป็นธาตุกลาง ไม่หนุนไม่ขัด')+`<br>`+
-   `• ภพที่เจ้าเรือนเป็นธาตุให้คุณ (เดินคล่อง): ${list(good)}<br>`+
-   `• ภพที่เจ้าเรือนเป็นธาตุให้โทษ (ต้องระวัง): ${list(bad)}<br>`+
-   (X.luck?`• ดวงโคจรปัจจุบัน <b class="cn">${X.luck.it.stem}${X.luck.it.branch}</b> (อายุ ${Math.floor(X.luck.it.ageStart)}–${Math.floor(X.luck.it.ageEnd)} ปี) ก้าน ${X.luck.god.n} ${EL_EMO[X.luck.it.sEl]}${X.luck.it.sEl} (${lfFvTag(lfFv(A,X.luck.it.sEl))})`
-    :(X.age!==null&&X.age<X.LP.list[0].ageStart?'• ยังไม่เข้าดวงโคจรแรก ใช้เสาเดือนเกิดเป็นพลังพื้นฐาน':''))+
-   `<br><span class="small">หมายเหตุ: ธาตุจีนของดาวใช้ตามชื่อ 五星 (อังคาร=ไฟ พุธ=น้ำ พฤหัสบดี=ไม้ ศุกร์=ทอง เสาร์=ดิน อาทิตย์=ไฟ จันทร์=น้ำ) เป็นการเทียบเคียงสองศาสตร์ ไม่ใช่กฎดั้งเดิมของศาสตร์ใดศาสตร์หนึ่ง · ใช้ระบบเรือนตามราศี (Whole Sign) · ยังไม่ได้คำนวณตำแหน่งดาวกำเนิด</span></div>`;
-  h+='<div class="tbwrap"><table class="rtable"><thead><tr><th>ภพ</th><th>ราศี</th><th>เจ้าเรือน</th><th>ธาตุจีน</th><th>ผลต่อดวง</th></tr></thead><tbody>';
+   `<b style="font-size:18px;color:var(--primary)">ลัคนาราศี${L.sign.n} · มีดาว${L.lordL}เป็นเจ้าเรือน</b><br>`+
+   `<span class="small">ธาตุประจำราศี: ${L.sign.el} · ประเภท: ${L.sign.q} · ดาวเจ้าลัคนาตรงกับธาตุ ${elEmoTag(A,el)}</span></div>`;
+  h+=`<div class="tip">🌉 <b>จุดเชื่อมระหว่างศาสตร์จีนกับลัคนา</b><br>`+
+   `• แกนในของคุณคือธาตุประจำตัว <b class="cn">${X.P.day.stem}</b> ${A.dm} (${A.status.t.replace(/^\S+\s+/,'')}) ธาตุที่หนุนคุณคือ ${A.fav.map(e=>EL_EMO[e]+e).join(' · ')} — `+
+   (fv>0?'ดาวเจ้าลัคนาเป็นธาตุที่หนุนคุณ ตัวตนภายนอกจึงช่วยเสริมสิ่งที่ดวงต้องการ':fv<0?'ดาวเจ้าลัคนาเป็นธาตุที่ควรลด ตัวตนภายนอกกับสิ่งที่ดวงต้องการจึงขัดกันบ้าง ลองชดเชยด้วยธาตุที่หนุนคุณ':'ดาวเจ้าลัคนาเป็นธาตุกลาง ๆ ไม่หนุนและไม่ขัด')+`<br>`+
+   `• เรือนที่เดินคล่อง (เจ้าเรือนเป็นธาตุที่หนุนคุณ): ${list(good)}<br>`+
+   `• เรือนที่ควรระวัง (เจ้าเรือนเป็นธาตุที่ควรลด): ${list(bad)}<br>`+
+   (X.luck?`• ช่วงชีวิต 10 ปีที่คุณอยู่ตอนนี้ <b class="cn">${X.luck.it.stem}${X.luck.it.branch}</b> (อายุ ${Math.floor(X.luck.it.ageStart)}–${Math.floor(X.luck.it.ageEnd)} ปี) เป็นธาตุ ${EL_EMO[X.luck.it.sEl]}${X.luck.it.sEl} (${lfFvTag(lfFv(A,X.luck.it.sEl))})`
+    :(X.age!==null&&X.age<X.LP.list[0].ageStart?'• ยังไม่ถึงช่วงชีวิต 10 ปีรอบแรก ใช้พลังของเดือนเกิดเป็นพื้นฐานไปก่อน':''))+
+   `<br><span class="small">หมายเหตุ: การเทียบธาตุของดาวกับธาตุจีน (อังคาร=ไฟ พุธ=น้ำ พฤหัสบดี=ไม้ ศุกร์=ทอง เสาร์=ดิน อาทิตย์=ไฟ จันทร์=น้ำ) เป็นการเทียบเคียงระหว่างสองศาสตร์ ไม่ใช่กฎดั้งเดิมของศาสตร์ใดศาสตร์หนึ่ง · ใช้ระบบเรือนตามราศี (Whole Sign) · ยังไม่ได้คำนวณตำแหน่งดาวตอนเกิด</span></div>`;
+  h+='<div class="tbwrap"><table class="rtable"><thead><tr><th>ภพ</th><th>ราศี</th><th>เจ้าเรือน</th><th>ธาตุ</th><th>ผลต่อดวงคุณ</th></tr></thead><tbody>';
   hs.forEach(o=>{
     h+=`<tr><td data-label="ภพ"><div><b>${o.h} ${o.name}</b> <span class="small">${MF_HOUSE[o.h].t}</span></div></td>`+
      `<td data-label="ราศี"><div>${o.sign}</div></td><td data-label="เจ้าเรือน"><div>${o.lord}</div></td>`+
-     `<td data-label="ธาตุจีน"><div>${EL_EMO[o.el]} ${o.el}</div></td>`+
-     `<td data-label="ผลต่อดวง"><div>${o.fv>0?'✅ ธาตุให้คุณ':o.fv<0?'⚠️ ธาตุให้โทษ':'➖ กลาง'} · <span class="small">${o.h===1?'เจ้าลัคนา':o.rel===2?'ดาวเดียวกับเจ้าลัคนา':o.rel===1?'มิตรกับเจ้าลัคนา':o.rel===-1?'ศัตรูกับเจ้าลัคนา':'กลางกับเจ้าลัคนา'}</span></div></td></tr>`;});
+     `<td data-label="ธาตุ"><div>${EL_EMO[o.el]} ${o.el}</div></td>`+
+     `<td data-label="ผลต่อดวงคุณ"><div>${o.fv>0?'✅ หนุนคุณ':o.fv<0?'⚠️ ควรระวัง':'➖ กลาง ๆ'} · <span class="small">${o.h===1?'เจ้าลัคนา':o.rel===2?'ดาวเดียวกับเจ้าลัคนา':o.rel===1?'เป็นมิตรกับเจ้าลัคนา':o.rel===-1?'เป็นศัตรูกับเจ้าลัคนา':'เป็นกลางกับเจ้าลัคนา'}</span></div></td></tr>`;});
   h+='</tbody></table></div>';
   return h;
 }
@@ -1588,10 +1758,10 @@ function renderLifeReading(P,A,LK,LP,y,m,d,gender){
   try{
     LIFE=buildLife(P,A,LK,LP,y,m,d,gender);
     document.getElementById('lifeBox').innerHTML=lifeOverviewHTML(LIFE)+LIFE.topics.map(lifeCardHTML).join('')+
-     '<div class="small" style="margin-top:10px">⚠️ คะแนนเป็นตัวชี้วัดเชิงเปรียบเทียบภายในดวงของคุณ ไม่ใช่คำทำนายตายตัว · ด้านสุขภาพไม่ใช้แทนคำวินิจฉัยของแพทย์ · ด้านการเงิน/โชคลาภไม่ใช่คำแนะนำการลงทุน</div>';
+     '<div class="small" style="margin-top:10px">⚠️ คะแนนใช้เทียบแต่ละด้านภายในดวงของคุณเองเท่านั้น ไม่ใช่คำทำนายที่ตายตัว · เรื่องสุขภาพไม่ใช้แทนคำวินิจฉัยของแพทย์ · เรื่องเงินและโชคลาภไม่ใช่คำแนะนำการลงทุน</div>';
   }catch(e){
     console.error('life reading failed',e);LIFE=null;
-    document.getElementById('lifeBox').innerHTML='<div class="small">⚠️ ไม่สามารถสร้างการวิเคราะห์ 9 มิติได้ในขณะนี้</div>';
+    document.getElementById('lifeBox').innerHTML='<div class="small">⚠️ ตอนนี้ยังสร้างการวิเคราะห์ 9 ด้านไม่ได้ ลองกดปุ่ม “วิเคราะห์ดวงชะตา” อีกครั้งนะ</div>';
   }
 }
 
@@ -1616,18 +1786,18 @@ function updateConfirm(){
   const tmode=getTimeMode(), cl=h+mi/60, cr=timeCorr(y,m,d,cl,loc.lon,TZ_FIXED,tmode);
   let tmTxt, tmHint;
   if(tmode==='clock'){
-    tmTxt='🕐 ใช้<b>เวลานาฬิกาตรง ๆ</b> (ไม่ปรับลองจิจูด/EoT)';
-    tmHint='ใช้เวลานาฬิกา +7 ตรง ๆ ไม่ปรับลองจิจูด/EoT · กระทบเสาวัน/เสาเวลา';
+    tmTxt='🕐 ใช้<b>เวลาตามนาฬิกา</b>ตรง ๆ (ไม่ปรับตามตำแหน่งจังหวัด)';
+    tmHint='ใช้เวลาตามนาฬิกา (+7) ตรง ๆ ไม่ปรับตามตำแหน่งจังหวัด · มีผลต่อเสาวันและเสาเวลา';
   }else{
     const sm=Math.round(mod(cl+cr,24)*60)%1440, dd=(cl+cr)<0?' (ของวันก่อนหน้า)':(cl+cr)>=24?' (ของวันถัดไป)':'';
     const dm=Math.round(cr*60);
     tmTxt='☀️ เวลาสุริยะจริง <b>'+String(Math.floor(sm/60)).padStart(2,'0')+':'+String(sm%60).padStart(2,'0')+' น.</b>'+dd+' · ปรับ '+(dm>=0?'+':'−')+Math.abs(dm)+' นาที';
-    tmHint='ปรับตามลองจิจูดจังหวัด + Equation of Time · กระทบเสาวัน/เสาเวลา · ลัคนาใช้พิกัดจริงเสมอ';
+    tmHint='ปรับเวลาตามตำแหน่งจริงของจังหวัดที่เกิดและการโคจรของโลก · มีผลต่อเสาวันและเสาเวลา · ลัคนาใช้พิกัดจริงเสมอ';
   }
   const hintEl=document.getElementById('tmodeHint');if(hintEl)hintEl.textContent=tmHint;
-  el.innerHTML=who+`📋 <b>ยืนยันข้อมูล:</b> เพศ<b>${genderTxt}</b> เกิด<b>วัน${TH_DOW[dt.getDay()]}</b> ที่ <b>${d} ${TH_MON[m-1]} ค.ศ. ${y}</b> `+
-   `เวลาตกฟาก <b>${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')} น.</b> `+
-   `ณ <b>จังหวัด${loc.name}</b> · ละติจูด <b>${loc.lat.toFixed(4)}°</b> · ลองจิจูด <b>${loc.lon.toFixed(4)}°</b> · ไทม์โซน <b>+7 (ประเทศไทย)</b>`+
+  el.innerHTML=who+`📋 <b>ลองตรวจดูข้อมูลอีกครั้ง:</b> เพศ<b>${genderTxt}</b> เกิด<b>วัน${TH_DOW[dt.getDay()]}</b> ที่ <b>${d} ${TH_MON[m-1]} ค.ศ. ${y}</b> `+
+   `เวลาเกิด <b>${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')} น.</b> `+
+   `ณ <b>จังหวัด${loc.name}</b> · ละติจูด <b>${loc.lat.toFixed(4)}°</b> · ลองจิจูด <b>${loc.lon.toFixed(4)}°</b> · เขตเวลา <b>+7 (ประเทศไทย)</b>`+
    `<div class="tmline">${tmTxt}</div>`;
 }
 function pillarHTML(i,P,dmIdx,isDay){
@@ -1641,24 +1811,24 @@ function pillarHTML(i,P,dmIdx,isDay){
 function buildElemFix(A,eTop){
   const add=A.fav[0],add2=A.fav[1],cut=A.unfav[0];
   const B=EL_BOOST[add],D=EL_DRAIN[cut];
-  let h=`<div class="fix"><b>🛠️ แนวทางปรับแก้เฉพาะบุคคล · สมดุลธาตุ</b>`;
-  h+=`<div class="fixhead">① เติมพลัง ${EL_EMO[add]}<b>ธาตุ${add}</b>`+(add2&&add2!==add?` (เสริมรองด้วย ${EL_EMO[add2]}ธาตุ${add2})`:'')+`</div>`;
+  let h=`<div class="fix"><b>🛠️ ปรับชีวิตให้สมดุลขึ้น · เรื่องธาตุ</b>`;
+  h+=`<div class="fixhead">① เติมพลัง ${EL_EMO[add]}<b>ธาตุ${add}</b> ให้มากขึ้น`+(add2&&add2!==add?` (เสริมรองด้วย ${EL_EMO[add2]}ธาตุ${add2})`:'')+`</div>`;
   h+=fixList([B.wear,B.eat,B.act,B.env,B.merit]);
-  // FIX: เดิมข้อความ "ลดทอน…ที่มากเกินสมดุล" ใช้กับดิถีอ่อนไม่ได้ และบรรทัดการแต่งกายเป็นข้อความตายตัวที่อาจแนะนำให้เพิ่มธาตุให้โทษ
-  const cutTxt=A.status.k==='weak'?'ที่ไม่ควรเสริมเพิ่ม (เป็นธาตุให้โทษของดวงอ่อน)':A.status.k==='strong'?'ที่ล้นอยู่แล้ว':'ที่มีมากสุดในดวง';
+  // เดิมข้อความ "ลดทอน…ที่มากเกินสมดุล" ใช้กับคนพลังบางไม่ได้ และบรรทัดการแต่งกายเป็นข้อความตายตัวที่อาจแนะนำให้เพิ่มธาตุที่ควรลด
+  const cutTxt=A.status.k==='weak'?'ที่ไม่ควรเพิ่มอีก (เพราะพลังของคุณค่อนบางอยู่แล้ว ธาตุนี้จะยิ่งดึงพลังของคุณไป)':A.status.k==='strong'?'ที่ล้นอยู่แล้ว':'ที่มีมากที่สุดในดวง';
   const favCol=A.fav.map(e=>EL_COLORNAME[e]).join(' / ');
-  h+=`<div class="fixhead">② ลดทอน ${EL_EMO[cut]}<b>ธาตุ${cut}</b> ${cutTxt}</div>`;
-  h+=fixList([`👕 <b>การแต่งกาย</b> — ลดโทน ${EL_COLORNAME[cut]} · เน้นโทนธาตุให้คุณ: ${favCol}`,D.eat,D.act,D.env]);
-  h+=`<div class="fixnote">⏱️ ทำต่อเนื่องอย่างน้อย 30 วันจึงจะเห็นผล</div></div>`;
+  h+=`<div class="fixhead">② ลด ${EL_EMO[cut]}<b>ธาตุ${cut}</b> ${cutTxt}</div>`;
+  h+=fixList([`👕 <b>การแต่งกาย</b> — ลดโทน ${EL_COLORNAME[cut]} · เน้นโทนสีที่หนุนคุณ: ${favCol}`,D.eat,D.act,D.env]);
+  h+=`<div class="fixnote">⏱️ ลองทำต่อเนื่องสักประมาณ 30 วัน แล้วดูว่าตัวเองรู้สึกต่างไปไหม</div></div>`;
   return h;
 }
 function buildGodFix(cTop,cLow){
-  let h=`<div class="fix"><b>🛠️ แนวทางปรับแก้เฉพาะบุคคล · สมดุลสิบเทพ</b>`;
-  h+=`<div class="fixhead">① คุมหมวดที่ล้น — ${GOD_EMO[cTop]}<b>${cTop}</b></div>`;
+  let h=`<div class="fix"><b>🛠️ ปรับชีวิตให้สมดุลขึ้น · เรื่องสิบเทพ</b>`;
+  h+=`<div class="fixhead">① หมวดที่เด่นล้น — ${GOD_EMO[cTop]}<b>${cTop}</b> ลองคุมให้พอดี</div>`;
   h+=fixList(GOD_FIX_HIGH[cTop]);
-  h+=`<div class="fixhead">② เติมหมวดที่บาง — ${GOD_EMO[cLow]}<b>${cLow}</b></div>`;
+  h+=`<div class="fixhead">② หมวดที่ยังบาง — ${GOD_EMO[cLow]}<b>${cLow}</b> ลองเติมให้มากขึ้น</div>`;
   h+=fixList(GOD_FIX_LOW[cLow]);
-  h+=`<div class="fixnote">⚠️ เป็นการปรับพฤติกรรมและสิ่งแวดล้อม ไม่ใช่คำทำนายตายตัวหรือคำแนะนำทางการแพทย์</div></div>`;
+  h+=`<div class="fixnote">⚠️ นี่เป็นแค่แนวทางปรับนิสัยและสภาพแวดล้อม ไม่ใช่คำทำนายที่ตายตัว และไม่ใช่คำแนะนำทางการแพทย์</div></div>`;
   return h;
 }
 function buildStory(P,A){
@@ -1667,17 +1837,20 @@ function buildStory(P,A){
   const clashAnimal=BR_TH[BRANCH.indexOf(CLASH[P.day.branch])];
   const comboAnimal=BR_TH[BRANCH.indexOf(COMBINE[P.day.branch])];
   let t='';
-  t+=`<p><b>1) ตัวคุณคือใครในภาษา BaZi</b><br>ธาตุประจำตัว (ดิถี) คือ <b>${dmS} ${P.day.yy}${A.dm}</b> ${DM_STORY[dmS]}<br>คุณเกิดในเดือนนักษัตร <b>${seas}</b> ซึ่งเป็นฤดูของธาตุ<b>${P.month.bEl}</b> ฤดูนี้คือ "สนามแข่ง" ที่กำหนดว่าพลังประจำตัวจะได้เปรียบหรือเสียเปรียบตั้งแต่ต้น</p>`;
-  t+=`<p><b>2) พลังของคุณแกร่งหรืออ่อน</b><br>พลังฝ่ายหนุนตัวคุณอยู่ที่ <b>${A.support}%</b> จัดเป็น <b>${A.status.t}</b><br>`+
-   (A.status.k==='hua'?`แปลว่าธาตุประจำตัวของคุณ "ถูกกลืน" ไปเป็นธาตุ${A.combo.T} ให้ใช้ชีวิตตามธาตุใหม่ ไม่ควรยึดธาตุเดิม`:A.status.k==='follow'?`แปลว่าดวงคุณ "ไหลตามกระแส" ยิ่งฝืนยิ่งเหนื่อย ไปกับโอกาสและสภาพแวดล้อมจะไปได้ไกลกว่า ไม่ควรเสริมพลังตัวเองเพิ่ม`:A.status.k==='dom'?`แปลว่าพลังตัวเองรวมตัวสูงมาก ใช้ความถนัดเฉพาะทางให้สุด ไม่ควรฝืนไปทางตรงข้ามธรรมชาติ`:A.status.k==='strong'?`แปลว่าคุณมีพลังงานสูง ลุยงานหนักได้ แต่พลังที่ล้นต้อง "มีทางระบาย" ไม่เช่นนั้นจะดื้อ ใจร้อน หรือหมดไฟ`
-    :A.status.k==='weak'?`แปลว่าพลังค่อนข้างบาง ไวต่อสภาพแวดล้อม กุญแจคือ "เติมก่อนใช้" พักผ่อนให้พอและหาผู้สนับสนุน`
-    :`แปลว่าดวงคุณสมดุล ปรับตัวได้ทั้งรุกและรับ ต้องเลือกจังหวะให้เป็น`)+`</p>`;
-  t+=`<p><b>3) ธาตุที่ควรเติม และธาตุที่ควรลด</b><br>ธาตุให้คุณคือ ${A.fav.map(e=>`${EL_EMO[e]}<b>${e}</b>`).join(' และ ')} — ใช้สี<b>${A.fav.map(e=>EL_COLORNAME[e]).join(' / ')}</b><br>ธาตุที่ควรลดคือ ${A.unfav.map(e=>`${EL_EMO[e]}<b>${e}</b>`).join(' และ ')}<br>โภชนาการที่เข้ากับคุณที่สุดคือ ${FOOD[A.fav[0]]}</p>`;
-  t+=`<p><b>4) ชีวิตคุณเน้นหนักด้านไหน</b><br>${CAT_STORY[topCat]}</p>`;
+  t+=`<p><b>1) ตัวตนของคุณ</b><br>ธาตุประจำตัว (ดิถี) ของคุณคือ <b>${dmS} ${P.day.yy}${A.dm}</b> ${DM_STORY[dmS]}<br>คุณเกิดในเดือนนักษัตร <b>${seas}</b> ซึ่งเป็นช่วงของธาตุ<b>${P.month.bEl}</b> ฤดูที่เกิดเหมือน “สนามแข่ง” ตั้งต้นของคุณ ว่าพลังของคุณจะได้เปรียบหรือต้องออกแรงมากกว่าคนอื่นตั้งแต่เริ่มต้น</p>`;
+  t+=`<p><b>2) พลังในตัวคุณเข้มแข็งแค่ไหน</b><br>พลังที่คอยหนุนตัวคุณอยู่ที่ <b>${A.support}%</b> ซึ่งจัดอยู่ในระดับ <b>${A.status.t}</b><br>`+
+   (A.status.k==='hua'?`หมายความว่าธาตุประจำตัวของคุณ “เปลี่ยนไป” เป็นธาตุ${A.combo.T} ชีวิตจะไปได้ดีเมื่อใช้ชีวิตตามธาตุใหม่นี้ มากกว่ายึดติดกับธาตุเดิม`
+   :A.status.k==='follow'?`หมายความว่าดวงของคุณเป็นแบบ “ไหลไปตามกระแส” ยิ่งฝืนก็ยิ่งเหนื่อย ไปตามโอกาสและสภาพแวดล้อมจะไปได้ไกลกว่า และไม่ควรเสริมพลังให้ตัวเองเพิ่ม`
+   :A.status.k==='dom'?`หมายความว่าพลังของคุณรวมตัวกันสูงมาก ให้ใช้ความถนัดเฉพาะทางให้เต็มที่ และไม่ควรฝืนไปในทางที่ขัดกับธรรมชาติของตัวเอง`
+   :A.status.k==='strong'?`หมายความว่าคุณมีพลังเหลือเฟือ ลุยงานหนักได้สบาย แต่พลังที่ล้นต้องมีทางระบายออก ไม่อย่างนั้นอาจกลายเป็นดื้อ ใจร้อน หรือหมดไฟได้`
+   :A.status.k==='weak'?`หมายความว่าพลังของคุณค่อนข้างบาง ไวต่อสภาพแวดล้อมรอบตัว กุญแจคือ “เติมพลังก่อนใช้” พักผ่อนให้พอ และมีคนคอยสนับสนุนอยู่ใกล้ ๆ`
+   :`หมายความว่าดวงของคุณค่อนข้างสมดุล ปรับตัวได้ทั้งเชิงรุกและเชิงรับ เพียงเลือกจังหวะให้เหมาะ`)+`</p>`;
+  t+=`<p><b>3) ธาตุที่ควรเติม และธาตุที่ควรลด</b><br>ธาตุที่หนุนคุณคือ ${A.fav.map(e=>`${EL_EMO[e]}<b>${e}</b>`).join(' และ ')} — สีที่เหมาะกับคุณคือ <b>${A.fav.map(e=>EL_COLORNAME[e]).join(' / ')}</b><br>ธาตุที่ควรลดคือ ${A.unfav.map(e=>`${EL_EMO[e]}<b>${e}</b>`).join(' และ ')}<br>อาหารที่เข้ากับคุณที่สุดคือ ${FOOD[A.fav[0]]}</p>`;
+  t+=`<p><b>4) ชีวิตของคุณเน้นหนักไปทางไหน</b><br>${CAT_STORY[topCat]}</p>`;
   if(lack.length)
-    t+=`<p><b>5) ธาตุที่ขาดในดวง</b><br>ดวงคุณแทบไม่มีธาตุ ${lack.map(e=>`${EL_EMO[e]}<b>${e}</b>`).join(', ')} เลย มักสะท้อนเป็น ${lack.map(e=>EL_LOW[e]).join(' · ')}</p>`;
-  t+=`<p><b>${lack.length?6:5}) จังหวะวันที่ควรจำ</b><br>นักษัตรประจำเสาวันคือ <b>${P.day.animal}</b> วันนักษัตร<b>${clashAnimal}</b>คือ "วันชงดิถี" ควรเลี่ยงตัดสินใจใหญ่ ส่วนวันนักษัตร<b>${comboAnimal}</b>เป็นวันสมพงศ์เหมาะเริ่มสิ่งใหม่</p>`;
-  t+=`<p class="small">⚠️ หมายเหตุ: เป็นเครื่องมือวางแผนชีวิต ไม่ใช่คำทำนายตายตัวและไม่ใช้แทนคำวินิจฉัยทางการแพทย์</p>`;
+    t+=`<p><b>5) ธาตุที่แทบไม่มีในดวง</b><br>ในดวงของคุณแทบไม่มีธาตุ ${lack.map(e=>`${EL_EMO[e]}<b>${e}</b>`).join(', ')} เลย ซึ่งมักสะท้อนออกมาเป็น ${lack.map(e=>EL_LOW[e]).join(' · ')}</p>`;
+  t+=`<p><b>${lack.length?6:5}) วันที่ควรจำไว้</b><br>นักษัตรประจำวันเกิดของคุณคือ <b>${P.day.animal}</b> วันที่ตรงกับนักษัตร<b>${clashAnimal}</b>เป็น “วันที่ชนกับตัวคุณ” ควรเลี่ยงการตัดสินใจเรื่องใหญ่ ส่วนวันนักษัตร<b>${comboAnimal}</b>เข้ากับคุณดี เหมาะกับการเริ่มต้นสิ่งใหม่</p>`;
+  t+=`<p class="small">⚠️ หมายเหตุ: ทั้งหมดนี้เป็นแนวทางช่วยวางแผนชีวิต ไม่ใช่คำทำนายที่ตายตัว และไม่ใช่คำแนะนำทางการแพทย์</p>`;
   return t;
 }
 function renderLadkhana(lk){
@@ -1686,25 +1859,25 @@ function renderLadkhana(lk){
    `<b style="font-size:20px;color:var(--primary)">ลัคนาราศี${lk.name}</b><br>`+
    `<span class="small">ตำแหน่งละเอียด ${lk.deg.toFixed(2)}° ในราศี${lk.name} (ระบบนิรายนะ · อายนางศ์ ${lk.ayanamsa.toFixed(2)}°)</span></div>`+
    `<div class="box read">${lk.desc}</div>`+
-   `<div class="tip">📖 คำนวณจากตำแหน่งราศีขึ้นสู่ขอบฟ้าทิศตะวันออก ณ วินาทีที่คุณเกิด ด้วยสูตรดาราศาสตร์มาตรฐาน ผลลัพธ์เป็นการประมาณการ หากต้องการความแม่นยำระดับสูงสุดควรปรึกษาตำราโหราศาสตร์ไทยร่วมกับผู้เชี่ยวชาญ</div>`;
+   `<div class="tip">📖 ลัคนาคำนวณจากราศีที่กำลังขึ้นทางขอบฟ้าตะวันออก ณ ตอนที่คุณเกิด ด้วยสูตรดาราศาสตร์มาตรฐาน ผลที่ได้เป็นค่าประมาณ ถ้าอยากได้ความแม่นยำสูงสุด ควรให้โหรผู้เชี่ยวชาญช่วยตรวจซ้ำอีกครั้ง</div>`;
 }
 function renderLuckPillars(lp,y,m,d){
   const todayAge=(Date.now()-new Date(y,m-1,d).getTime())/(365.25*24*3600*1000);
-  let h=`<div style="text-align:center;margin-bottom:10px" class="small">ทิศทางดวงโคจร: <b>${lp.forward?'เดินหน้า (順)':'ถอยหลัง (逆)'}</b> · เริ่มดวงโคจรแรกเมื่ออายุ <b>${lp.startYears} ปี ${lp.startMonths} เดือน</b></div>`;
-  h+='<div class="tbwrap"><table class="rtable"><thead><tr><th>ช่วงอายุ</th><th>เสาดวงโคจร</th><th>นักษัตร</th><th>ธาตุ</th><th>สิบเทพ</th></tr></thead><tbody>';
+  let h=`<div style="text-align:center;margin-bottom:10px" class="small">ทิศทางของจังหวะชีวิต: <b>${lp.forward?'เดินหน้า':'ถอยหลัง'}</b> · รอบแรกเริ่มเมื่ออายุ <b>${lp.startYears} ปี ${lp.startMonths} เดือน</b></div>`;
+  h+='<div class="tbwrap"><table class="rtable"><thead><tr><th>ช่วงอายุ</th><th>เสาประจำช่วง</th><th>นักษัตร</th><th>ธาตุ</th><th>สิบเทพ</th></tr></thead><tbody>';
   lp.list.forEach(it=>{
     const isCur=todayAge>=it.ageStart&&todayAge<it.ageEnd;
     const god=tenGod(CH.dmIdx,it.si);
     h+=`<tr${isCur?' style="background:#fff3cd"':''}>`+
      `<td data-label="ช่วงอายุ"><div><b>${Math.floor(it.ageStart)}–${Math.floor(it.ageEnd)} ปี</b>${isCur?' <span class="badge" style="background:#ca8a04">ปัจจุบัน</span>':''}</div></td>`+
-     `<td data-label="เสาดวงโคจร"><div><b style="font-family:var(--cn);font-size:19px;color:var(--primary)">${it.stem}${it.branch}</b></div></td>`+
+     `<td data-label="เสาประจำช่วง"><div><b style="font-family:var(--cn);font-size:19px;color:var(--primary)">${it.stem}${it.branch}</b></div></td>`+
      `<td data-label="นักษัตร"><div>${it.animal}</div></td>`+
      `<td data-label="ธาตุ"><div>${EL_EMO[it.sEl]} ${it.yy}${it.sEl} / ${EL_EMO[it.bEl]}${it.bEl}</div></td>`+
      `<td data-label="สิบเทพ"><div class="small">${god.n}</div></td></tr>`;
   });
   h+='</tbody></table></div>';
-  if(todayAge<lp.list[0].ageStart)h+=`<div class="tip">⏳ ขณะนี้ยังไม่เข้าดวงโคจรแรก (เริ่มเมื่ออายุ ${lp.startYears} ปี ${lp.startMonths} เดือน) — ช่วงก่อนหน้าใช้พลังของเสาเดือนเกิดเป็นพื้นฐาน</div>`;
-  h+=`<div class="tip">📖 <b>ดวงโคจร 10 ปี (大運)</b> คือกระแสพลังงานระยะยาวที่ซ้อนทับดวงกำเนิด แถบสีเหลืองคือช่วงอายุปัจจุบันของคุณ</div>`;
+  if(todayAge<lp.list[0].ageStart)h+=`<div class="tip">⏳ ตอนนี้ยังไม่ถึงรอบ 10 ปีรอบแรก (จะเริ่มเมื่ออายุ ${lp.startYears} ปี ${lp.startMonths} เดือน) ช่วงก่อนหน้านี้ใช้พลังของเดือนเกิดเป็นพื้นฐาน</div>`;
+  h+=`<div class="tip">📖 <b>จังหวะชีวิตรอบ 10 ปี</b> คือกระแสพลังงานช่วงยาวที่ซ้อนอยู่บนดวงกำเนิดของคุณ เหมือนฉากหลังของแต่ละช่วงชีวิต แถบสีเหลืองคือช่วงอายุที่คุณอยู่ตอนนี้</div>`;
   document.getElementById('luckBox').innerHTML=h;
 }
 function calculateBazi(){
@@ -1720,34 +1893,34 @@ function calculateBazi(){
   pillarHTML(3,P.year,P.day.si,false);
 
   document.getElementById('strengthBox').innerHTML=
-   `⚖️ <b>สถานะดิถี (Day Master)</b><br>👑 ดิถี: <b style="font-family:var(--cn);font-size:22px;color:var(--primary)">${P.day.stem}</b> `+
+   `⚖️ <b>ธาตุประจำตัวของคุณ (ดิถี)</b><br>👑 ธาตุประจำตัว: <b style="font-family:var(--cn);font-size:22px;color:var(--primary)">${P.day.stem}</b> `+
    `${EL_EMO[CH.dm]} <b>${P.day.yy}${CH.dm}</b> · ฤดูเกิด ${P.month.animal}<br>`+
-   `ผลประเมิน: <b style="color:${CH.status.c};font-size:16px">${CH.status.t}</b><br>`+
-   `พลังหนุน = <b>${CH.support}%</b> <span class="small">(รวมผลฤดูเกิด รากของก้าน และการจับคู่ก้านแล้ว)</span><div class="gauge"><span style="left:calc(${Math.min(100,CH.support)}% - 2px)"></span></div>`+
-   `<div class="small">🔵 อ่อน &lt;45% · 🟢 สมดุล 45–55% · 🔴 แกร่ง &gt;55%</div>`;
+   `พลังของคุณอยู่ในระดับ: <b style="color:${CH.status.c};font-size:16px">${CH.status.t}</b><br>`+
+   `พลังที่คอยหนุนคุณ <b>${CH.support}%</b> <span class="small">(คิดรวมฤดูที่เกิดและรากของธาตุไว้แล้ว)</span><div class="gauge"><span style="left:calc(${Math.min(100,CH.support)}% - 2px)"></span></div>`+
+   `<div class="small">🔵 ค่อนบาง ต่ำกว่า 45% · 🟢 สมดุล 45–55% · 🔴 แกร่ง เกิน 55%</div>`;
 
   const elSorted=Object.keys(CH.sc).sort((a,b)=>CH.sc[b]-CH.sc[a]);
   const eTop=elSorted[0],eLow=elSorted[4];
-  let eb='🧪 <b>สัดส่วนพลังธาตุทั้งดวง</b>';
+  let eb='🧪 <b>พลังของแต่ละธาตุในดวงคุณ</b>';
   Object.keys(CH.sc).forEach(e=>{const v=CH.pc(e);
     eb+=`<div class="erow"><div class="ename"><span>${EL_EMO[e]} <b>${e}</b></span><b>${v}%</b></div><div class="bar"><i class="bg${e}" style="width:${v}%"></i></div><div class="edesc">${EL_MEAN[e]}</div></div>`;});
-  eb+=`<div class="tip">🔝 สูงสุด ${EL_EMO[eTop]}<b>${eTop}</b> (${CH.pc(eTop)}%): ${EL_HIGH[eTop]}<br>🔻 ต่ำสุด ${EL_EMO[eLow]}<b>${eLow}</b> (${CH.pc(eLow)}%): ${EL_LOW[eLow]}</div>`;
+  eb+=`<div class="tip">🔝 มากที่สุด ${EL_EMO[eTop]}<b>${eTop}</b> (${CH.pc(eTop)}%): ${EL_HIGH[eTop]}<br>🔻 น้อยที่สุด ${EL_EMO[eLow]}<b>${eLow}</b> (${CH.pc(eLow)}%): ${EL_LOW[eLow]}</div>`;
   eb+=buildElemFix(CH,eTop);
   document.getElementById('elemBox').innerHTML=eb;
 
   const catSorted=Object.keys(CH.cat).sort((a,b)=>CH.cat[b]-CH.cat[a]);
   const cTop=catSorted[0],cLow=catSorted[4];
-  let gb='🌟 <b>สิบเทพ (10 Gods) ในดวงกำเนิด</b>';
+  let gb='🌟 <b>สิบเทพ — บทบาทต่าง ๆ ในชีวิตคุณ</b>';
   Object.keys(CH.cat).forEach(c=>{const v=(CH.cat[c]/CH.ctot*100).toFixed(1);
     gb+=`<div class="erow"><div class="ename"><span>${GOD_EMO[c]} <b>${c}</b></span><b>${v}%</b></div><div class="bar"><i style="width:${v}%;background:var(--primary)"></i></div><div class="edesc">${GOD_MEAN[c]}</div></div>`;});
-  gb+=`<div class="tip">🔝 เด่นสุด ${GOD_EMO[cTop]}<b>${cTop}</b>: ${GOD_HIGH[cTop]}<br>🔻 บางสุด ${GOD_EMO[cLow]}<b>${cLow}</b>: ${GOD_LOW[cLow]}</div>`;
+  gb+=`<div class="tip">🔝 เด่นที่สุด ${GOD_EMO[cTop]}<b>${cTop}</b>: ${GOD_HIGH[cTop]}<br>🔻 บางที่สุด ${GOD_EMO[cLow]}<b>${cLow}</b>: ${GOD_LOW[cLow]}</div>`;
   gb+=buildGodFix(cTop,cLow);
   document.getElementById('godsBox').innerHTML=gb;
 
   document.getElementById('yongBox').innerHTML=
-   `💎 <b>ธาตุให้คุณ</b><br>`+CH.fav.map(e=>`${EL_EMO[e]} <b>${e}</b> ${dots([e])}`).join('<br>')+
-   `<br>🚫 <b>ธาตุให้โทษ</b><br>`+CH.unfav.map(e=>`${EL_EMO[e]} <b>${e}</b> ${dots([e])}`).join('<br>')+
-   `<br>🍲 <b>แนวโภชนาการหลัก</b><br><span class="small">${FOOD[CH.fav[0]]}</span>`;
+   `💎 <b>ธาตุที่หนุนคุณ</b><br>`+CH.fav.map(e=>`${EL_EMO[e]} <b>${e}</b> ${dots([e])}`).join('<br>')+
+   `<br>🚫 <b>ธาตุที่ควรลด</b><br>`+CH.unfav.map(e=>`${EL_EMO[e]} <b>${e}</b> ${dots([e])}`).join('<br>')+
+   `<br>🍲 <b>อาหารที่เข้ากับคุณ</b><br><span class="small">${FOOD[CH.fav[0]]}</span>`;
 
   document.getElementById('storyBox').innerHTML=buildStory(P,CH);
 
@@ -1788,40 +1961,40 @@ function loadNavigator(){
   document.getElementById('dailyBox').innerHTML=
    `📆 <b>วัน${TH_DOW[base.getDay()]}ที่ ${base.getDate()} ${TH_MON[base.getMonth()]} ค.ศ. ${base.getFullYear()}</b>`+
    (toISO(base)===todayISO?' <span class="badge" style="background:#15803d">วันนี้</span>':'')+`<br>`+
-   `🥢 เสาวันจร <b style="font-family:var(--cn);font-size:26px;color:var(--primary)">${p.day.stem}${p.day.branch}</b> · ${EL_EMO[p.day.sEl]} <b>${p.day.yy}${p.day.sEl}</b> · ${p.day.animal}<br>`+
-   `🧪 ธาตุวันจร (รวมธาตุแฝง): ${shTxt}<br>`+
-   `🌟 สิบเทพก้านวัน: <b>${ev.god.n}</b> (${ev.sTag}) · กิ่งวัน: <b>${ev.godB.n}</b> (${ev.bTag})<br>`+
+   `🥢 เสาประจำวัน <b style="font-family:var(--cn);font-size:26px;color:var(--primary)">${p.day.stem}${p.day.branch}</b> · ${EL_EMO[p.day.sEl]} <b>${p.day.yy}${p.day.sEl}</b> · ${p.day.animal}<br>`+
+   `🧪 ธาตุของวันนี้ (รวมธาตุแฝง): ${shTxt}<br>`+
+   `🌟 บทบาทของวันนี้ต่อคุณ (สิบเทพ): ก้านวัน <b>${ev.god.n}</b> (${ev.sTag}) · กิ่งวัน <b>${ev.godB.n}</b> (${ev.bTag})<br>`+
    `${ev.lv.e} <b style="color:${ev.lv.c};font-size:17px">${ev.lv.t} · คะแนน ${ev.sv}/100</b>`+
    (ev.tags.length?`<br><span class="small">${ev.tags.join(' · ')}</span>`:'')+
    `<hr style="border:none;border-top:1px dashed var(--gold);margin:12px 0">`+
-   `🎨 <b>สีมงคลวันนี้</b><br>${colLine(ev.lucky,true)}<br>`+
-   `🚫 <b>สีกาลกิณีวันนี้</b><br>`+
-   (ev.bad.length?colLine(ev.bad,false):'<span class="small" style="color:#15803d">✅ วันนี้ไม่มีสีต้องห้ามเด็ดขาด</span>')+
-   (ev.relaxed.length?`<br><span class="small">🟢 ผ่อนผันวันนี้ (ธาตุให้โทษของดวง แต่วันนี้แรงลบต่ำ ใช้ได้):</span> ${dots(ev.relaxed)}`:'')+
+   `🎨 <b>สีเสริมดวงวันนี้</b><br>${colLine(ev.lucky,true)}<br>`+
+   `🚫 <b>สีที่ควรเลี่ยงวันนี้</b><br>`+
+   (ev.bad.length?colLine(ev.bad,false):'<span class="small" style="color:#15803d">✅ วันนี้ไม่มีสีที่ต้องเลี่ยงเลย</span>')+
+   (ev.relaxed.length?`<br><span class="small">🟢 ใช้ได้วันนี้ (ปกติเป็นธาตุที่ควรลด แต่วันนี้แรงลบน้อย):</span> ${dots(ev.relaxed)}`:'')+
    `<hr style="border:none;border-top:1px dashed var(--gold);margin:12px 0">`+
    (ev.modeTxt?`<b>${ev.modeTxt}</b><br>`:'')+
    `✅ <b>ควรทำ</b><br>${ul(ev.goodList)}<br>`+
    `⚠️ <b>ควรเลี่ยง</b><br><span style="color:#b91c1c">${ul(ev.avoidList)}</span><br>`+
-   `🍲 <b>โภชนาการ:</b> ${ev.food}`;
+   `🍲 <b>อาหารแนะนำ:</b> ${ev.food}`;
   let h='';
   for(let i=0;i<7;i++){
     const d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+i,12,0,0,0);
     const q=DP(d), e=evaluateDay(q.day), isToday=toISO(d)===todayISO;
     const badCell=(e.bad.length
         ?`${dots(e.bad)}<div class="edesc">${dxWhy(e,e.bad[0],false)}</div>`
-        :`<span class="small" style="color:#15803d">✅ ไม่มีสีต้องห้าม</span>`)+
-      (e.relaxed.length?`<div class="edesc">🟢 ผ่อนผัน ${dots(e.relaxed)}</div>`:'');
+        :`<span class="small" style="color:#15803d">✅ ไม่มีสีที่ต้องเลี่ยง</span>`)+
+      (e.relaxed.length?`<div class="edesc">🟢 พอใช้ได้ ${dots(e.relaxed)}</div>`:'');
     h+=`<tr>
       <td data-label="📅 วันที่"><div><b>${TH_DOWS[d.getDay()]}</b> ${d.getDate()} ${TH_MONS[d.getMonth()]}${isToday?' <span class="badge" style="background:#15803d">วันนี้</span>':''}</div></td>
-      <td data-label="🥢 เสาวันจร"><div><b style="font-family:var(--cn);font-size:19px;color:var(--primary)">${q.day.stem}${q.day.branch}</b><span class="badge bg${q.day.sEl}">${EL_EMO[q.day.sEl]}${q.day.yy}${q.day.sEl}</span></div></td>
+      <td data-label="🥢 เสาประจำวัน"><div><b style="font-family:var(--cn);font-size:19px;color:var(--primary)">${q.day.stem}${q.day.branch}</b><span class="badge bg${q.day.sEl}">${EL_EMO[q.day.sEl]}${q.day.yy}${q.day.sEl}</span></div></td>
       <td data-label="🐉 นักษัตร"><div>${q.day.animal} <span class="small">${q.day.hidden.map(x=>x.s+' '+x.w+'%').join(' · ')}</span></div></td>
       <td data-label="🌟 สิบเทพ"><div><span class="small">ก้าน ${e.god.n} · กิ่ง ${e.godB.n}</span> <span class="badge" style="background:var(--primary)">${e.god.c}</span><div class="edesc">${e.sTag}</div></div></td>
       <td data-label="⚖️ คะแนน"><div><b style="color:${e.lv.c};font-size:14px">${e.lv.e} ${e.lv.t}</b><div class="bar"><i style="width:${e.sv}%;background:${e.lv.c}"></i></div>${e.tags.length?`<span class="small">${e.tags.join(' · ')}</span>`:''}</div></td>
-      <td data-label="🎨 สีมงคล"><div>${dots(e.lucky)}<div class="edesc">${dxWhy(e,e.lucky[0],true)}</div></div></td>
-      <td data-label="🚫 สีกาลกิณี"><div>${badCell}</div></td>
+      <td data-label="🎨 สีเสริมดวง"><div>${dots(e.lucky)}<div class="edesc">${dxWhy(e,e.lucky[0],true)}</div></div></td>
+      <td data-label="🚫 สีที่ควรเลี่ยง"><div>${badCell}</div></td>
       <td data-label="✅ ควรทำ"><div style="text-align:left;font-size:12.5px">${e.modeTxt?'<b>'+e.modeTxt+'</b><br>':''}${ul(e.goodList)}</div></td>
       <td data-label="⚠️ ควรเลี่ยง"><div style="text-align:left;font-size:12.5px;color:#b91c1c">${ul(e.avoidList)}</div></td>
-      <td data-label="🍲 โภชนาการ"><div style="text-align:left;font-size:12.5px">${e.food}</div></td></tr>`;
+      <td data-label="🍲 อาหารแนะนำ"><div style="text-align:left;font-size:12.5px">${e.food}</div></td></tr>`;
   }
   document.getElementById('wk').innerHTML=h;
 }
@@ -2104,7 +2277,7 @@ function mfText(k,X){
    if(X.bp)tp.push(`นัดเดตหรือคุยเรื่องสำคัญกับคู่ใน${tkw(3)} (วันศรี) หรือ${tkw(6)} (วันมนตรี)`);
    break;}
   case 'luck':{const gd=X.days.filter(x=>x.ev.sv>=75).length;
-   t.push(`วันลาภลอย ${G('偏財')} วัน · วันสุขใจ/ไอเดียพุ่ง ${G('食神')} วัน · วันมีผู้ใหญ่ช่วย ${cnt.noble} วัน · วันมงคลเยี่ยม ${gd} วัน`);
+   t.push(`วันลาภลอย ${G('偏財')} วัน · วันสุขใจ/ไอเดียพุ่ง ${G('食神')} วัน · วันมีผู้ใหญ่ช่วย ${cnt.noble} วัน · วันดีมาก ${gd} วัน`);
    t.push(isF(A.wea)?'ธาตุเงินเป็นธาตุที่หนุนคุณ โชคมักมาเป็นรายได้พิเศษ โบนัส หรือโอกาสจากคนรู้จัก':'โชคเดือนนี้มาในรูปความช่วยเหลือและโอกาสมากกว่าตัวเงิน');
    if(cnt.noble)t.push('วันมีผู้ใหญ่ช่วย มักมีคนไม่คาดคิดยื่นมือ เหมาะขอความช่วยเหลือหรือยื่นเรื่องสำคัญ');
    if(G('偏印')>=5&&isU(A.res))t.push('มีวันคิดมากจนบั่นทอนความสุข โชคอาจมาช้ากว่าที่คิด');
@@ -2309,8 +2482,8 @@ function persistFieldsSoon(){clearTimeout(FIELD_T);FIELD_T=setTimeout(persistNow
 
 /* ---------- ส่งออก PDF ---------- */
 function exportPDF(){
-  if(!CH){toast('⚠️ กด “วิเคราะห์ดวงชะตา” ก่อนส่งออก');return;}
-  if(typeof html2pdf==='undefined'){toast('⚠️ โหลดตัวสร้าง PDF ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรช');return;}
+  if(!CH){toast('⚠️ กดปุ่ม “วิเคราะห์ดวงชะตา” ก่อน แล้วค่อยส่งออกนะ');return;}
+  if(typeof html2pdf==='undefined'){toast('⚠️ โหลดตัวสร้าง PDF ไม่สำเร็จ ลองตรวจอินเทอร์เน็ตแล้วรีเฟรชหน้านี้นะ');return;}
   const cur=activeProfile(),name=cur?cur.name:'ดวง',B=readBirth();
   const wrap=document.createElement('div');
   wrap.style.cssText='position:fixed;left:0;top:0;width:780px;background:#fff;padding:14px;z-index:-9999;color:#2c2c2c;font-family:var(--th)';
@@ -2342,24 +2515,24 @@ function buildShareText(){
   const P=CH.P,A=CH,cur=activeProfile(),pil=k=>P[k].stem+P[k].branch,t=[];
   t.push('🏛️ BaZi Precision Navigator'+(cur?' · '+cur.name:''));
   t.push(`🥢 เสาเวลา ${pil('hour')} | เสาวัน ${pil('day')} | เสาเดือน ${pil('month')} | เสาปี ${pil('year')}`);
-  t.push(`👑 ดิถี ${P.day.stem} ${A.dm} · ${A.status.t.replace(/^\S+\s+/,'')} (พลังหนุน ${A.support}%)`);
-  t.push(`💎 ธาตุให้คุณ: ${A.fav.join(' · ')}  🚫 ธาตุให้โทษ: ${A.unfav.join(' · ')}`);
+  t.push(`👑 ธาตุประจำตัว ${P.day.stem} ${A.dm} · พลังอยู่ในระดับ${A.status.t.replace(/^\S+\s+/,'')} (พลังหนุน ${A.support}%)`);
+  t.push(`💎 ธาตุที่หนุนคุณ: ${A.fav.join(' · ')}  🚫 ธาตุที่ควรลด: ${A.unfav.join(' · ')}`);
   if(LIFE&&LIFE.X){
-    t.push(`🔯 ลัคนาราศี${LIFE.L.sign.n} เจ้าเรือนดาว${LIFE.L.lordL}`);
+    t.push(`🔯 ลัคนาราศี${LIFE.L.sign.n} มีดาว${LIFE.L.lordL}เป็นเจ้าเรือน`);
     const s=[...LIFE.topics].sort((a,b)=>b.sc-a.sc);
-    t.push('✅ เด่น: '+s.slice(0,2).map(x=>x.ic+x.title.replace(/^\S+\s+/,'')).join(' · '));
-    t.push('⚠️ ประคอง: '+s.slice(-2).map(x=>x.ic+x.title.replace(/^\S+\s+/,'')).join(' · '));
+    t.push('✅ ด้านที่เด่น: '+s.slice(0,2).map(x=>x.ic+x.title.replace(/^\S+\s+/,'')).join(' · '));
+    t.push('⚠️ ด้านที่ควรประคอง: '+s.slice(-2).map(x=>x.ic+x.title.replace(/^\S+\s+/,'')).join(' · '));
   }
-  t.push('⚠️ เป็นแนวทางวางแผนชีวิต ไม่ใช่คำทำนายตายตัว');
+  t.push('⚠️ เป็นแนวทางช่วยวางแผนชีวิต ไม่ใช่คำทำนายที่ตายตัว');
   return t.join('\n');
 }
 function exportLine(){
-  if(!CH){toast('⚠️ กด “วิเคราะห์ดวงชะตา” ก่อนส่งออก');return;}
+  if(!CH){toast('⚠️ กดปุ่ม “วิเคราะห์ดวงชะตา” ก่อน แล้วค่อยส่งออกนะ');return;}
   const text=buildShareText();
   if(navigator.share){navigator.share({title:'BaZi Precision Navigator',text}).catch(()=>{});return;}
   try{if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(text).catch(()=>{});}catch(e){}
   window.open('https://line.me/R/msg/text/?'+encodeURIComponent(text.slice(0,350)),'_blank','noopener');
-  toast('💬 คัดลอกสรุปแล้ว (ฉบับเต็มอยู่ในคลิปบอร์ด) กำลังเปิดไลน์…');
+  toast('💬 คัดลอกสรุปไว้แล้ว (ฉบับเต็มอยู่ในคลิปบอร์ด) กำลังเปิดไลน์ให้…');
 }
 
 /* ---------- แผงแอดมิน ----------
@@ -2411,9 +2584,9 @@ async function renderKeyList(){
         `<td data-label="หมายเหตุ"><div>${esc(u.note||'')}</div></td>`+
         `<td data-label="หมดอายุ"><div>${esc(fmtDMY(kExp(u)))||'ไม่มีกำหนด'}${expBadge(u)}</div></td>`+
         `<td data-label="เข้าใช้ล่าสุด"><div>${lastSeenInfo(u).html}</div></td>`+
-        `<td data-label="สถานะ"><div>${sp?'<span class="badge" style="background:#b91c1c">ระงับ</span>':'<span class="badge" style="background:#15803d">ใช้งาน</span>'}${u.locked?' <span class="badge" style="background:#b45309">🔒 ล็อกชั่วคราว</span>':''}</div></td>`+
+        `<td data-label="สถานะ"><div>${sp?'<span class="badge" style="background:#b91c1c">พักใช้งาน</span>':'<span class="badge" style="background:#15803d">ใช้งาน</span>'}${u.locked?' <span class="badge" style="background:#b45309">🔒 ล็อกชั่วคราว</span>':''}</div></td>`+
         `<td data-label="จัดการ"><div><button class="mini" onclick="keyAction(${i},'renew')">📅 ต่ออายุ</button> <button class="mini ghost" onclick="keyAction(${i},'reset')">🔄 รีเซ็ตรหัส</button> `+
-        `<button class="mini ghost" onclick="keyAction(${i},'status')">${sp?'▶️ เปิดใช้':'⏸️ ระงับ'}</button> `+
+        `<button class="mini ghost" onclick="keyAction(${i},'status')">${sp?'▶️ เปิดใช้':'⏸️ พักใช้งาน'}</button> `+
         `<button class="mini ghost" onclick="keyAction(${i},'remove')">🗑️ ลบ</button></div></td></tr>`;
     });
     box.innerHTML=h+'</tbody></table></div>'+
@@ -2440,16 +2613,16 @@ function parseDMY(v){   // รับ DD/MM/YYYY (ปี ค.ศ. หรือ �
 const thDate=s=>{const x=fmtDMY(s);return x&&DATE_BE?x+' (พ.ศ.)':x;};
 function issueText(){
   const I=LAST_ISSUE;if(!I)return '';
-  let url='';try{if(/^https?:/.test(location.origin))url=location.origin+location.pathname;}catch(e){}
+  const url=appUrl();
   const ex=thDate(I.exp);
-  return ['🔐 ข้อมูลเข้าใช้งาน BaZi Precision Navigator','ชื่อผู้ใช้: '+I.name,'รหัสผ่าน (4 หลัก): '+I.pin,ex?'ใช้ได้ถึง: '+ex:'',url?'เข้าใช้งานที่: '+url:'','⚠️ รหัสนี้ใช้เฉพาะคุณ กรุณาอย่าส่งต่อให้ผู้อื่น'].filter(Boolean).join('\n');
+  return ['🔐 ข้อมูลสำหรับเข้าใช้ BaZi Precision Navigator','ชื่อผู้ใช้: '+I.name,'รหัสผ่านเริ่มต้น (4 หลัก): '+I.pin,ex?'ใช้ได้ถึง: '+ex:null,url?'เข้าใช้งานที่: '+url:null,'','💡 พอเข้าสู่ระบบแล้ว กดปุ่ม “เปลี่ยนรหัสผ่าน” เพื่อตั้งรหัสของคุณเองได้เลย','📲 กดปุ่ม “ติดตั้งแอป” ในหน้าเว็บ เพื่อเก็บไว้บนหน้าจอโฮมได้','⚠️ รหัสนี้ใช้ได้เฉพาะคุณ ขอให้เก็บเป็นความลับนะ'].filter(x=>x!==null&&x!==undefined&&x!==false).join('\n');
 }
 function showIssued(out,label,name,pin,exp){
   LAST_ISSUE={name,pin,exp:exp||''};
   clearTimeout(ISSUE_T);ISSUE_T=setTimeout(()=>{LAST_ISSUE=null;},15*60*1000);   // ล้างรหัสออกจากหน่วยความจำหลัง 15 นาที
   out.innerHTML=`<div class="small" style="margin-top:10px">${label}</div><div class="keyout">${esc(pin)}</div>`+
    `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="mini" onclick="sendIssuedLine()">💬 ส่งรหัสทางไลน์</button><button class="mini ghost" onclick="copyIssued()">📋 คัดลอกข้อความ</button></div>`+
-   `<div class="small" style="margin-top:6px">ข้อความมีรหัสผ่านจริง ควรส่งในแชทส่วนตัวกับผู้ใช้คนนั้นเท่านั้น ห้ามส่งในกลุ่ม</div>`;
+   `<div class="small" style="margin-top:6px">ข้อความนี้มีรหัสผ่านจริง ส่งในแชทส่วนตัวกับผู้ใช้คนนั้นเท่านั้นนะ อย่าส่งในกลุ่ม</div>`;
 }
 function copyText(text){
   try{if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(text).then(()=>true,()=>false);}catch(e){}
@@ -2467,16 +2640,16 @@ function copyIssued(){
 async function genKey(){
   const u=clean(document.getElementById('agUser').value);
   const out=document.getElementById('keyResult');
-  if(!/^[A-Za-z0-9ก-๙_.\-]{2,30}$/.test(u)){toast('⚠️ ชื่อผู้ใช้ 2–30 ตัว (ตัวอักษร ตัวเลข _ . -)');return;}
+  if(!/^[A-Za-z0-9ก-๙_.\-]{2,30}$/.test(u)){toast('⚠️ ชื่อผู้ใช้ต้องยาว 2–30 ตัว ใช้ตัวอักษร ตัวเลข _ . - ได้นะ');return;}
   const note=clean(document.getElementById('agNote').value),expRaw=String(document.getElementById('agExp').value||'').trim();
   let exp=null;
   if(expRaw){exp=parseDMY(expRaw);if(!exp){toast('⚠️ วันหมดอายุไม่ถูกต้อง ใช้รูปแบบ DD/MM/YYYY เช่น 31/12/'+new Date().getFullYear());return;}
     if(exp<toISO(new Date())){toast('⚠️ วันหมดอายุต้องไม่ย้อนหลัง');return;}}
   try{
     const r=await rpc(ADMIN_RPC.create,{p_token:TOKEN,p_user:u,p_note:note,p_expire:exp});
-    if(r&&r.ok===false){out.innerHTML='<div class="err">❌ '+esc(r.code==='exists'?'มีชื่อผู้ใช้นี้อยู่แล้ว':r.code==='badname'?'ชื่อผู้ใช้ไม่ถูกต้อง (ห้ามขึ้นต้นด้วย __)':(r.message||'สร้างรหัสไม่สำเร็จ'))+'</div>';return;}
+    if(r&&r.ok===false){out.innerHTML='<div class="err">❌ '+esc(r.code==='exists'?'มีชื่อผู้ใช้นี้อยู่ในระบบแล้ว':r.code==='badname'?'ชื่อผู้ใช้ไม่ถูกต้อง (ห้ามขึ้นต้นด้วย __)':(r.message||'สร้างรหัสไม่สำเร็จ'))+'</div>';return;}
     const pin=r&&(r.pin||r.key);
-    if(pin)showIssued(out,'รหัสของ <b>'+esc(u)+'</b> — แสดงครั้งเดียว จดไว้หรือส่งไลน์ก่อนปิดหน้านี้',u,pin,exp);else out.innerHTML='<div class="ok">✅ สร้างผู้ใช้แล้ว</div>';
+    if(pin)showIssued(out,'รหัสผ่านเริ่มต้นของ <b>'+esc(u)+'</b> — แสดงครั้งเดียวเท่านั้น จดไว้หรือส่งไลน์ก่อนปิดหน้านี้นะ',u,pin,exp);else out.innerHTML='<div class="ok">✅ สร้างผู้ใช้แล้ว</div>';
     document.getElementById('agUser').value='';document.getElementById('agNote').value='';document.getElementById('agExp').value='';
     renderKeyList();
   }catch(e){out.innerHTML='<div class="err">⚠️ '+esc(e.message)+'</div>';}
@@ -2486,14 +2659,14 @@ async function keyAction(i,act){
   try{
     if(act==='renew'){openRenew(i);return;}
     if(act==='reset'){
-      if(!confirm('รีเซ็ตรหัสของ "'+nm+'" ? รหัสเดิมจะใช้ไม่ได้ทันที'))return;
+      if(!confirm('รีเซ็ตรหัสของ "'+nm+'" ใช่ไหม? รหัสเดิมจะใช้ไม่ได้ทันที และเครื่องที่เข้าสู่ระบบอยู่จะถูกออกจากระบบ'))return;
       const r=await rpc(ADMIN_RPC.reset,{p_token:TOKEN,p_user:nm});
       if(r&&r.ok===false){out.innerHTML='<div class="err">❌ '+esc(r.code==='notfound'?'ไม่พบผู้ใช้นี้':'รีเซ็ตรหัสไม่สำเร็จ')+'</div>';return;}
       const pin=r&&(r.pin||r.key);
-      if(pin)showIssued(out,'รหัสใหม่ของ <b>'+esc(nm)+'</b> — แสดงครั้งเดียว',nm,pin,kExp(u));else out.innerHTML='<div class="ok">✅ รีเซ็ตแล้ว</div>';
+      if(pin)showIssued(out,'รหัสใหม่ของ <b>'+esc(nm)+'</b> — แสดงครั้งเดียวเท่านั้น',nm,pin,kExp(u));else out.innerHTML='<div class="ok">✅ รีเซ็ตแล้ว</div>';
     }else if(act==='status'){
       const rs=await rpc(ADMIN_RPC.status,{p_token:TOKEN,p_user:nm,p_active:kSusp(u)});if(rs&&rs.ok===false){toast('⚠️ ไม่พบผู้ใช้นี้');return;}
-      toast(kSusp(u)?'▶️ เปิดใช้งาน '+nm:'⏸️ ระงับ '+nm);
+      toast(kSusp(u)?'▶️ เปิดให้ '+nm+' ใช้งานแล้ว':'⏸️ พักการใช้งานของ '+nm+' แล้ว');
     }else if(act==='remove'){
       if(!confirm('ลบผู้ใช้ "'+nm+'" และดวงที่บันทึกไว้ทั้งหมด?\nเข้าใช้ล่าสุด: '+lastSeenInfo(u).plain+'\nย้อนกลับไม่ได้'))return;
       const rd=await rpc(ADMIN_RPC.remove,{p_token:TOKEN,p_user:nm});if(rd&&rd.ok===false){toast('⚠️ ไม่พบผู้ใช้นี้');return;}toast('🗑️ ลบ '+nm+' แล้ว');
@@ -2522,14 +2695,14 @@ async function doRenew(i,opt){
     if(r&&r.ok===false){const m={notfound:'ไม่พบผู้ใช้นี้',baddate:'วันที่ต้องไม่ย้อนหลัง และไม่เกิน 10 ปีจากวันนี้',baddays:'จำนวนวันต้องอยู่ระหว่าง 1–3650',bad:'ข้อมูลไม่ครบ'}[r.code]||'ต่ออายุไม่สำเร็จ';out.innerHTML='<div class="err" style="margin-top:10px">❌ '+esc(m)+'</div>';return;}
     const exp=r&&r.expire?String(r.expire).slice(0,10):'';LAST_NOTICE={name:nm,exp};
     out.innerHTML=`<div class="ok" style="margin-top:10px">✅ ต่ออายุ <b>${esc(nm)}</b> แล้ว — ใช้ได้ถึง <b>${exp?esc(thDate(exp)):'ไม่มีกำหนด'}</b></div>`+
-     (r&&r.active===false?'<div class="small" style="margin-top:6px">⚠️ ผู้ใช้นี้ยังถูก "ระงับ" อยู่ ต่ออายุแล้วแต่ยังเข้าใช้งานไม่ได้ จนกว่าจะกด ▶️ เปิดใช้</div>':'')+
+     (r&&r.active===false?'<div class="small" style="margin-top:6px">⚠️ ผู้ใช้นี้ยังอยู่ในสถานะ “พักใช้งาน” ต่ออายุแล้วแต่ยังเข้าใช้ไม่ได้ จนกว่าจะกด ▶️ เปิดใช้</div>':'')+
      `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="mini" onclick="sendNoticeLine()">💬 แจ้งผู้ใช้ทางไลน์</button><button class="mini ghost" onclick="copyNotice()">📋 คัดลอกข้อความ</button></div>`;
     renderKeyList();
   }catch(e){out.innerHTML='<div class="err" style="margin-top:10px">⚠️ '+esc(e.message)+'</div>';}
 }
 function noticeText(){
-  const I=LAST_NOTICE;if(!I)return '';let url='';try{if(/^https?:/.test(location.origin))url=location.origin+location.pathname;}catch(e){}
-  return ['✅ ต่ออายุการใช้งาน BaZi Precision Navigator แล้ว','ชื่อผู้ใช้: '+I.name,'ใช้ได้ถึง: '+(I.exp?thDate(I.exp):'ไม่มีกำหนด'),url?'เข้าใช้งานที่: '+url:'','(ใช้รหัสผ่านเดิมของคุณได้ตามปกติ)'].filter(Boolean).join('\n');
+  const I=LAST_NOTICE;if(!I)return '';const url=appUrl();
+  return ['✅ ต่ออายุการใช้งาน BaZi Precision Navigator ให้เรียบร้อยแล้ว','ชื่อผู้ใช้: '+I.name,'ใช้ได้ถึง: '+(I.exp?thDate(I.exp):'ไม่มีกำหนด'),url?'เข้าใช้งานที่: '+url:'','(ใช้รหัสผ่านเดิมเข้าสู่ระบบได้ตามปกติ)'].filter(Boolean).join('\n');
 }
 function sendNoticeLine(){const t=noticeText();if(!t)return;window.open('https://line.me/R/msg/text/?'+encodeURIComponent(t),'_blank','noopener');toast('💬 กำลังเปิดไลน์ เลือกแชทของผู้ใช้เพื่อส่ง');}
 function copyNotice(){const t=noticeText();if(!t)return;copyText(t).then(ok=>toast(ok?'📋 คัดลอกข้อความแล้ว':'⚠️ คัดลอกไม่ได้'));}
@@ -2554,8 +2727,8 @@ function tbxInit(){
  const dEnd=Math.max(iD,kids.indexOf(top('wk')),kids.indexOf(top('dailyBox')));
  const dyn=kids.slice(iD,dEnd+1);
  const bar=document.createElement('div');bar.id='tbxBar';bar.className='tbbar';
- bar.innerHTML=`<button data-t="static" onclick="tbxSwitch('static')">📌 ดวงกำเนิด<small>โครงสร้าง · ลัคนา · ดวงโคจร · 9 มิติ</small></button>`+
-  `<button data-t="daily" onclick="tbxSwitch('daily')">📅 วันจร 7 วัน<small>ตรวจวัน · สี · กิจกรรม</small></button>`+
+ bar.innerHTML=`<button data-t="static" onclick="tbxSwitch('static')">📌 ดวงกำเนิด<small>ธาตุ · ลัคนา · จังหวะ 10 ปี · 9 ด้าน</small></button>`+
+  `<button data-t="daily" onclick="tbxSwitch('daily')">📅 7 วันข้างหน้า<small>วันดี-วันระวัง · สี · สิ่งที่ควรทำ</small></button>`+
   `<button data-t="month" onclick="tbxSwitch('month')">🌙 ดวงรายเดือน<small>ภาพรวม 8 ด้าน · ดาวจร</small></button>`;
  const mk=id=>{const p=document.createElement('div');p.id=id;p.className='tbpane';return p;};
  const pS=mk('tbxStatic'),pD=mk('tbxDaily'),pM=mk('tbxMonth');
@@ -2604,11 +2777,24 @@ document.addEventListener('copy',e=>{const t=(e.target.tagName||'').toUpperCase(
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncToday();});
   window.addEventListener('focus',syncToday);
   setInterval(syncToday,60000);
+  refreshInstallUI();
+  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+    // service worker ทำให้ Android ติดตั้งเป็นแอปจริง (WebAPK) ได้ ไม่ใช่แค่ทางลัดไปหน้าเว็บ
+    navigator.serviceWorker.register('sw.js').catch(e=>console.warn('service worker ไม่ทำงาน',e));
+  }
   await restoreSession();
 })();
 </script>
 <!--
-CHANGELOG (รอบตรวจสอบนี้)
+CHANGELOG (รอบล่าสุด)
+1. ภาษาในแอปทั้งหมดปรับให้เป็นธรรมชาติขึ้น: ข้อความล็อกอิน/แจ้งเตือน, อ่านดวง, วันจร, 9 ด้าน, แผงแอดมิน, ข้อความไลน์ — ลดศัพท์จีนในคำอธิบายและใช้คำเรียกเดียวกันทั้งแอป (ธาตุที่หนุนคุณ / ธาตุที่ควรลด / วันนี้ชนกับตัวคุณ)
+2. ผู้ใช้เปลี่ยนรหัสผ่านเองได้ (ปุ่ม “เปลี่ยนรหัสผ่าน”) + แจ้งเตือนเบา ๆ ให้ตั้งรหัสเองถ้ายังใช้รหัสที่แอดมินออกให้ · ต้องรันไฟล์ SQL ล่าสุดใน Supabase
+3. ฟอนต์ Sarabun ทั้งแอป (รวมปุ่ม/ช่องกรอก/หัวข้อ) · Noto Serif TC เหลือไว้เฉพาะตัวอักษรจีนในเสาทั้งสี่
+4. favicon + ไอคอนหน้าจอโฮม iOS (apple-touch-icon) ใช้ icon.png
+5. ติดตั้งเป็นแอปบน Android ได้จริง (manifest.json + sw.js + ไอคอน) และมีปุ่ม “ติดตั้งแอป”; ลิงก์ที่ส่งทางไลน์ใส่ openExternalBrowser เพื่อเปิดนอกเบราว์เซอร์ในไลน์
+[แก้บั๊ก] ดวงบางแบบ (เช่น เกิด 23/12/2019) ทำให้ “ธาตุที่ควรลด” ว่าง แล้วหน้าวิเคราะห์ล่มทั้งหน้า → ใส่ค่าสำรอง · แก้คำผิดในคำอธิบายลัคนาพิจิก · คำว่า “ดิถีดิถี…” ซ้ำในหัวข้อการเงิน
+
+CHANGELOG (รอบตรวจสอบก่อนหน้า)
 [ร้ายแรง]
 1. SyntaxError 4 จุด (วงเล็บ/เครื่องหมายผิดใน applyProvince, currentLatLon, lfCtx, lifeCardHTML) → สคริปต์ทั้งไฟล์ไม่ทำงาน
 2. sunLon() ใช้ epoch ผิด คลาด ~36 ชม. → เสาเดือน/ปี/ดวงโคจรของคนเกิดใกล้ต้นเดือนจีน (節) ผิด ตอนนี้คลาด < 15 นาที

@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "BaZi Precision Navigator",
+  "short_name": "BaZi",
+  "description": "อ่านดวงชะตาจีน-ไทยแบบเข้าใจง่าย",
+  "lang": "th",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#060d1b",
+  "theme_color": "#060d1b",
+  "categories": ["lifestyle", "utilities"],
+  "icons": [
+    { "src": "icon.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

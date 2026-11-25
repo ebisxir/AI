@@ -321,7 +321,7 @@ table.raw td:last-child{text-align:right;font-variant-numeric:tabular-nums;color
 <nav class="stepper" id="stepper">
   <div data-s="1" class="on">📋 เตรียมตัว</div>
   <div data-s="2">📸 สแกนใบหน้า</div>
-  <div data-s="3">💎 ผลและรูทีน</div>
+  <div data-s="3">💎 ผลลัพธ์และผลิตภัณฑ์ที่แนะนำ</div>
 </nav>
 
 <main>
@@ -559,10 +559,10 @@ table.raw td:last-child{text-align:right;font-variant-numeric:tabular-nums;color
    ===================================================================== */
 const CONFIG = {
   workWidth: 460, burstFrames: 3, burstGapMs: 140, minEyeSharp: 8, stableLoops: 8,
-  T: { glow: 4, oil: 9, flake: 4, dark: 5, red: 3.5, vFine: 2.0, vCoarse: 3.5 },
+  T: { glow: 4, oil: 9, flake: 4, dark: 3.2, red: 3.0, vFine: 2.0, vCoarse: 3.5 },
   ranges: {
     rough:[1.3,3.6], flake:[0.004,0.04], oil:[0.01,0.09],
-    darkFrac:[0.002,0.035], darkCount:[2,25], redFrac:[0.002,0.03], redCount:[1,14], aStd:[1.4,4.5],
+    darkFrac:[0.0015,0.025], darkCount:[2,18], redFrac:[0.0015,0.025], redCount:[1,12], aStd:[1.4,4.5],
     droop:[-0.004,0.025], nasoShadow:[0.03,0.15], underShadow:[0.03,0.17], jawRatio:[0.80,0.93],
     wrinkle:[0.01,0.14], evenness:[1.2,4.2], chroma:[20,10]
   },
@@ -872,7 +872,7 @@ function analyzeFrame(src,lms,kind='front'){
   // ---- จุดด่างดำ / รอยแดง / สิว
   const dk=new Uint8Array(N), rd=new Uint8Array(N);
   for(const i of skinAll){ if(G2[i]-G12[i]<-T.dark&&L[i]>10) dk[i]=1; if(aG2[i]-aG12[i]>T.red) rd[i]=1; }
-  const minA=Math.max(3,Math.PI*(0.004*faceW)**2), maxA=Math.PI*(0.045*faceW)**2;
+  const minA=Math.max(2,Math.PI*(0.0028*faceW)**2), maxA=Math.PI*(0.045*faceW)**2;
   const dc=components(dk,W,H,minA,maxA), rc=components(rd,W,H,minA,maxA);
   const darkFrac=skinAll.length?dc.area/skinAll.length:NaN, redFrac=skinAll.length?rc.area/skinAll.length:NaN;
   const aStd=statsF(skinAll,i=>aG2[i]-aG12[i]).std;

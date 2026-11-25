@@ -8,14 +8,14 @@
 <title>ARTISTRY Skin Analysis — วิเคราะห์ผิวหน้า 5 มิติ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Serif+Thai:wght@500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --ink:#0a1424;--ink-2:#14284a;--gold:#c8a15a;--gold-2:#e8d3a1;--gold-3:#f7eed8;--gold-d:#8f6a25;
   --text:#1b2330;--muted:#6d7280;--line:#eadfc8;--bg:#f7f2e9;--card:#fffdf9;
   --ok:#12a150;--good:#5aa83c;--mid:#d99a00;--low:#e8762c;--bad:#d64545;
   --r:22px;--sh:0 1px 2px rgba(60,40,10,.04),0 12px 32px rgba(60,40,10,.08);
-  --serif:'Noto Serif Thai','Cormorant Garamond',serif;--disp:'Cormorant Garamond','Noto Serif Thai',serif;
+  --serif:'Sarabun',system-ui,sans-serif;--disp:'Sarabun',system-ui,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:'Sarabun',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
@@ -248,8 +248,13 @@ main{max-width:980px;margin:0 auto;padding:16px 16px calc(40px + env(safe-area-i
 .tier-h{display:flex;flex-direction:column;margin-bottom:8px}
 .tier-h b{font-family:var(--serif);font-size:16.5px;color:var(--ink)}
 .tier-h small{color:var(--muted);font-size:13px}
-.pick{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:14px;border:1.5px solid var(--line);border-radius:16px;cursor:pointer;margin-bottom:8px;background:#fff;transition:.2s}
-.pick:has(input:checked){border-color:var(--gold);background:linear-gradient(135deg,#fffaf0,#fff);box-shadow:0 4px 14px rgba(200,161,90,.18)}
+.pickrow{border:1.5px solid var(--line);border-radius:16px;margin-bottom:8px;background:#fff;transition:.2s;overflow:hidden}
+.pickrow:has(input:checked){border-color:var(--gold);background:linear-gradient(135deg,#fffaf0,#fff);box-shadow:0 4px 14px rgba(200,161,90,.18)}
+.pick{position:relative;display:grid;grid-template-columns:28px 1fr;gap:12px;padding:14px;cursor:pointer}
+.alt{display:flex;align-items:center;gap:10px;padding:0 14px 14px 54px;flex-wrap:wrap}
+.alt span{font-size:12.5px;color:var(--muted);font-weight:600;white-space:nowrap}
+.alt select{flex:1;min-width:220px;max-width:100%;font-family:inherit;font-size:14px;padding:10px 36px 10px 12px;border:1.5px solid var(--gold-2);border-radius:12px;color:var(--ink);cursor:pointer;-webkit-appearance:none;appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c8a15a' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center/14px}
+.alt select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,161,90,.2)}
 .pick input{position:absolute;opacity:0;pointer-events:none}
 .pick .bx{width:24px;height:24px;border-radius:8px;border:2px solid #d8cdb4;display:grid;place-items:center;margin-top:2px;transition:.2s;background:#fff}
 .pick input:checked + .bx{background:linear-gradient(135deg,#e8d3a1,#c8a15a);border-color:#a77c33}
@@ -1063,7 +1068,7 @@ const ROLE = {
 };
 const SUB_EMO = { A:'🫧', B1:'💦', B2:'💎', B3:'🧪', B4:'🧴', B5:'🎭', B6:'👁️', B7:'☀️' };
 const TIER = {
-  1:{ e:'⭐', t:'ควรมีก่อน',       d:'พื้นฐานที่จำเป็นที่สุด ทำความสะอาด บำรุง และปกป้องผิว' },
+  1:{ e:'⭐', t:'ชุดเริ่มต้น',       d:'พื้นฐานที่จำเป็นที่สุด ทำความสะอาด บำรุง และปกป้องผิว' },
   2:{ e:'💎', t:'เสริมผลตรงจุด',   d:'ตอบโจทย์ปัญหาผิวที่ตรวจเจอของคุณโดยเฉพาะ' },
   3:{ e:'👑', t:'เติมความพิเศษ',   d:'ใช้เพิ่มเมื่อพร้อม ช่วยให้เห็นผลชัดและเร็วขึ้น' }
 };
@@ -1129,7 +1134,7 @@ function collectItems(rt,res){
   const feed=arr=>arr.forEach(st=>{
     const key=(st.p.alias&&map.has(st.p.alias))?st.p.alias:st.p.id;
     if(map.has(key)) return;
-    map.set(key,{ p:st.p, role:st.role, tier:tierOf(st.role,res) });
+    map.set(key,{ key, p:st.p, orig:st.p, role:st.role, tier:tierOf(st.role,res) });
   });
   feed(rt.am); feed(rt.pm); feed(rt.wk);
   return [...map.values()].sort((a,b)=>a.tier-b.tier);
@@ -1470,6 +1475,7 @@ function applyPreset(k){
 }
 
 function renderRoutine(){
+  SWAP={};
   const rt=buildRoutine(RESULT,OPT);
   CUR={ rt, items:collectItems(rt,RESULT) };
   applyPreset(SUM.preset==='custom'?'rec':SUM.preset);
@@ -1496,25 +1502,53 @@ function renderRoutine(){
 }
 
 /* ---------- แผงสรุปชุดที่ควรใช้ ---------- */
-function selectedItems(){ return (CUR.items||[]).filter(it=>SUM.sel.has(it.p.id)); }
-function seqOf(arr){ return arr.filter(st=>inSel(st,SUM.sel)).map(st=>`${ROLE[st.role].s} ${st.p.code}`); }
+let SWAP={};   // รหัสสินค้าที่แนะนำ → รหัสสินค้าที่ผู้ใช้เลือกแทน
+const curP = p => (SWAP[p.id]&&CATALOG.find(x=>x.id===SWAP[p.id]))||p;
+const ROLE_FILTER={
+  cleanser:p=>p.sub==='A'&&p.cat==='cleanser', remover:p=>p.sub==='A'&&p.cat==='remover',
+  toner:p=>p.sub==='B1', serum:p=>p.sub==='B2', special:p=>p.sub==='B3', eye:p=>p.sub==='B6',
+  moist:p=>p.sub==='B4'&&!p.day, sun:p=>p.sub==='B7', mask:p=>p.sub==='B5'
+};
+/* คะแนนความเหมาะสม ใช้สูตรเดียวกับแคตตาล็อกผลิตภัณฑ์ */
+function catScore(p,rt){
+  return Math.max(0.01, matchRaw(p,rt.ctx.n)+(p.fit?(p.fit.includes(rt.type)?.25:-.15):0)+(p.remover?(rt.ctx.heavy?p.remover.heavy:p.remover.light)*.5:0));
+}
+const ALT_MIN=65; // % เทียบกับตัวที่เหมาะที่สุดในกลุ่มเดียวกัน
+function altsFor(it,rt){
+  const group=CATALOG.filter(ROLE_FILTER[it.role]).map(p=>({p,s:catScore(p,rt)})).sort((a,b)=>b.s-a.s);
+  const max=group[0].s;
+  return group.map(x=>({p:x.p,pct:Math.round(x.s/max*100)})).filter(x=>x.pct>=ALT_MIN||x.p.id===it.orig.id);
+}
+function viewItems(){ return (CUR.items||[]).map(it=>({...it,p:curP(it.orig)})); }
+function selectedItems(){ return viewItems().filter(it=>SUM.sel.has(it.key)); }
+function seqOf(arr,part){
+  return arr.filter(st=>inSel(st,SUM.sel)).map(st=>({st,p:curP(st.p)}))
+    .filter(x=>!(part==='am'&&x.st.role==='special'&&x.p.pmOnly))
+    .map(x=>`${ROLE[x.st.role].s} ${x.p.code}`);
+}
 
 function renderSummary(){
-  const items=CUR.items||[], rt=CUR.rt; if(!rt) return;
+  const items=viewItems(), rt=CUR.rt; if(!rt) return;
   const cnt=t=>items.filter(i=>i.tier<=t).length;
   const presets=[['start','ชุดเริ่มต้น',cnt(1)],['rec','ชุดแนะนำ',cnt(2)],['full','ครบสูตร',items.length]];
   let h=`<div class="seg" id="presetSeg">${presets.map(([k,t,n])=>`<button data-p="${k}" class="${SUM.preset===k?'on':''}">${t} · ${n}</button>`).join('')}</div>`;
+  h+=`<p class="note" style="margin-top:12px">ทุกรายการมีตัวเลือก 🔁 ให้เปลี่ยนเป็นรุ่นอื่นในกลุ่มเดียวกันที่เหมาะกับผิวคุณใกล้เคียงกัน (เปอร์เซ็นต์เทียบกับตัวที่เหมาะที่สุดในกลุ่ม ตามแคตตาล็อกด้านล่าง) มีทั้งรุ่นทั่วไปและไลน์พรีเมียม 👑</p>`;
   for(const t of [1,2,3]){
     const g=items.filter(i=>i.tier===t); if(!g.length) continue;
     h+=`<div class="tier"><div class="tier-h"><b>${TIER[t].e} ${TIER[t].t}</b><small>${TIER[t].d}</small></div>`+
-      g.map(it=>`<label class="pick"><input type="checkbox" data-id="${it.p.id}"${SUM.sel.has(it.p.id)?' checked':''}><span class="bx"></span><div>
-        <div class="p-name"><span class="code ${it.p.grp}">${it.p.code}</span>${it.p.name}</div>
-        <div class="p-meta">${ROLE[it.role].e} ${ROLE[it.role].s}${it.p.sku?` · รหัส ${it.p.sku}`:''}${it.p.size?` · ${it.p.size}`:''}</div>
-        <div class="p-why">${ICON.spark}<span>${why(it.p,rt)}</span></div></div></label>`).join('')+`</div>`;
+      g.map(it=>{
+        const alts=altsFor(it,rt);
+        return `<div class="pickrow"><label class="pick"><input type="checkbox" data-id="${it.key}"${SUM.sel.has(it.key)?' checked':''}><span class="bx"></span><div>
+          <div class="p-name"><span class="code ${it.p.grp}">${it.p.code}</span>${it.p.name}${it.p.premium?' 👑':''}</div>
+          <div class="p-meta">${ROLE[it.role].e} ${ROLE[it.role].s}${it.p.sku?` · รหัส ${it.p.sku}`:''}${it.p.size?` · ${it.p.size}`:''}</div>
+          <div class="p-why">${ICON.spark}<span>${why(it.p,rt)}</span></div>
+          ${it.p.note?`<div class="p-note">${it.p.note}</div>`:''}</div></label>
+          ${alts.length>1?`<div class="alt"><span>🔁 เลือกรุ่นอื่น</span><select data-key="${it.key}" aria-label="เลือกรุ่นอื่นของ ${ROLE[it.role].s}">${alts.map(a=>`<option value="${a.p.id}"${a.p.id===it.p.id?' selected':''}>${a.p.id===it.orig.id?'⭐ แนะนำ · ':''}${a.p.premium?'👑 ':''}${a.p.code} · ${a.p.name} (${a.pct}%)</option>`).join('')}</select></div>`:''}</div>`;
+      }).join('')+`</div>`;
   }
   const n=SUM.sel.size, dis=n?'':' disabled';
   h+=`<div class="sel-sum"><div><b>${n}</b> จาก ${items.length} ชิ้น<small>ติ๊กเพิ่มหรือเอาออกได้ตามต้องการ</small></div><div style="font-size:30px">🛍️</div></div>`;
-  const am=seqOf(rt.am), pm=seqOf(rt.pm), wk=seqOf(rt.wk);
+  const am=seqOf(rt.am,'am'), pm=seqOf(rt.pm,'pm'), wk=seqOf(rt.wk,'wk');
   if(n) h+=`<div class="seqbox">${am.length?`<div>☀️ <b>เช้า</b> · ${am.join(' → ')}</div>`:''}${pm.length?`<div>🌙 <b>กลางคืน</b> · ${pm.join(' → ')}</div>`:''}${wk.length?`<div>🗓️ <b>รายสัปดาห์</b> · ${wk.join(' · ')}</div>`:''}<div>💡 กันแดดทุกเช้า และใช้สม่ำเสมออย่างน้อย 4–6 สัปดาห์ จึงจะเห็นความต่างชัด</div></div>`;
   h+=`<div class="btn-row"><button class="btn line" data-act="line"${dis}>💬 ส่งผลทาง LINE</button><button class="btn sec" data-act="copy"${dis}>📋 คัดลอกข้อความ</button></div>`;
   $('#summary').innerHTML=h;
@@ -1532,7 +1566,7 @@ function buildLineText(){
   L.push('');
   L.push(`🛍️ ชุดที่เลือก ${chosen.length} ชิ้น`);
   chosen.forEach((it,i)=>L.push(`${i+1}. ${it.p.name}${it.p.sku?` (รหัส ${it.p.sku})`:''}`));
-  const am=seqOf(rt.am), pm=seqOf(rt.pm), wk=seqOf(rt.wk);
+  const am=seqOf(rt.am,'am'), pm=seqOf(rt.pm,'pm'), wk=seqOf(rt.wk,'wk');
   L.push('');
   if(am.length) L.push(`☀️ เช้า: ${am.join(' → ')}`);
   if(pm.length) L.push(`🌙 กลางคืน: ${pm.join(' → ')}`);
@@ -1654,6 +1688,12 @@ $('#summary').addEventListener('click',async e=>{
   }
 });
 $('#summary').addEventListener('change',e=>{
+  const sl=e.target.closest('select[data-key]');
+  if(sl){
+    const it=CUR.items.find(x=>x.key===sl.dataset.key);
+    if(it){ if(sl.value===it.orig.id) delete SWAP[it.orig.id]; else SWAP[it.orig.id]=sl.value; }
+    renderSummary(); return;
+  }
   const cb=e.target.closest('input[data-id]'); if(!cb) return;
   if(cb.checked) SUM.sel.add(cb.dataset.id); else SUM.sel.delete(cb.dataset.id);
   SUM.preset='custom'; renderSummary();

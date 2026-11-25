@@ -3,37 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0f2742">
+<meta name="theme-color" content="#0a1424">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>ARTISTRY Skin Analysis — วิเคราะห์ผิวหน้า 5 มิติ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Serif+Thai:wght@500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --navy:#0f2742;--teal:#0e7c7b;--teal-2:#14a3a1;--teal-50:#e8f5f4;
-  --text:#1d2939;--muted:#667085;--line:#e4e7ec;--bg:#f3f5f8;--card:#fff;
+  --ink:#0a1424;--ink-2:#14284a;--gold:#c8a15a;--gold-2:#e8d3a1;--gold-3:#f7eed8;--gold-d:#8f6a25;
+  --text:#1b2330;--muted:#6d7280;--line:#eadfc8;--bg:#f7f2e9;--card:#fffdf9;
   --ok:#12a150;--good:#5aa83c;--mid:#d99a00;--low:#e8762c;--bad:#d64545;
-  --r:20px;--sh:0 1px 2px rgba(16,24,40,.04),0 6px 24px rgba(16,24,40,.06);
+  --r:22px;--sh:0 1px 2px rgba(60,40,10,.04),0 12px 32px rgba(60,40,10,.08);
+  --serif:'Noto Serif Thai','Cormorant Garamond',serif;--disp:'Cormorant Garamond','Noto Serif Thai',serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:'Sarabun',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(120% 40% at 50% 0%,#fbf6ea 0%,var(--bg) 60%)}
 button{font-family:inherit}
+.hidden{display:none!important}
 .i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 
 /* ---------- App bar & stepper ---------- */
-.appbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 20px 10px;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:10px}
-.mark{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;display:grid;place-items:center;font-weight:700;font-size:17px}
-.brand b{display:block;font-size:14px;letter-spacing:.24em;color:var(--navy);line-height:1.15}
-.brand small{display:block;font-size:12px;color:var(--muted);letter-spacing:.03em}
-.secure{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--teal);background:var(--teal-50);padding:6px 12px;border-radius:99px;font-weight:600}
-.secure .i{width:15px;height:15px}
+.appbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 20px 10px;background:rgba(10,20,36,.94);backdrop-filter:saturate(160%) blur(14px);-webkit-backdrop-filter:saturate(160%) blur(14px);border-bottom:1px solid rgba(200,161,90,.45)}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--gold);color:var(--gold-2);display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:22px;background:radial-gradient(circle at 30% 25%,rgba(232,211,161,.18),transparent 60%)}
+.brand b{display:block;font-family:var(--disp);font-size:19px;letter-spacing:.34em;color:var(--gold-2);line-height:1.1;font-weight:600}
+.brand small{display:block;font-size:10.5px;color:#9fb0c8;letter-spacing:.32em}
+.lux-tag{font-size:12px;color:var(--gold-2);border:1px solid rgba(200,161,90,.5);padding:5px 12px;border-radius:99px;letter-spacing:.06em}
 .stepper{display:flex;gap:8px;max-width:980px;margin:14px auto 0;padding:0 16px}
 .stepper div{flex:1;font-size:12.5px;color:var(--muted);font-weight:500}
-.stepper div::before{content:'';display:block;height:4px;border-radius:99px;background:var(--line);margin-bottom:6px;transition:.3s}
-.stepper div.on{color:var(--navy);font-weight:600}
-.stepper div.on::before{background:linear-gradient(90deg,var(--navy),var(--teal))}
+.stepper div::before{content:'';display:block;height:3px;border-radius:99px;background:var(--line);margin-bottom:6px;transition:.3s}
+.stepper div.on{color:var(--ink);font-weight:600}
+.stepper div.on::before{background:linear-gradient(90deg,var(--gold-d),var(--gold),var(--gold-2))}
 
 main{max-width:980px;margin:0 auto;padding:16px 16px calc(40px + env(safe-area-inset-bottom))}
 .screen{display:none;animation:fade .35s ease}
@@ -41,15 +43,21 @@ main{max-width:980px;margin:0 auto;padding:16px 16px calc(40px + env(safe-area-i
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 /* ---------- Common ---------- */
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;margin-bottom:16px;box-shadow:var(--sh)}
-.card h2{font-size:18.5px;font-weight:700;margin:0 0 2px;color:var(--navy)}
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;margin-bottom:18px;box-shadow:var(--sh)}
+.card h2{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:19px;font-weight:700;margin:0 0 4px;color:var(--ink)}
+.card h2 .em{font-size:22px}
 .sub{font-size:14px;color:var(--muted);margin:0 0 16px}
-.seg{display:flex;background:var(--bg);padding:4px;border-radius:14px;gap:4px}
+.orn{display:flex;align-items:center;gap:10px;color:var(--gold);font-size:11px;letter-spacing:.3em;margin:2px 0 14px}
+.orn::before,.orn::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold-2),transparent)}
+.seg{display:flex;background:#f1eadc;padding:4px;border-radius:14px;gap:4px}
 .seg button{flex:1;min-width:0;border:0;background:transparent;padding:10px 6px;border-radius:10px;font-size:14.5px;font-weight:500;color:var(--muted);cursor:pointer;transition:.2s;white-space:nowrap}
-.seg button.on{background:#fff;color:var(--navy);font-weight:600;box-shadow:0 1px 3px rgba(16,24,40,.14)}
-.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:0;border-radius:14px;padding:15px 18px;font-size:16.5px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,var(--navy),#1d4b73);color:#fff;box-shadow:0 6px 18px rgba(15,39,66,.25);transition:transform .15s}
+.seg button.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(60,40,10,.15),inset 0 -2px 0 var(--gold)}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:0;border-radius:14px;padding:15px 18px;font-size:16.5px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#ecd8a6 0%,#c8a15a 55%,#a77c33 100%);color:#1c1303;box-shadow:0 8px 22px rgba(167,124,51,.35),inset 0 1px 0 rgba(255,255,255,.5);transition:transform .15s,filter .15s}
 .btn:active{transform:scale(.98)}
-.btn.sec{background:#fff;color:var(--navy);border:1.5px solid var(--line);box-shadow:none;font-size:15px}
+.btn:disabled{filter:grayscale(.7) opacity(.55);cursor:not-allowed;box-shadow:none}
+.btn.dark{background:linear-gradient(135deg,var(--ink),var(--ink-2));color:var(--gold-2);box-shadow:0 8px 22px rgba(10,20,36,.3)}
+.btn.sec{background:#fff;color:var(--ink);border:1.5px solid var(--gold-2);box-shadow:none;font-size:15px}
+.btn.line{background:linear-gradient(135deg,#17d36a,#06c755);color:#fff;box-shadow:0 8px 22px rgba(6,199,85,.3)}
 .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .status{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13.5px;color:var(--muted);margin-top:14px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--mid);animation:pulse 1.2s infinite}
@@ -57,176 +65,238 @@ main{max-width:980px;margin:0 auto;padding:16px 16px calc(40px + env(safe-area-i
 @keyframes pulse{50%{opacity:.3}}
 .note{font-size:13.5px;color:var(--muted);line-height:1.65}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:4px 11px;border-radius:99px;background:var(--bg);color:var(--text);font-weight:500}
-.chip.teal{background:var(--teal-50);color:var(--teal)}
-.chip.warn{background:#fff6e0;color:#9a6200}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:4px 12px;border-radius:99px;background:#f1eadc;color:var(--text);font-weight:500}
+.chip.gold{background:var(--gold-3);color:var(--gold-d);font-weight:600}
+.chip.warn{background:#fff3d6;color:#8a5a00}
 .chip.bad{background:#fdecec;color:#b42318}
-.chip.ok{background:#e7f7ee;color:#0b7a3e}
-.callout{display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:#eef5ff;color:#1d4b8f;font-size:13.5px;line-height:1.6;margin-top:14px}
-.callout.warn{background:#fff6e0;color:#7a4e00}
+.chip.ok{background:#e4f6ec;color:#0b7a3e}
+.callout{display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:#f1f5fb;color:#24446f;font-size:13.5px;line-height:1.6;margin-top:14px}
+.callout.warn{background:#fff3d6;color:#6f4700}
 .callout ul{margin:4px 0 0;padding-left:18px}
+.toast{position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--ink);color:var(--gold-2);padding:11px 20px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:90;border:1px solid rgba(200,161,90,.5)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
 
 /* ---------- Intro ---------- */
-.hero{position:relative;overflow:hidden;border-radius:24px;padding:30px 24px 24px;color:#fff;margin-bottom:16px;box-shadow:var(--sh);
-  background:radial-gradient(120% 140% at 100% 0%,#1f8f8c 0%,rgba(31,143,140,0) 55%),linear-gradient(135deg,#0f2742 0%,#163c5e 60%,#0e5f63 100%)}
-.hero::after{content:'';position:absolute;right:-70px;top:-70px;width:260px;height:260px;border-radius:50%;border:1px solid rgba(255,255,255,.12);box-shadow:0 0 0 34px rgba(255,255,255,.03),0 0 0 78px rgba(255,255,255,.02)}
-.eyebrow{display:inline-block;font-size:12px;letter-spacing:.18em;font-weight:600;color:#bfe7e4;background:rgba(255,255,255,.09);padding:5px 12px;border-radius:99px;margin-bottom:14px}
-.hero h1{position:relative;font-size:29px;line-height:1.35;margin:0 0 10px;font-weight:700}
-.hero p{position:relative;margin:0;color:#d4e1ec;font-size:15.5px;max-width:580px}
-.trust{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px}
-.trust div{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13);border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.5;color:#dce7f0}
-.trust .i{display:block;margin-bottom:6px;color:#8fe0da}
-.trust b{display:block;color:#fff;font-size:14px;font-weight:600}
+.hero{position:relative;overflow:hidden;border-radius:26px;padding:34px 26px 26px;color:#fff;margin-bottom:18px;box-shadow:0 18px 40px rgba(10,20,36,.28);
+  background:radial-gradient(90% 120% at 100% 0%,rgba(200,161,90,.38) 0%,rgba(200,161,90,0) 55%),radial-gradient(70% 90% at 0% 100%,rgba(30,70,120,.55) 0%,rgba(30,70,120,0) 60%),linear-gradient(140deg,#060d1a 0%,#0f2142 60%,#162f57 100%)}
+.hero::before{content:'';position:absolute;inset:10px;border-radius:19px;border:1px solid rgba(232,211,161,.35);pointer-events:none}
+.hero::after{content:'';position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;border:1px solid rgba(232,211,161,.18);box-shadow:0 0 0 30px rgba(232,211,161,.04),0 0 0 70px rgba(232,211,161,.025)}
+.eyebrow{display:inline-block;font-family:var(--disp);font-size:13px;letter-spacing:.3em;font-weight:600;color:var(--gold-2);margin-bottom:14px}
+.hero h1{position:relative;font-family:var(--serif);font-size:30px;line-height:1.4;margin:0 0 12px;font-weight:700}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,#f6e7bd,#d8b36a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{position:relative;margin:0;color:#cfd9e6;font-size:15.5px;max-width:560px}
+.trust{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:24px}
+.trust div{background:rgba(255,255,255,.06);border:1px solid rgba(232,211,161,.22);border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.5;color:#d6dfeb}
+.trust .e{display:block;font-size:22px;margin-bottom:4px}
+.trust b{display:block;color:var(--gold-2);font-size:14px;font-weight:600}
 .dims{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-.dims div{text-align:center;padding:14px 4px 12px;border-radius:14px;background:var(--bg);font-size:13.5px;font-weight:600;color:var(--navy);line-height:1.35}
-.dims span{display:grid;place-items:center;width:34px;height:34px;margin:0 auto 8px;border-radius:50%;background:#fff;color:var(--teal);font-weight:700;box-shadow:var(--sh)}
+.dims div{text-align:center;padding:14px 4px 12px;border-radius:16px;background:linear-gradient(180deg,#fffaf0,#f8f0de);border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--ink);line-height:1.35}
+.dims span{display:grid;place-items:center;width:42px;height:42px;margin:0 auto 8px;border-radius:50%;background:#fff;font-size:21px;box-shadow:var(--sh);border:1px solid var(--gold-2)}
+.field{display:grid;grid-template-columns:1fr;gap:14px}
+.field label{font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px}
+.field input[type=text]{width:100%;font-family:inherit;font-size:16px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--text);outline:none;transition:.2s}
+.field input[type=text]:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,161,90,.2)}
 .tips{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tip{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:14px;background:var(--bg);font-size:14px;line-height:1.55;color:#475467}
-.tip .ic{width:38px;height:38px;border-radius:11px;background:#fff;color:var(--teal);display:grid;place-items:center;flex:none;box-shadow:var(--sh)}
-.tip b{display:block;color:var(--navy);font-weight:600;font-size:15px}
+.tip{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:16px;background:linear-gradient(180deg,#fffaf0,#f8f0de);border:1px solid var(--line);font-size:14px;line-height:1.55;color:#4d4a42}
+.tip .ic{width:42px;height:42px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:none;box-shadow:var(--sh);font-size:22px}
+.tip b{display:block;color:var(--ink);font-weight:700;font-size:15px}
+.shotguide{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.shotguide div{text-align:center;padding:12px 4px;border-radius:14px;background:#f7f1e3;border:1px solid var(--line);font-size:13px;line-height:1.4;color:var(--ink);font-weight:600}
+.shotguide .e{display:block;font-size:24px;margin-bottom:4px}
+.shotguide small{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
+.shotguide .req small{color:var(--gold-d);font-weight:700}
+
+/* upload tiles */
+.up-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.up-tile{position:relative;aspect-ratio:4/5;border:1.5px dashed var(--gold);border-radius:16px;background:#fbf6ea center/cover no-repeat;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--ink);padding:8px;overflow:hidden}
+.up-tile .up-emo{font-size:26px}
+.up-tile b{font-size:14px}
+.up-tile small{font-size:11.5px;color:var(--muted)}
+.up-tile .up-add{margin-top:6px;font-size:12px;font-weight:700;color:var(--gold-d)}
+.up-tile.has{border-style:solid;color:#fff;justify-content:flex-end}
+.up-tile.has::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(10,20,36,.8))}
+.up-tile.has>*{position:relative;z-index:1}
+.up-tile.has small{color:#e8d3a1}
+.up-tile.has .up-emo{display:none}
+.up-x{position:absolute!important;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(10,20,36,.75);color:#fff;font-style:normal;display:grid;place-items:center;font-size:12px}
 
 /* ---------- Camera ---------- */
-#screen-camera{position:fixed;inset:0;z-index:60;background:#070d18;color:#fff;flex-direction:column;animation:none}
+#screen-camera{position:fixed;inset:0;z-index:60;background:#05080f;color:#fff;flex-direction:column;animation:none}
 #screen-camera.active{display:flex}
-.cam-top{display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 16px 12px}
-.icon-btn{width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.1);color:#fff;display:grid;place-items:center;cursor:pointer}
-.cam-title{font-weight:600;font-size:16px}
-.cam-view{position:relative;flex:1;margin:0 12px;border-radius:24px;overflow:hidden;background:#000}
+.cam-top{display:flex;justify-content:space-between;align-items:center;padding:calc(10px + env(safe-area-inset-top)) 16px 6px}
+.icon-btn{width:42px;height:42px;border-radius:50%;border:1px solid rgba(232,211,161,.35);background:rgba(255,255,255,.08);color:#fff;display:grid;place-items:center;cursor:pointer}
+.cam-title{font-family:var(--serif);font-weight:600;font-size:16px;color:var(--gold-2)}
+.shotbar{display:flex;gap:6px;justify-content:center;padding:4px 10px 8px;overflow-x:auto}
+.shotbar span{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:99px;background:rgba(255,255,255,.07);color:#8e9bb0;white-space:nowrap;border:1px solid transparent}
+.shotbar span.cur{background:rgba(200,161,90,.18);color:var(--gold-2);border-color:rgba(200,161,90,.6)}
+.shotbar span.done{background:rgba(18,161,80,.18);color:#6fe3a2}
+.cam-view{position:relative;flex:1;min-height:0;margin:0 12px;border-radius:24px;overflow:hidden;background:#000;border:1px solid rgba(232,211,161,.25)}
 .cam-view video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .mirror{transform:scaleX(-1)}
 .guide{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
-.cam-hint{position:absolute;left:50%;top:16px;transform:translateX(-50%);background:rgba(7,13,24,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:8px 18px;border-radius:99px;font-size:14.5px;font-weight:500;white-space:nowrap}
-.cam-hint.ok{background:rgba(18,161,80,.92)}
-.checks{display:flex;gap:6px;justify-content:center;padding:14px 12px 2px;flex-wrap:wrap}
-.checks span{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.08);color:#9aa6b8;transition:.2s}
+.cam-hint{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:rgba(5,8,15,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:8px 18px;border-radius:99px;font-size:14.5px;font-weight:500;white-space:nowrap;border:1px solid rgba(232,211,161,.25)}
+.cam-hint.ok{background:rgba(18,161,80,.92);border-color:transparent}
+.shot-tip{text-align:center;font-size:13.5px;color:#d6dfeb;padding:10px 16px 0;line-height:1.5}
+.shot-tip b{color:var(--gold-2)}
+.checks{display:flex;gap:6px;justify-content:center;padding:10px 12px 2px;flex-wrap:wrap}
+.checks span{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:5px 11px;border-radius:99px;background:rgba(255,255,255,.07);color:#8e9bb0;transition:.2s}
 .checks span::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor}
 .checks span.ok{background:rgba(18,161,80,.2);color:#6fe3a2}
-.cam-bottom{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:12px 22px calc(20px + env(safe-area-inset-bottom))}
-.shutter{width:76px;height:76px;border-radius:50%;border:4px solid #fff;background:transparent;padding:4px;cursor:pointer}
-.shutter i{display:block;width:100%;height:100%;border-radius:50%;background:#fff}
-.toggle{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#cfd6e1;cursor:pointer;user-select:none}
+.finish-row{display:none;justify-content:center;padding:8px 16px 0}
+.finish-row button{border:1px solid rgba(232,211,161,.6);background:rgba(200,161,90,.14);color:var(--gold-2);padding:9px 18px;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer}
+.cam-bottom{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:10px 22px calc(18px + env(safe-area-inset-bottom))}
+.shutter{width:74px;height:74px;border-radius:50%;border:3px solid var(--gold-2);background:transparent;padding:4px;cursor:pointer}
+.shutter i{display:block;width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#fff,#f0dfb4)}
+.toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:#cfd6e1;cursor:pointer;user-select:none}
 .sw{width:42px;height:24px;border-radius:99px;background:rgba(255,255,255,.22);position:relative;transition:.2s;flex:none}
 .sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
-.toggle.on .sw{background:var(--teal-2)}
+.toggle.on .sw{background:var(--gold)}
 .toggle.on .sw::after{left:21px}
+.skip{justify-self:end;border:0;background:none;color:#b9c4d6;font-size:14px;cursor:pointer;padding:10px 4px}
 
 /* ---------- Loading ---------- */
 .load{max-width:460px;margin:5vh auto 0;text-align:center}
-.scanner{width:124px;height:124px;margin:0 auto 20px;border-radius:50%;position:relative;display:grid;place-items:center;background:conic-gradient(var(--teal) 0%,var(--line) 0)}
+.scanner{width:124px;height:124px;margin:0 auto 20px;border-radius:50%;position:relative;display:grid;place-items:center;background:conic-gradient(var(--gold) 0%,var(--line) 0)}
 .scanner::after{content:'';position:absolute;inset:9px;border-radius:50%;background:#fff}
-.scanner b{position:relative;z-index:1;font-size:26px;color:var(--navy)}
+.scanner b{position:relative;z-index:1;font-family:var(--disp);font-size:30px;color:var(--ink)}
 .lsteps{text-align:left;list-style:none;padding:0;margin:18px 0 0}
-.lsteps li{display:flex;align-items:center;gap:12px;padding:11px 0;color:#98a2b3;font-size:15px;border-top:1px solid var(--line)}
+.lsteps li{display:flex;align-items:center;gap:12px;padding:11px 0;color:#a9a496;font-size:15px;border-top:1px solid var(--line)}
 .lsteps li::before{content:'';width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:none;box-sizing:border-box}
-.lsteps li.act{color:var(--navy);font-weight:600}
-.lsteps li.act::before{border-color:var(--teal);border-top-color:transparent;animation:spin .8s linear infinite}
+.lsteps li.act{color:var(--ink);font-weight:600}
+.lsteps li.act::before{border-color:var(--gold);border-top-color:transparent;animation:spin .8s linear infinite}
 .lsteps li.done{color:var(--text)}
-.lsteps li.done::before{border-color:var(--teal);background:var(--teal) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center/12px no-repeat}
+.lsteps li.done::before{border-color:var(--gold);background:var(--gold) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center/12px no-repeat}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ---------- Result ---------- */
+.res-title{font-family:var(--serif);font-size:13px;color:var(--gold-d);letter-spacing:.08em;font-weight:600;margin-bottom:12px}
 .summary{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center}
-.ring{position:relative;width:136px;height:136px}
+.ring{position:relative;width:140px;height:140px}
 .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
-.ring circle{fill:none;stroke-width:10}
-.ring .bg{stroke:#edf0f4}
+.ring circle{fill:none;stroke-width:9}
+.ring .bg{stroke:#f0e8d6}
 .ring .fg{stroke-linecap:round;transition:stroke-dasharray 1.2s ease}
 .ring .val{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
-.ring .val b{font-size:40px;line-height:1;color:var(--navy);display:block}
+.ring .val b{font-family:var(--disp);font-size:46px;line-height:1;color:var(--ink);display:block;font-weight:700}
 .ring .val small{font-size:12px;color:var(--muted)}
-.sum-title{font-size:12.5px;color:var(--muted);letter-spacing:.12em;font-weight:600}
-.sum-level{font-size:25px;font-weight:700;color:var(--navy);margin:2px 0 10px;line-height:1.35}
+.sum-title{font-size:12.5px;color:var(--gold-d);letter-spacing:.12em;font-weight:700}
+.sum-level{font-family:var(--serif);font-size:24px;font-weight:700;color:var(--ink);margin:2px 0 10px;line-height:1.4}
 .priority{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
-.prio{border-radius:14px;padding:12px 14px;background:linear-gradient(135deg,#fff7ed,#fffdf9);border:1px solid #fbe1c4}
-.prio small{color:#a15c07;font-weight:700;font-size:12px;letter-spacing:.04em}
-.prio b{display:block;color:var(--navy);font-size:15.5px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.prio{border-radius:16px;padding:13px 15px;background:linear-gradient(135deg,#fff7e6,#fffdf8);border:1px solid #efd9a8}
+.prio small{color:var(--gold-d);font-weight:700;font-size:12px;letter-spacing:.04em}
+.prio b{display:block;color:var(--ink);font-size:15.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
 .grid2 .card{margin-bottom:0}
-.photo{width:100%;border-radius:14px;display:block;background:var(--bg)}
+.photo{width:100%;border-radius:16px;display:block;background:#f1eadc}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:10px;min-height:18px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 #radar{width:100%;max-width:390px;aspect-ratio:1;display:block;margin:0 auto}
+.thumbs{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.thumbs figure{margin:0;text-align:center;font-size:12.5px;color:var(--ink);font-weight:600}
+.thumbs img,.thumbs .nop{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:14px;border:1px solid var(--gold-2);display:block;margin-bottom:6px;background:#f1eadc}
+.thumbs .nop{display:grid;place-items:center;color:#b3ab98;font-size:12px;border-style:dashed;font-weight:400}
+.thumbs figure.dim img{opacity:.35}
 .metric{padding:18px 0;border-top:1px solid var(--line)}
 .metric:first-child{border-top:0;padding-top:4px}
 .m-top{display:flex;align-items:center;gap:12px}
-.m-ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-weight:700;font-size:16px;flex:none}
+.m-ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:23px;flex:none}
 .m-name{flex:1;min-width:0}
-.m-name b{display:block;font-weight:700;color:var(--navy);font-size:16px}
+.m-name b{display:block;font-family:var(--serif);font-weight:700;color:var(--ink);font-size:16px}
 .m-name small{color:var(--muted);font-size:12.5px}
-.m-score{font-size:28px;font-weight:700;line-height:1;text-align:right}
-.m-score small{display:block;font-size:12px;font-weight:600;margin-top:4px}
-.bar{height:8px;border-radius:99px;background:#eef1f5;overflow:hidden;margin:14px 0 6px}
+.m-score{font-family:var(--disp);font-size:34px;font-weight:700;line-height:1;text-align:right}
+.m-score small{display:block;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;margin-top:4px}
+.bar{height:8px;border-radius:99px;background:#f0e8d6;overflow:hidden;margin:14px 0 6px}
 .bar i{display:block;height:100%;border-radius:99px;transition:width 1.1s ease}
-.m-foot{display:flex;justify-content:space-between;font-size:12px;color:#98a2b3}
+.m-foot{display:flex;justify-content:space-between;font-size:12px;color:#a9a496}
 .m-desc{font-size:13.5px;color:var(--muted);margin-top:10px;line-height:1.65}
-.m-tip{display:flex;gap:8px;font-size:13.5px;margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--teal-50);color:#0b5f5e;line-height:1.6}
+.m-tip{display:flex;gap:8px;font-size:13.5px;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--gold-3);color:#6b4d12;line-height:1.6}
 .m-tip .i{width:17px;height:17px;margin-top:2px}
 .aux{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.aux div{background:var(--bg);border-radius:14px;padding:14px}
+.aux div{background:linear-gradient(180deg,#fffaf0,#f8f0de);border:1px solid var(--line);border-radius:16px;padding:14px}
 .aux small{display:block;font-size:12.5px;color:var(--muted)}
-.aux b{display:block;font-size:22px;color:var(--navy);line-height:1.3}
+.aux b{display:block;font-family:var(--disp);font-size:30px;color:var(--ink);line-height:1.2}
 .aux span{font-size:12.5px;font-weight:600}
 .mk-row{display:grid;grid-template-columns:1fr 110px 42px;gap:10px;align-items:center;font-size:14px;padding:8px 0;border-top:1px solid var(--line)}
 .mk-row:first-child{border-top:0}
-.mk-row em{font-style:normal;text-align:right;font-weight:600;color:var(--navy);font-size:13px}
-.mini{height:6px;border-radius:99px;background:#eef1f5;overflow:hidden}
-.mini i{display:block;height:100%;background:linear-gradient(90deg,#e8a0b4,#c2416b)}
+.mk-row em{font-style:normal;text-align:right;font-weight:600;color:var(--ink);font-size:13px}
+.mini{height:6px;border-radius:99px;background:#f0e8d6;overflow:hidden}
+.mini i{display:block;height:100%;background:linear-gradient(90deg,#e8b4c4,#c2416b)}
 .ctrl{display:grid;grid-template-columns:1fr 1.4fr;gap:14px;margin-bottom:18px}
 .ctrl label{font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:4px}
 .tabs button{border:0;background:none;padding:10px 14px;font-size:15.5px;font-weight:600;color:var(--muted);border-bottom:2.5px solid transparent;cursor:pointer;display:flex;align-items:center;gap:7px;margin-bottom:-1px}
-.tabs button.on{color:var(--navy);border-color:var(--teal)}
-.tabs .i{width:18px;height:18px}
-.step{display:grid;grid-template-columns:32px 1fr;gap:14px;padding:16px 0;border-top:1px solid var(--line)}
+.tabs button.on{color:var(--ink);border-color:var(--gold)}
+.step{display:grid;grid-template-columns:34px 1fr;gap:14px;padding:16px 0;border-top:1px solid var(--line)}
 .step:first-child{border-top:0}
-.step-no{width:32px;height:32px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px}
-.step-lbl{font-size:12.5px;color:var(--teal);font-weight:700;letter-spacing:.03em}
-.p-name{font-weight:700;font-size:16px;color:var(--navy);line-height:1.45;margin:2px 0}
-.code{display:inline-block;font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:6px;background:var(--navy);color:#fff;margin-right:7px;vertical-align:2px;letter-spacing:.02em}
-.code.A{background:var(--teal)}
+.step-no{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--ink),var(--ink-2));color:var(--gold-2);display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:17px;border:1px solid var(--gold)}
+.step-lbl{font-size:13px;color:var(--gold-d);font-weight:700;letter-spacing:.02em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tg{font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;background:#f1eadc;color:var(--muted)}
+.tg.t1{background:#fdf1cf;color:#8a5a00}.tg.t2{background:#e8eefb;color:#2c4a8a}.tg.t3{background:#f3e8fa;color:#6b2f8f}
+.p-name{font-weight:700;font-size:16px;color:var(--ink);line-height:1.45;margin:2px 0}
+.code{display:inline-block;font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:6px;background:var(--ink);color:var(--gold-2);margin-right:7px;vertical-align:2px;letter-spacing:.02em}
+.code.A{background:var(--gold-d);color:#fff}
 .p-meta{font-size:13px;color:var(--muted)}
-.p-why{font-size:13.5px;color:#0b5f5e;margin-top:5px;display:flex;gap:6px;align-items:flex-start}
-.p-why .i{width:16px;height:16px;margin-top:3px}
-.p-note{font-size:13px;color:#7a4e00;background:#fff8e8;border-radius:8px;padding:7px 10px;margin-top:7px;line-height:1.55}
-.total{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;padding:14px 16px;border-radius:14px;background:var(--bg);font-weight:600;color:var(--navy)}
+.p-why{font-size:13.5px;color:#6b4d12;margin-top:5px;display:flex;gap:6px;align-items:flex-start}
+.p-why .i{width:16px;height:16px;margin-top:3px;color:var(--gold)}
+.p-note{font-size:13px;color:#7a4e00;background:#fff6df;border-radius:10px;padding:7px 10px;margin-top:7px;line-height:1.55}
+.total{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;padding:14px 16px;border-radius:14px;background:#f7f1e3;font-weight:600;color:var(--ink)}
 .total small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
-.total b{font-size:20px;white-space:nowrap}
 .empty{padding:18px 0;color:var(--muted);font-size:14px}
-details.cat{border:1px solid var(--line);border-radius:14px;margin-bottom:8px;overflow:hidden}
-details.cat summary{list-style:none;padding:13px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;color:var(--navy)}
+
+/* summary panel */
+.tier{margin-top:18px}
+.tier-h{display:flex;flex-direction:column;margin-bottom:8px}
+.tier-h b{font-family:var(--serif);font-size:16.5px;color:var(--ink)}
+.tier-h small{color:var(--muted);font-size:13px}
+.pick{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:14px;border:1.5px solid var(--line);border-radius:16px;cursor:pointer;margin-bottom:8px;background:#fff;transition:.2s}
+.pick:has(input:checked){border-color:var(--gold);background:linear-gradient(135deg,#fffaf0,#fff);box-shadow:0 4px 14px rgba(200,161,90,.18)}
+.pick input{position:absolute;opacity:0;pointer-events:none}
+.pick .bx{width:24px;height:24px;border-radius:8px;border:2px solid #d8cdb4;display:grid;place-items:center;margin-top:2px;transition:.2s;background:#fff}
+.pick input:checked + .bx{background:linear-gradient(135deg,#e8d3a1,#c8a15a);border-color:#a77c33}
+.pick input:checked + .bx::after{content:'';width:6px;height:11px;border:solid #1c1303;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.sel-sum{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding:16px 18px;border-radius:16px;background:linear-gradient(135deg,var(--ink),var(--ink-2));color:#fff}
+.sel-sum b{font-family:var(--disp);font-size:34px;color:var(--gold-2);margin-right:4px}
+.sel-sum small{display:block;color:#b8c4d6;font-size:12.5px}
+.seqbox{margin-top:12px;padding:14px 16px;border-radius:14px;background:#f7f1e3;font-size:13.5px;line-height:1.75;color:var(--text)}
+.seqbox div+div{margin-top:6px}
+
+details.cat{border:1px solid var(--line);border-radius:16px;margin-bottom:8px;overflow:hidden;background:#fff}
+details.cat summary{list-style:none;padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;color:var(--ink)}
 details.cat summary::-webkit-details-marker{display:none}
-details.cat summary::after{content:'+';font-size:22px;color:var(--muted);line-height:1}
+details.cat summary::after{content:'+';font-size:22px;color:var(--gold);line-height:1}
 details.cat[open] summary::after{content:'−'}
 details.cat summary small{color:var(--muted);font-weight:400}
 .cat-body{padding:0 16px 6px}
 .cat-item{display:grid;grid-template-columns:1fr 64px;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line);font-size:14.5px}
 .cat-item .nm{font-weight:600;color:var(--text)}
-.cat-item .pct{text-align:right;font-weight:700;color:var(--teal)}
+.cat-item .pct{text-align:right;font-weight:700;color:var(--gold-d)}
 .cat-item .pct .mini{margin-top:5px}
-.cat-item .pct .mini i{background:linear-gradient(90deg,var(--teal-2),var(--teal))}
-.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:6px;margin-left:6px;vertical-align:1px}
-.tag.in{background:var(--teal-50);color:var(--teal)}
-.tag.men{background:#eef2ff;color:#3b4fa8}
-.tech summary{cursor:pointer;font-weight:600;color:var(--navy)}
+.cat-item .pct .mini i{background:linear-gradient(90deg,var(--gold-2),var(--gold))}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:6px;margin-left:6px;vertical-align:1px;background:#f1eadc;color:var(--muted)}
+.tag.in{background:var(--gold-3);color:var(--gold-d)}
+.tag.men{background:#e8eefb;color:#2c4a8a}
+.tech summary{cursor:pointer;font-weight:600;color:var(--ink)}
 table.raw{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
 table.raw td{padding:6px 4px;border-top:1px solid var(--line)}
-table.raw td:last-child{text-align:right;font-variant-numeric:tabular-nums;color:var(--navy)}
+table.raw td:last-child{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
 .disclaimer{font-size:12.5px;color:var(--muted);line-height:1.75;padding:2px 6px 14px}
 
 @media (max-width:720px){
   .grid2,.ctrl,.tips,.priority{grid-template-columns:1fr}
   .trust{grid-template-columns:1fr}
   .trust div{display:flex;gap:12px;align-items:center}
-  .trust .i{margin:0}
-  .dims div{font-size:12px;padding:12px 2px 10px}
+  .trust .e{margin:0}
+  .dims div{font-size:11.5px;padding:12px 2px 10px}
+  .shotguide{grid-template-columns:repeat(3,1fr)}
+  .thumbs{grid-template-columns:repeat(3,1fr)}
   .summary{grid-template-columns:1fr;justify-items:center;text-align:center}
   .summary .chips{justify-content:center}
-  .hero h1{font-size:24px}
-  .aux b{font-size:19px}
+  .hero h1{font-size:25px}
   .card{padding:18px}
+  .lux-tag{display:none}
 }
 @media print{
-  .appbar,.stepper,.no-print,#viewSeg,.ctrl,.tabs{display:none!important}
+  .appbar,.stepper,.no-print,#viewSeg,.ctrl,.tabs,.toast{display:none!important}
   body{background:#fff}
   .card{box-shadow:none;break-inside:avoid}
   #rtAll .rt-pane{display:block!important}
@@ -236,69 +306,91 @@ table.raw td:last-child{text-align:right;font-variant-numeric:tabular-nums;color
 <body>
 
 <header class="appbar">
-  <div class="brand"><div class="mark">A</div><div><b>ARTISTRY</b><small>Skin Analysis</small></div></div>
+  <div class="brand"><div class="mark">A</div><div><b>ARTISTRY</b><small>SKIN ANALYSIS</small></div></div>
+  <span class="lux-tag">💎 รายงานผิว 5 มิติ</span>
 </header>
 <nav class="stepper" id="stepper">
-  <div data-s="1" class="on">1 · เตรียมตัว</div>
-  <div data-s="2">2 · สแกนใบหน้า</div>
-  <div data-s="3">3 · ผลวิเคราะห์และรูทีน</div>
+  <div data-s="1" class="on">📋 เตรียมตัว</div>
+  <div data-s="2">📸 สแกนใบหน้า</div>
+  <div data-s="3">💎 ผลและรูทีน</div>
 </nav>
 
 <main>
 <!-- ================= INTRO ================= -->
 <section id="screen-intro" class="screen active">
   <div class="hero">
-    <span class="eyebrow">SKIN ANALYSIS · 5 มิติ</span>
-    <h1>ดูสภาพผิวของคุณ<br>ในไม่กี่วินาที</h1>
-    <p>ถ่ายรูปหน้าด้วยมือถือ แล้วดูสภาพผิว 5 ด้าน พร้อมรูทีน ARTISTRY ที่เหมาะกับผิวคุณ</p>
+    <span class="eyebrow">✦ ARTISTRY ✦</span>
+    <h1>ดูสภาพผิวของคุณ<br><em>แบบละเอียด 5 ด้าน</em></h1>
+    <p>ถ่ายรูปหน้าด้วยมือถือ แล้วดูสภาพผิว พร้อมรูทีน ARTISTRY ที่เหมาะกับผิวของคุณ</p>
     <div class="trust">
-      <div><svg class="i" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span><b>วิเคราะห์ 5 ด้าน</b>ความชุ่มชื้น จุดด่าง ริ้วรอย และอื่น ๆ</span></div>
-      <div><svg class="i" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg><span><b>แบ่งโซนใบหน้า</b>ใช้จุดบนใบหน้า 468 จุด</span></div>
-      <div><svg class="i" viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg><span><b>รู้ว่าแต่งหน้าอยู่</b>แล้วปรับผลให้เอง</span></div>
+      <div><span class="e">🔬</span><span><b>วิเคราะห์ 5 ด้าน</b>ชุ่มชื้น จุดด่าง หย่อนคล้อย ริ้วรอย กระจ่างใส</span></div>
+      <div><span class="e">🗺️</span><span><b>แบ่งโซนใบหน้า</b>ใช้จุดบนใบหน้า 468 จุด</span></div>
+      <div><span class="e">💄</span><span><b>รู้ว่าแต่งหน้าอยู่</b>แล้วปรับผลให้เอง</span></div>
     </div>
   </div>
 
   <div class="card">
-    <h2>ดูอะไรบ้าง</h2>
+    <h2><span class="em">🌟</span>ดูอะไรบ้าง</h2>
     <p class="sub">ให้คะแนนแต่ละด้าน 0–100 ยิ่งสูงยิ่งดี</p>
     <div class="dims">
-      <div><span>1</span>ความชุ่มชื้น</div>
-      <div><span>2</span>จุดด่างดำ รอยแดง สิว</div>
-      <div><span>3</span>ความหย่อนคล้อย</div>
-      <div><span>4</span>ริ้วรอย</div>
-      <div><span>5</span>ความกระจ่างใส</div>
+      <div><span>💧</span>ความชุ่มชื้น</div>
+      <div><span>🎯</span>จุดด่างดำ รอยแดง สิว</div>
+      <div><span>🧲</span>ความหย่อนคล้อย</div>
+      <div><span>⏳</span>ริ้วรอย</div>
+      <div><span>✨</span>ความกระจ่างใส</div>
     </div>
   </div>
 
   <div class="card">
-    <h2>ข้อมูลผู้ใช้</h2>
-    <p class="sub">ใช้เลือกผลิตภัณฑ์ให้ตรงกับคุณ</p>
-    <div class="seg" id="genderSeg">
-      <button data-g="f" class="on">หญิง</button>
-      <button data-g="m">ชาย</button>
-      <button data-g="x">ไม่ระบุ</button>
+    <h2><span class="em">🪪</span>ข้อมูลผู้ใช้</h2>
+    <p class="sub">ไม่บังคับ ชื่อจะแสดงในผลและข้อความที่ส่งทาง LINE</p>
+    <div class="field">
+      <div><label for="userName">ชื่อ</label><input type="text" id="userName" placeholder="เช่น คุณสมหญิง" autocomplete="off"></div>
+      <div><label>เพศ</label>
+        <div class="seg" id="genderSeg">
+          <button data-g="f" class="on">👩 หญิง</button>
+          <button data-g="m">👨 ชาย</button>
+          <button data-g="x">ไม่ระบุ</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="card">
-    <h2>เตรียมตัวก่อนสแกน</h2>
+    <h2><span class="em">🕯️</span>เตรียมตัวก่อนสแกน</h2>
     <p class="sub">ทำตามนี้ ผลจะแม่นขึ้น</p>
     <div class="tips">
-      <div class="tip"><div class="ic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></div><div><b>แสงสว่างเท่ากันทั้งหน้า</b>หันเข้าหาหน้าต่างหรือไฟสีขาว อย่าให้แสงส้มหรือแสงส่องมาจากด้านเดียว</div></div>
-      <div class="tip"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><b>หน้าสดแม่นที่สุด</b>ถ้าแต่งหน้าอยู่ก็สแกนได้ ระบบจะปรับผลให้ แต่ความแม่นจะลดลงเล็กน้อย</div></div>
-      <div class="tip"><div class="ic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M9 15h6"/></svg></div><div><b>เปิดหน้าผาก ถอดแว่น</b>ทำหน้าเฉย ๆ ไม่ยิ้ม และให้เห็นลำคอนิดหน่อย จะได้เทียบสีผิวได้</div></div>
-      <div class="tip"><div class="ic"><svg class="i" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div><div><b>ถือมือถือระดับสายตา</b>จัดหน้าให้อยู่ในกรอบวงรี พอพร้อมแล้วระบบจะถ่ายให้เอง</div></div>
+      <div class="tip"><div class="ic">☀️</div><div><b>แสงสว่างเท่ากันทั้งหน้า</b>หันเข้าหาหน้าต่างหรือไฟสีขาว อย่าให้แสงส้มหรือแสงส่องมาจากด้านเดียว</div></div>
+      <div class="tip"><div class="ic">🫧</div><div><b>หน้าสดแม่นที่สุด</b>ถ้าแต่งหน้าอยู่ก็สแกนได้ ระบบจะปรับผลให้ แต่ความแม่นจะลดลงเล็กน้อย</div></div>
+      <div class="tip"><div class="ic">👓</div><div><b>เปิดหน้าผาก ถอดแว่น</b>ทำหน้าเฉย ๆ ไม่ยิ้ม และให้เห็นลำคอนิดหน่อย จะได้เทียบสีผิวได้</div></div>
+      <div class="tip"><div class="ic">📱</div><div><b>ถือมือถือระดับสายตา</b>จัดหน้าให้อยู่ในกรอบวงรี พอพร้อมแล้วระบบจะถ่ายให้เอง</div></div>
     </div>
   </div>
 
   <div class="card">
-    <button class="btn" id="btnStart"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h3l2-3h6l2 3h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="4"/></svg>เริ่มสแกนใบหน้า</button>
-    <div class="btn-row">
-      <button class="btn sec" id="btnNative"><svg class="i" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>กล้องของระบบ</button>
-      <button class="btn sec" id="btnUpload"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>เลือกจากคลังภาพ</button>
+    <h2><span class="em">📸</span>ภาพที่ใช้วิเคราะห์</h2>
+    <p class="sub">ถ่ายครบ 5 มุมจะแม่นที่สุด ข้ามมุมที่ไม่สะดวกได้ ยกเว้นหน้าตรง</p>
+    <div class="shotguide">
+      <div class="req"><span class="e">🙂</span>หน้าตรง<small>จำเป็น</small></div>
+      <div><span class="e">🌓</span>แก้มซ้าย<small>ไม่บังคับ</small></div>
+      <div><span class="e">🌗</span>แก้มขวา<small>ไม่บังคับ</small></div>
+      <div><span class="e">🌅</span>หน้าผาก<small>ไม่บังคับ</small></div>
+      <div><span class="e">🌙</span>คางและลำคอ<small>ไม่บังคับ</small></div>
     </div>
-    <input type="file" id="fileNative" accept="image/*" capture="user" hidden>
-    <input type="file" id="fileUpload" accept="image/*" hidden>
+  </div>
+
+  <div class="card">
+    <button class="btn" id="btnStart">📷 เริ่มสแกนด้วยกล้อง</button>
+    <div class="btn-row" style="grid-template-columns:1fr">
+      <button class="btn sec" id="btnUpload">🖼️ เลือกรูปจากคลังภาพ</button>
+    </div>
+    <div id="uploadPanel" class="hidden" style="margin-top:18px">
+      <div class="orn">✦</div>
+      <p class="sub" style="margin-bottom:12px">แตะช่องเพื่อเลือกรูป หรือเลือกหลายรูปพร้อมกัน ระบบจะเรียงใส่ช่องตามลำดับให้</p>
+      <div class="up-grid" id="upGrid"></div>
+      <button class="btn dark" id="btnAnalyze" disabled>✨ เริ่มวิเคราะห์</button>
+    </div>
+    <input type="file" id="fileUpload" accept="image/*" multiple hidden>
     <div class="status"><span class="dot" id="modelDot"></span><span id="modelStatus">กำลังโหลดตัววิเคราะห์ใบหน้า…</span></div>
   </div>
 </section>
@@ -307,26 +399,29 @@ table.raw td:last-child{text-align:right;font-variant-numeric:tabular-nums;color
 <section id="screen-camera" class="screen">
   <div class="cam-top">
     <button class="icon-btn" id="btnCancel" aria-label="ปิด"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    <div class="cam-title">วางใบหน้าให้พอดีกรอบ</div>
+    <div class="cam-title" id="camTitle">ขั้นที่ 1/5 · หน้าตรง</div>
     <button class="icon-btn" id="btnFlip" aria-label="สลับกล้อง"><svg class="i" viewBox="0 0 24 24"><path d="M20 7h-9a5 5 0 0 0 0 10h1"/><path d="M17 4l3 3-3 3"/><path d="M4 17h9a5 5 0 0 0 0-10h-1"/><path d="M7 20l-3-3 3-3"/></svg></button>
   </div>
+  <div class="shotbar" id="shotbar"></div>
   <div class="cam-view">
     <video id="video" playsinline autoplay muted></video>
     <svg class="guide" viewBox="0 0 300 400" preserveAspectRatio="xMidYMid meet">
       <defs><mask id="ovalMask" maskUnits="userSpaceOnUse" x="-1000" y="-1000" width="2300" height="2400"><rect x="-1000" y="-1000" width="2300" height="2400" fill="#fff"/><ellipse cx="150" cy="190" rx="105" ry="140" fill="#000"/></mask></defs>
-      <rect x="-1000" y="-1000" width="2300" height="2400" fill="rgba(7,13,24,.58)" mask="url(#ovalMask)"/>
-      <ellipse cx="150" cy="190" rx="105" ry="140" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2" stroke-dasharray="6 6"/>
-      <ellipse id="ovalProg" cx="150" cy="190" rx="105" ry="140" fill="none" stroke="#3ddc97" stroke-width="4.5" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" stroke-opacity="0" transform="rotate(-90 150 190)"/>
+      <rect x="-1000" y="-1000" width="2300" height="2400" fill="rgba(5,8,15,.6)" mask="url(#ovalMask)"/>
+      <ellipse cx="150" cy="190" rx="105" ry="140" fill="none" stroke="rgba(232,211,161,.55)" stroke-width="2" stroke-dasharray="6 6"/>
+      <ellipse id="ovalProg" cx="150" cy="190" rx="105" ry="140" fill="none" stroke="#e8d3a1" stroke-width="4.5" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" stroke-opacity="0" transform="rotate(-90 150 190)"/>
     </svg>
     <div class="cam-hint" id="hint">กำลังค้นหาใบหน้า…</div>
   </div>
+  <div class="shot-tip" id="shotTip"></div>
   <div class="checks">
-    <span data-chk="face">พบใบหน้า</span><span data-chk="dist">ระยะพอดี</span><span data-chk="angle">หน้าตรง</span><span data-chk="light">แสงเพียงพอ</span>
+    <span data-chk="face">พบใบหน้า</span><span data-chk="dist">ระยะพอดี</span><span data-chk="angle" id="chkAngle">หน้าตรง</span><span data-chk="light">แสงเพียงพอ</span>
   </div>
+  <div class="finish-row" id="finishRow"><button id="btnFinish">✨ วิเคราะห์เลย</button></div>
   <div class="cam-bottom">
     <div class="toggle on" id="autoToggle"><span class="sw"></span>ถ่ายอัตโนมัติ</div>
     <button class="shutter" id="btnShutter" aria-label="ถ่ายภาพ"><i></i></button>
-    <div></div>
+    <button class="skip" id="btnSkip">ข้ามมุมนี้ ›</button>
   </div>
 </section>
 
@@ -334,8 +429,8 @@ table.raw td:last-child{text-align:right;font-variant-numeric:tabular-nums;color
 <section id="screen-loading" class="screen">
   <div class="card load">
     <div class="scanner" id="scanner"><b id="scanPct">0%</b></div>
-    <h2>กำลังวิเคราะห์ผิวของคุณ</h2>
-    <p class="sub">รอสักครู่ ใช้เวลาประมาณ 3–8 วินาที</p>
+    <h2 style="justify-content:center">💎 กำลังวิเคราะห์ผิวของคุณ</h2>
+    <p class="sub">รอสักครู่ ใช้เวลาประมาณ 5–15 วินาที</p>
     <ul class="lsteps" id="lsteps"></ul>
   </div>
 </section>
@@ -343,6 +438,7 @@ table.raw td:last-child{text-align:right;font-variant-numeric:tabular-nums;color
 <!-- ================= RESULT ================= -->
 <section id="screen-result" class="screen">
   <div class="card">
+    <div class="res-title" id="resTitle">✦ รายงานสภาพผิว ✦</div>
     <div class="summary">
       <div class="ring">
         <svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" id="ringFg" cx="60" cy="60" r="52" pathLength="100" stroke-dasharray="0 100"/></svg>
@@ -359,19 +455,21 @@ table.raw td:last-child{text-align:right;font-variant-numeric:tabular-nums;color
     <div class="priority" id="priority"></div>
   </div>
 
+  <div class="card" id="shotsCard"></div>
+
   <div class="grid2">
     <div class="card">
-      <h2>กราฟสุขภาพผิว 5 มิติ</h2>
+      <h2><span class="em">🕸️</span>กราฟสุขภาพผิว 5 มิติ</h2>
       <p class="sub">ยิ่งใกล้ขอบนอก สภาพผิวด้านนั้นยิ่งดี</p>
       <canvas id="radar"></canvas>
     </div>
     <div class="card">
-      <h2>ภาพวิเคราะห์</h2>
-      <p class="sub">เลือกมุมมองเพื่อดูตำแหน่งที่ตรวจเจอ</p>
+      <h2><span class="em">🔍</span>ภาพวิเคราะห์</h2>
+      <p class="sub">เลือกมุมมองเพื่อดูตำแหน่งที่ตรวจเจอ (จากภาพหน้าตรง)</p>
       <canvas id="photo" class="photo"></canvas>
       <div class="seg" id="viewSeg" style="margin-top:12px">
         <button data-v="normal" class="on">ปกติ</button>
-        <button data-v="spots">จุดด่างดำ/สิว</button>
+        <button data-v="spots">จุดด่าง/สิว</button>
         <button data-v="wrinkles">ริ้วรอย</button>
         <button data-v="zones">โซน</button>
       </div>
@@ -380,26 +478,26 @@ table.raw td:last-child{text-align:right;font-variant-numeric:tabular-nums;color
   </div>
 
   <div class="card">
-    <h2>ผลการวิเคราะห์รายด้าน</h2>
+    <h2><span class="em">📊</span>ผลวิเคราะห์รายด้าน</h2>
     <p class="sub">คะแนน 0–100 · ระดับ 1–5 · ค่าความเชื่อมั่นของการวัด</p>
     <div id="metrics"></div>
   </div>
 
   <div class="card">
-    <h2>ตัวชี้วัดเสริม</h2>
-    <p class="sub">ใช้ประกอบการประเมินประเภทผิวและเลือกผลิตภัณฑ์</p>
+    <h2><span class="em">🧪</span>ตัวชี้วัดเสริม</h2>
+    <p class="sub">ใช้ประกอบการดูประเภทผิวและเลือกผลิตภัณฑ์</p>
     <div class="aux" id="aux"></div>
   </div>
 
   <div class="card">
-    <h2>การตรวจจับเครื่องสำอาง</h2>
+    <h2><span class="em">💄</span>การตรวจเครื่องสำอาง</h2>
     <p class="sub">ดูจาก 5 สัญญาณ แล้วรวมเป็นคะแนนเมคอัพ</p>
     <div id="makeup"></div>
   </div>
 
   <div class="card">
-    <h2>รูทีน ARTISTRY สำหรับคุณ</h2>
-    <p class="sub">จับคู่จากผลวิเคราะห์ 5 มิติ ประเภทผิว และเพศ</p>
+    <h2><span class="em">🧴</span>รูทีน ARTISTRY สำหรับคุณ</h2>
+    <p class="sub">จับคู่จากผลวิเคราะห์ 5 ด้านและประเภทผิว เป็นรูทีนเต็ม ดูแผงสรุปด้านล่างเพื่อเลือกชุดที่ใช้จริง</p>
     <div class="ctrl">
       <div><label>ระดับรูทีน</label>
         <div class="seg" id="levelSeg"><button data-l="basic">เบสิก</button><button data-l="full" class="on">ครบสูตร</button><button data-l="intensive">เข้มข้นพิเศษ</button></div>
@@ -409,31 +507,38 @@ table.raw td:last-child{text-align:right;font-variant-numeric:tabular-nums;color
       </div>
     </div>
     <div class="tabs" id="tabs">
-      <button data-tab="am" class="on"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v3M4.9 7.9l1.4 1.4M19.1 7.9l-1.4 1.4M3 17h18M7 17a5 5 0 0 1 10 0M5 21h14"/></svg>เช้า</button>
-      <button data-tab="pm"><svg class="i" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>กลางคืน</button>
-      <button data-tab="wk"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>รายสัปดาห์</button>
+      <button data-tab="am" class="on">☀️ เช้า</button>
+      <button data-tab="pm">🌙 กลางคืน</button>
+      <button data-tab="wk">🗓️ รายสัปดาห์</button>
     </div>
     <div id="rtAll"></div>
     <div id="total"></div>
   </div>
 
+  <div class="card" id="summaryCard">
+    <h2><span class="em">🛍️</span>สรุปชุดที่ควรใช้</h2>
+    <p class="sub">เลือกชิ้นที่เหมาะกับงบของคุณได้ เริ่มจากชุดเริ่มต้นแล้วค่อยเพิ่มทีหลังก็ได้</p>
+    <div id="summary"></div>
+  </div>
+
   <div class="card">
-    <h2>แคตตาล็อกผลิตภัณฑ์ตามความเหมาะสม</h2>
+    <h2><span class="em">📚</span>แคตตาล็อกผลิตภัณฑ์ตามความเหมาะสม</h2>
     <p class="sub">เรียงตามความเหมาะสมกับผลวิเคราะห์ของคุณ (เทียบภายในแต่ละกลุ่ม)</p>
     <div id="catalog"></div>
   </div>
 
   <div class="card tech">
-    <details><summary>ข้อมูลเชิงเทคนิค (สำหรับผู้เชี่ยวชาญ)</summary><table class="raw" id="rawTable"></table></details>
+    <details><summary>🔧 ข้อมูลเชิงเทคนิค (สำหรับผู้เชี่ยวชาญ)</summary><table class="raw" id="rawTable"></table></details>
   </div>
 
-  <p class="disclaimer">ผลการวิเคราะห์นี้เป็นการประเมินเชิงความงามจากภาพถ่าย (cosmetic assessment) ไม่ใช่การวินิจฉัยทางการแพทย์ ความแม่นยำขึ้นกับแสง กล้อง และเครื่องสำอาง หากมีสิวอักเสบรุนแรง ผื่นแพ้ หรือไฝที่เปลี่ยนแปลง โปรดปรึกษาแพทย์ผิวหนัง ควรทดสอบผลิตภัณฑ์ใหม่บริเวณท้องแขนก่อนใช้จริง</p>
+  <p class="disclaimer">ผลวิเคราะห์นี้เป็นการประเมินเชิงความงามจากภาพถ่าย ไม่ใช่การวินิจฉัยทางการแพทย์ ความแม่นยำขึ้นกับแสง กล้อง และเครื่องสำอาง หากมีสิวอักเสบรุนแรง ผื่นแพ้ หรือไฝที่เปลี่ยนแปลง ควรปรึกษาแพทย์ผิวหนัง และควรทดสอบผลิตภัณฑ์ใหม่บริเวณท้องแขนก่อนใช้จริง</p>
   <div class="btn-row no-print">
-    <button class="btn sec" id="btnPrint">บันทึกผล (PDF)</button>
-    <button class="btn" id="btnRescan">สแกนใหม่</button>
+    <button class="btn sec" id="btnPrint">🖨️ บันทึกผล (PDF)</button>
+    <button class="btn dark" id="btnRescan">🔄 สแกนใหม่</button>
   </div>
 </section>
 </main>
+<div class="toast" id="toast"></div>
 
 <script type="module">
 /* =====================================================================
@@ -677,7 +782,7 @@ const glowScore = g => g<0.06 ? 25+75*(g/0.06) : Math.max(40,100-(g-0.06)/0.16*4
 /* =====================================================================
    5) CORE ANALYSIS (ต่อ 1 เฟรม)
    ===================================================================== */
-function analyzeFrame(src,lms){
+function analyzeFrame(src,lms,kind='front'){
   const T=CONFIG.T, RG=CONFIG.ranges, sw=src.width, sh=src.height;
   const P=lms.map(p=>({x:p.x*sw,y:p.y*sh}));
   let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
@@ -830,14 +935,14 @@ function analyzeFrame(src,lms){
   if(faceSt.mean>88) qc.push('แสงจ้าเกินไป');
   if(fracF(skinAll,i=>L[i]>96)>0.04) qc.push('มีจุดสะท้อนแสงจ้าบนผิว');
   const asym=Math.abs(statsF(R.cheekL,i=>L[i]).mean-statsF(R.cheekR,i=>L[i]).mean);
-  if(asym>9) qc.push('แสงตกกระทบสองข้างของใบหน้าไม่เท่ากัน');
+  if(asym>9&&kind!=='left'&&kind!=='right') qc.push('แสงตกกระทบสองข้างของใบหน้าไม่เท่ากัน');
   const dl=dist(pts[1],pts[234]), dr=dist(pts[1],pts[454]), yaw=(dl-dr)/(dl+dr);
-  if(Math.abs(yaw)>0.14) qc.push('ใบหน้าไม่ตรง (หันข้าง)');
+  if(kind!=='left'&&kind!=='right'&&Math.abs(yaw)>0.14) qc.push('ใบหน้าไม่ตรง (หันข้าง)');
   const roll=Math.atan2(pts[263].y-pts[33].y,pts[263].x-pts[33].x)*180/Math.PI;
-  if(Math.abs(roll)>10) qc.push('ศีรษะเอียง');
+  if(Math.abs(roll)>(kind==='front'?10:14)) qc.push('ศีรษะเอียง');
   if(eyeSharp<CONFIG.minEyeSharp) qc.push('ภาพไม่คมชัดหรือสั่นไหว');
-  if(!wbUsed) qc.push('ปรับสมดุลแสงขาวจากตาขาวไม่ได้');
-  if(!R.neck.length) qc.push('ไม่เห็นลำคอ จึงใช้สัญญาณตรวจเมคอัพได้ไม่ครบ');
+  if(!wbUsed&&kind==='front') qc.push('ปรับสมดุลแสงขาวจากตาขาวไม่ได้');
+  if(!R.neck.length&&(kind==='front'||kind==='chin')) qc.push('ไม่เห็นลำคอ จึงใช้สัญญาณตรวจเมคอัพได้ไม่ครบ');
   const qcFactor=Math.max(.5,1-.08*qc.length);
 
   // ---- ชดเชยเมคอัพ + ความเชื่อมั่น
@@ -847,15 +952,15 @@ function analyzeFrame(src,lms){
     conf[k]=clamp(0.92*(1-CONFIG.makeupSens[k]*makeup)*qcFactor,0.2,0.95);
   }
 
-  return { W,H,work,polys,final,conf,makeup,signals,qc,eyeSharp,
+  return { kind,W,H,work,polys,final,conf,makeup,signals,qc,eyeSharp,
     aux:{ oil:s.oil, texture:s.rough, darkcircle:s.under, cheekShine },
     overlay:{ dark:dc.blobs, red:rc.blobs, wrinkleMask },
     raw:{ rough,glow,flake,oilFrac,cheekShine,darkFrac,darkCount:dc.count,redFrac,redCount:rc.count,aStd,nasoShadow,underShadow,droop,jawRatio,
       wF,wC,wU,wN,evenness,chroma,ita,neckDE,texRatio,lipDelta:lipC-skinC,lidDE,aSpread,eyeSharp,yaw,roll,wb:`${gR.toFixed(2)} / ${gG.toFixed(2)} / ${gB.toFixed(2)}` } };
 }
 
-/* รวมหลายเฟรมด้วยค่ามัธยฐาน */
-function combine(rs){
+/* รวมเฟรมในมุมเดียวกันด้วยค่ามัธยฐาน */
+function combineBurst(rs){
   const disp=rs.reduce((a,b)=>b.eyeSharp>a.eyeSharp?b:a);
   const out={...disp, final:{}, conf:{}, aux:{}};
   for(const k of KEYS){
@@ -867,6 +972,38 @@ function combine(rs){
   for(const k of Object.keys(disp.aux)) out.aux[k]=medArr(rs.map(r=>r.aux[k]));
   out.makeup=rs.reduce((a,r)=>a+r.makeup,0)/rs.length;
   out.frames=rs.length;
+  return out;
+}
+
+/* รวมผลจากหลายมุม: น้ำหนักต่างกันตามด้าน (ความหย่อนคล้อยใช้หน้าตรงอย่างเดียว เพราะวัดจากรูปทรงใบหน้า) */
+const SHOT_W={
+  front:   {hydration:1,  spots:1,  sagging:1, wrinkles:1,  radiance:1,  mk:2},
+  left:    {hydration:.6, spots:.6, sagging:0, wrinkles:.6, radiance:.5, mk:1},
+  right:   {hydration:.6, spots:.6, sagging:0, wrinkles:.6, radiance:.5, mk:1},
+  forehead:{hydration:.4, spots:.5, sagging:0, wrinkles:.8, radiance:.4, mk:1},
+  chin:    {hydration:.3, spots:.4, sagging:0, wrinkles:.2, radiance:.4, mk:1}
+};
+function combineShots(list){
+  const base=list.find(x=>x.kind==='front').r;
+  const out={...base, final:{}, conf:{}, aux:{}, qc:[...base.qc]};
+  for(const k of KEYS){
+    let sw=0,sv=0; const vals=[];
+    for(const {kind,r} of list){ const w=SHOT_W[kind][k]; if(w>0){ sw+=w; sv+=w*r.final[k]; vals.push(r.final[k]); } }
+    out.final[k]=sv/sw;
+    const spread=Math.max(...vals)-Math.min(...vals);
+    out.conf[k]=clamp(base.conf[k]*(1+.05*(vals.length-1))*(spread>20?.9:1),.2,.95);
+  }
+  for(const k of Object.keys(base.aux)){
+    let sw=0,sv=0;
+    for(const {kind,r} of list){ const w=SHOT_W[kind].hydration; sw+=w; sv+=w*r.aux[k]; }
+    out.aux[k]=sv/sw;
+  }
+  let mw=0,mv=0; for(const {kind,r} of list){ const w=SHOT_W[kind].mk; mw+=w; mv+=w*r.makeup; }
+  out.makeup=mv/mw;
+  for(const {kind,r} of list){ if(kind==='front') continue;
+    r.qc.forEach(q=>{ if(q!=='ปรับสมดุลแสงขาวจากตาขาวไม่ได้') out.qc.push((SHOT_NAME[kind]||kind)+': '+q); }); }
+  out.shots=list.map(x=>x.kind);
+  out.frames=list.reduce((a,x)=>a+x.r.frames,0);
   return out;
 }
 
@@ -895,7 +1032,7 @@ const matchRaw = (p,n) => NK.reduce((s,k)=>s+(p.t[k]||0)*(n[k]||0),0);
 function scoreP(p,ctx){
   let s=matchRaw(p,ctx.n);
   if(p.fit) s+=p.fit.includes(ctx.type)?.25:-.15;
-  if(p.men) s+=ctx.gender==='m'?.8:-99;
+  if(p.men&&ctx.gender==='m') s+=.1;
   if(p.premium) s+=ctx.level==='intensive'?.25:ctx.level==='full'?-.35:-99;
   if(p.remover) s+=ctx.heavy?p.remover.heavy:p.remover.light;
   if(p.exfoliant&&ctx.inflamed) s-=.45;
@@ -905,6 +1042,38 @@ function pick(sub,ctx,filter=()=>true,exclude=new Set()){
   const c=CATALOG.filter(p=>p.sub===sub&&filter(p)&&!exclude.has(p.id))
     .map(p=>({p,s:scoreP(p,ctx)})).filter(x=>x.s>-50).sort((a,b)=>b.s-a.s);
   return c[0]?c[0].p:null;
+}
+
+/* =====================================================================
+   6.5) ROUTINE BUILDER + SHOTS + TIERS
+   ===================================================================== */
+const SHOTS = [
+  { id:'front',    emo:'🙂', name:'หน้าตรง',       req:true, angle:'หน้าตรง',  tip:'มองกล้องตรง ๆ ทำหน้าเฉย ๆ เปิดหน้าผาก ให้เห็นลำคอนิดหน่อย' },
+  { id:'left',     emo:'🌓', name:'แก้มซ้าย',      angle:'องศาหัน', tip:'หันหน้าไปทางขวาของคุณเล็กน้อย ให้เห็นแก้มซ้ายชัด' },
+  { id:'right',    emo:'🌗', name:'แก้มขวา',       angle:'องศาหัน', tip:'หันหน้าไปอีกด้าน ให้เห็นแก้มขวาชัด' },
+  { id:'forehead', emo:'🌅', name:'หน้าผาก',       angle:'ท่าถูกต้อง', tip:'ก้มหน้าลงเล็กน้อย ปัดผมออกให้เห็นหน้าผากชัด' },
+  { id:'chin',     emo:'🌙', name:'คางและลำคอ',    angle:'ท่าถูกต้อง', tip:'เงยหน้าขึ้นเล็กน้อย ให้เห็นคางและลำคอ' }
+];
+const SHOT_NAME = Object.fromEntries(SHOTS.map(s => [s.id, s.name]));
+const SHOT_EMO = Object.fromEntries(SHOTS.map(s => [s.id, s.emo]));
+const EMO = { hydration:'💧', spots:'🎯', sagging:'🧲', wrinkles:'⏳', radiance:'✨' };
+const ROLE = {
+  cleanser:{e:'🫧',s:'คลีนเซอร์'}, remover:{e:'🧼',s:'ล้างเมคอัพ'}, toner:{e:'💦',s:'โทนเนอร์'}, serum:{e:'💎',s:'เซรั่ม'},
+  special:{e:'🧪',s:'ซีรัมพิเศษ'}, eye:{e:'👁️',s:'อายครีม'}, moist:{e:'🧴',s:'มอยส์เจอไรเซอร์'}, sun:{e:'☀️',s:'กันแดด'}, mask:{e:'🎭',s:'มาสก์'}
+};
+const SUB_EMO = { A:'🫧', B1:'💦', B2:'💎', B3:'🧪', B4:'🧴', B5:'🎭', B6:'👁️', B7:'☀️' };
+const TIER = {
+  1:{ e:'⭐', t:'ควรมีก่อน',       d:'พื้นฐานที่จำเป็นที่สุด ทำความสะอาด บำรุง และปกป้องผิว' },
+  2:{ e:'💎', t:'เสริมผลตรงจุด',   d:'ตอบโจทย์ปัญหาผิวที่ตรวจเจอของคุณโดยเฉพาะ' },
+  3:{ e:'👑', t:'เติมความพิเศษ',   d:'ใช้เพิ่มเมื่อพร้อม ช่วยให้เห็นผลชัดและเร็วขึ้น' }
+};
+
+function tierOf(role, res){
+  if(role==='cleanser'||role==='sun'||role==='moist') return 1;
+  if(role==='remover') return res.makeup>=.3 ? 1 : 3;
+  if(role==='toner'||role==='serum') return 2;
+  if(role==='eye') return (res.aux.darkcircle<60||res.final.wrinkles<65) ? 2 : 3;
+  return 3;
 }
 
 function buildRoutine(res,opt){
@@ -928,43 +1097,58 @@ function buildRoutine(res,opt){
   for(let i=0;i<nMask;i++){ const m=pick('B5',ctx,()=>true,ex); if(m){ masks.push(m); ex.add(m.id); } }
 
   const am=[], pm=[], wk=[];
-  const S=(label,p,note='')=>p&&({label,p,note});
+  const S=(label,p,role,note='')=>p?{label,p,role,note}:null;
 
-  am.push(S('ทำความสะอาดผิวหน้า',cleanser,ctx.gender==='m'&&cleanser.men?'':''));
-  am.push(S('ปรับสภาพผิว (โทนเนอร์)',toner));
-  if(serum) am.push(S('เซรั่มบำรุง',serum));
-  if(special&&!special.pmOnly&&Lv==='intensive') am.push(S('ซีรัมพิเศษ',special,special.note||''));
-  if(eye) am.push(S('บำรุงรอบดวงตา',eye,'แตะเบา ๆ ด้วยนิ้วนางรอบกระบอกตา ไม่ลากผิว'));
-  if(!(sun&&sun.spf==='lotion')) am.push(S('มอยส์เจอไรเซอร์',moist));
-  if(sun) am.push(S('ปกป้องผิวจากแสงแดด',sun, sun.spf==='lotion'
-      ?'โลชั่นบำรุงผสม SPF30 ใช้แทนมอยส์เจอไรเซอร์ตอนเช้าได้ หากอยู่กลางแจ้งนานควรทาซ้ำทุก 2–3 ชั่วโมง'
-      :'ทาเป็นขั้นตอนสุดท้ายก่อนแต่งหน้า ปริมาณประมาณ 2 ข้อนิ้ว และทาซ้ำเมื่ออยู่กลางแจ้ง'));
+  am.push(S('ทำความสะอาดผิวหน้า',cleanser,'cleanser'));
+  am.push(S('ปรับสภาพผิว (โทนเนอร์)',toner,'toner'));
+  if(serum) am.push(S('เซรั่มบำรุง',serum,'serum'));
+  if(special&&!special.pmOnly&&Lv==='intensive') am.push(S('ซีรัมพิเศษ',special,'special',special.note||''));
+  if(eye) am.push(S('บำรุงรอบดวงตา',eye,'eye','แตะเบา ๆ ด้วยนิ้วนางรอบกระบอกตา ไม่ลากผิว'));
+  if(!(sun&&sun.spf==='lotion')) am.push(S('มอยส์เจอไรเซอร์',moist,'moist'));
+  if(sun) am.push(S('ปกป้องผิวจากแสงแดด',sun,'sun', sun.spf==='lotion'
+      ?'โลชั่นบำรุงผสม SPF30 ใช้แทนมอยส์เจอไรเซอร์ตอนเช้าได้ ถ้าอยู่กลางแจ้งนานควรทาซ้ำทุก 2–3 ชั่วโมง'
+      :'ทาเป็นขั้นตอนสุดท้ายก่อนแต่งหน้า ใช้ประมาณ 2 ข้อนิ้ว และทาซ้ำเมื่ออยู่กลางแจ้ง'));
 
-  pm.push(S('ล้างเมคอัพ / ครีมกันแดด',remover, res.makeup>=.3
-      ?`ตรวจพบเมคอัพ${ctx.heavy?'ค่อนข้างหนา':'บางเบา'} แนะนำล้าง 2 ขั้นตอน (double cleansing) ก่อนใช้คลีนเซอร์`
+  pm.push(S('ล้างเมคอัพ / ครีมกันแดด',remover,'remover', res.makeup>=.3
+      ?`ตรวจเจอเมคอัพ${ctx.heavy?'ค่อนข้างหนา':'บาง ๆ'} แนะนำล้าง 2 ขั้น (double cleansing) ก่อนใช้คลีนเซอร์`
       :'ใช้ในวันที่แต่งหน้าหรือทาครีมกันแดด'));
-  pm.push(S('ทำความสะอาดผิวหน้า',cleanser));
-  pm.push(S('ปรับสภาพผิว (โทนเนอร์)',toner));
-  if(special) pm.push(S('ทรีตเมนต์เข้มข้น',special,special.note||(Lv==='full'?'แนะนำเพิ่ม เพราะมีบางด้านที่คะแนนต่ำกว่า 45':'')));
-  if(serum) pm.push(S('เซรั่มบำรุง',serum));
-  if(eye) pm.push(S('บำรุงรอบดวงตา',eye));
-  pm.push(S('มอยส์เจอไรเซอร์ (กลางคืน)',moist));
+  pm.push(S('ทำความสะอาดผิวหน้า',cleanser,'cleanser'));
+  pm.push(S('ปรับสภาพผิว (โทนเนอร์)',toner,'toner'));
+  if(special) pm.push(S('ทรีตเมนต์เข้มข้น',special,'special',special.note||(Lv==='full'?'แนะนำเพิ่ม เพราะมีบางด้านที่คะแนนต่ำกว่า 45':'')));
+  if(serum) pm.push(S('เซรั่มบำรุง',serum,'serum'));
+  if(eye) pm.push(S('บำรุงรอบดวงตา',eye,'eye'));
+  pm.push(S('มอยส์เจอไรเซอร์ (กลางคืน)',moist,'moist'));
 
-  masks.forEach(m=>wk.push(S(m.exfoliant?'ผลัดเซลล์ผิว (สครับ)':'มาสก์บำรุง',m,m.freq+(m.exfoliant&&ctx.inflamed?' · ตรวจพบรอยแดง/สิวค่อนข้างมาก ควรเว้นบริเวณที่อักเสบ':''))));
+  masks.forEach(m=>wk.push(S(m.exfoliant?'ผลัดเซลล์ผิว (สครับ)':'มาสก์บำรุง',m,'mask',m.freq+(m.exfoliant&&ctx.inflamed?' · ตรวจเจอรอยแดง/สิวค่อนข้างมาก ควรเว้นบริเวณที่อักเสบ':''))));
 
   return { am:am.filter(Boolean), pm:pm.filter(Boolean), wk:wk.filter(Boolean), type, ctx };
 }
 
+function collectItems(rt,res){
+  const map=new Map();
+  const feed=arr=>arr.forEach(st=>{
+    const key=(st.p.alias&&map.has(st.p.alias))?st.p.alias:st.p.id;
+    if(map.has(key)) return;
+    map.set(key,{ p:st.p, role:st.role, tier:tierOf(st.role,res) });
+  });
+  feed(rt.am); feed(rt.pm); feed(rt.wk);
+  return [...map.values()].sort((a,b)=>a.tier-b.tier);
+}
+const inSel = (st,sel) => sel.has(st.p.id)||(st.p.alias&&sel.has(st.p.alias));
+
 /* =====================================================================
    7) CAMERA / MODEL
    ===================================================================== */
-let landmarker=null, stream=null, camActive=false, facing='user', lastTs=0;
-let stable=0, capturing=false, autoCap=true;
-let RESULT=null, OPT={gender:'f',level:'full',type:'auto'}, TAB='am';
+let landmarker=null, stream=null, camActive=false, facing='user', lastTs=0, curMode='VIDEO';
+let stable=0, capturing=false, autoCap=true, holdUntil=0, holdMsg='', curIdx=0, lastYaw=0, leftSign=0;
+let CAP={}, UP={}, upStart=0;
+let RESULT=null, CUR={}, OPT={gender:'f',level:'full',type:'auto',name:''}, TAB='am';
+const SUM={ preset:'rec', sel:new Set() };
 const video=$('#video');
-let curMode='VIDEO';
-async function setMode(m){ if(landmarker&&curMode!==m){ await landmarker.setOptions({runningMode:m}); curMode=m; } }
 const ts=()=>{ let t=performance.now(); if(t<=lastTs) t=lastTs+1; lastTs=t; return t; };
+async function setMode(m){ if(landmarker&&curMode!==m){ await landmarker.setOptions({runningMode:m}); curMode=m; } }
+
+function toast(t){ const e=$('#toast'); e.textContent=t; e.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove('show'),2300); }
 
 function show(id){
   $$('.screen').forEach(s=>s.classList.remove('active'));
@@ -983,6 +1167,7 @@ async function initModel(){
     const opts=d=>({baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',delegate:d},runningMode:'VIDEO',numFaces:1});
     try{ landmarker=await vision.FaceLandmarker.createFromOptions(fileset,opts('GPU')); }
     catch(e){ landmarker=await vision.FaceLandmarker.createFromOptions(fileset,opts('CPU')); }
+    curMode='VIDEO';
     $('#modelStatus').textContent='พร้อมสแกนแล้ว';
     $('#modelDot').className='dot ok';
   }catch(e){
@@ -992,13 +1177,29 @@ async function initModel(){
   }
 }
 
-async function startCamera(){
-  if(!navigator.mediaDevices?.getUserMedia){ alert('เบราว์เซอร์ไม่รองรับกล้อง หรือหน้าเว็บไม่ได้เปิดผ่าน HTTPS\nโปรดใช้ปุ่ม "กล้องของระบบ" แทน'); return; }
+/* ---------- กล้อง: ถ่ายทีละมุม ---------- */
+function updateShotUI(){
+  const s=SHOTS[curIdx], last=SHOTS.length-1;
+  $('#camTitle').textContent=`ขั้นที่ ${curIdx+1}/${SHOTS.length} · ${s.name}`;
+  $('#shotTip').innerHTML=`<b>${s.emo} ${s.name}</b> · ${s.tip}`;
+  $('#chkAngle').textContent=s.angle;
+  $('#shotbar').innerHTML=SHOTS.map((x,i)=>`<span class="${CAP[x.id]?'done':i===curIdx?'cur':''}">${CAP[x.id]?'✓':x.emo} ${x.name}</span>`).join('');
+  $('#btnSkip').style.visibility=s.req?'hidden':'visible';
+  $('#btnSkip').textContent=curIdx>=last?'ข้ามแล้ววิเคราะห์ ›':'ข้ามมุมนี้ ›';
+  const n=Object.keys(CAP).length;
+  $('#finishRow').style.display=(CAP.front&&curIdx<last)?'flex':'none';
+  $('#btnFinish').textContent=`✨ วิเคราะห์เลย (${n} ภาพ)`;
+}
+
+async function startCamera(keep=false){
+  if(!navigator.mediaDevices?.getUserMedia){ alert('เบราว์เซอร์ไม่รองรับกล้อง หรือหน้าเว็บไม่ได้เปิดผ่าน HTTPS\nให้ใช้ปุ่ม "เลือกรูปจากคลังภาพ" แทน'); return; }
   try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1920},height:{ideal:1440}},audio:false}); }
   catch(e){ alert('เปิดกล้องไม่ได้: '+e.message); return; }
   video.srcObject=stream; video.classList.toggle('mirror',facing==='user');
-  stable=0; capturing=false;
+  if(!keep){ CAP={}; curIdx=0; leftSign=0; }
+  stable=0; capturing=false; holdUntil=0;
   if(landmarker) await setMode('VIDEO');
+  updateShotUI();
   show('camera'); await video.play().catch(()=>{});
   camActive=true; liveLoop();
 }
@@ -1006,11 +1207,15 @@ function stopCamera(){ camActive=false; if(stream){ stream.getTracks().forEach(t
 
 const probe=document.createElement('canvas'); probe.width=32; probe.height=32;
 const pctx=probe.getContext('2d',{willReadFrequently:true});
+
 function liveLoop(){
   if(!camActive) return;
+  const next=()=>setTimeout(()=>requestAnimationFrame(liveLoop),150);
+  if(capturing){ next(); return; }
   let ok=false;
   try{
-    if(landmarker&&video.readyState>=2){
+    if(landmarker&&video.readyState>=2&&curMode==='VIDEO'){
+      const sh=SHOTS[curIdx], side=sh.id==='left'||sh.id==='right';
       const r=landmarker.detectForVideo(video,ts());
       const vw=video.videoWidth, vh=video.videoHeight;
       pctx.drawImage(video,vw*.3,vh*.25,vw*.4,vh*.5,0,0,32,32);
@@ -1023,14 +1228,30 @@ function liveLoop(){
         const lm=r.faceLandmarks[0], fwN=Math.abs(lm[454].x-lm[234].x);
         const dl=Math.hypot(lm[1].x-lm[234].x,lm[1].y-lm[234].y), dr=Math.hypot(lm[1].x-lm[454].x,lm[1].y-lm[454].y), yaw=(dl-dr)/(dl+dr);
         const roll=Math.atan2((lm[263].y-lm[33].y)*vh,(lm[263].x-lm[33].x)*vw)*180/Math.PI;
-        c.dist=fwN>=.33&&fwN<=.78;
-        c.angle=Math.abs(yaw)<=.12&&Math.abs(roll)<=8;
-        msg=!c.dist?(fwN<.33?'ขยับเข้าใกล้อีกนิด':'ถอยออกเล็กน้อย')
-          :!c.angle?(Math.abs(yaw)>.12?'หันหน้าตรงเข้าหากล้อง':'ตั้งศีรษะให้ตรง')
+        lastYaw=yaw;
+        const minW=side?.24:.33;
+        c.dist=fwN>=minW&&fwN<=.78;
+        let angMsg='';
+        if(side){
+          const ay=Math.abs(yaw), wrong=sh.id==='right'&&leftSign&&Math.sign(yaw)===leftSign;
+          if(wrong) angMsg='หันไปอีกด้านหนึ่ง';
+          else if(ay<.15) angMsg='หันหน้าเพิ่มอีกนิด';
+          else if(ay>.45) angMsg='หันกลับมาเล็กน้อย';
+          else if(Math.abs(roll)>12) angMsg='ตั้งศีรษะให้ตรง';
+          c.angle=!angMsg;
+        }else{
+          const yl=sh.id==='front'?.12:.15, rl=sh.id==='front'?8:12;
+          c.angle=Math.abs(yaw)<=yl&&Math.abs(roll)<=rl;
+          angMsg=Math.abs(yaw)>yl?'หันหน้าตรงเข้าหากล้อง':'ตั้งศีรษะให้ตรง';
+          if(c.angle&&sh.id==='chin'&&lm[152].y>.8){ c.angle=false; angMsg='เงยหน้าให้เห็นคางและลำคอ'; }
+        }
+        msg=!c.dist?(fwN<minW?'ขยับเข้าใกล้อีกนิด':'ถอยออกเล็กน้อย')
+          :!c.angle?angMsg
           :!c.light?(luma<70?'แสงน้อยเกินไป หันเข้าหาแสง':'แสงจ้าเกินไป'):'';
       }
       ok=c.face&&c.dist&&c.angle&&c.light;
-      if(ok) msg=autoCap?'นิ่งไว้สักครู่… กำลังถ่ายอัตโนมัติ':'พร้อมแล้ว กดถ่ายได้เลย';
+      if(performance.now()<holdUntil){ ok=false; msg=holdMsg; }
+      else if(ok) msg=autoCap?'นิ่งไว้สักครู่… กำลังถ่ายอัตโนมัติ':'พร้อมแล้ว กดถ่ายได้เลย';
       for(const k in c) $(`[data-chk="${k}"]`).classList.toggle('ok',c[k]);
       const h=$('#hint'); h.textContent=msg; h.classList.toggle('ok',ok);
     }
@@ -1040,57 +1261,118 @@ function liveLoop(){
   const ring=$('#ovalProg');
   ring.setAttribute('stroke-dasharray',`${prog} 100`);
   ring.setAttribute('stroke-opacity',prog>0?1:0);
-  if(autoCap&&stable>=CONFIG.stableLoops&&!capturing){ captureBurst(); return; }
-  setTimeout(()=>requestAnimationFrame(liveLoop),150);
+  if(autoCap&&stable>=CONFIG.stableLoops&&!capturing) captureBurst();
+  next();
 }
 
 async function captureBurst(){
   if(capturing||!video.videoWidth) return;
-  capturing=true; $('#hint').textContent='กำลังถ่ายภาพ…';
-  const frames=[];
-  for(let i=0;i<CONFIG.burstFrames;i++){
-    const c=document.createElement('canvas'); c.width=video.videoWidth; c.height=video.videoHeight;
-    c.getContext('2d').drawImage(video,0,0); frames.push(c);
+  capturing=true;
+  const sh=SHOTS[curIdx], n=sh.id==='front'?CONFIG.burstFrames:2, frames=[];
+  $('#hint').textContent='กำลังถ่ายภาพ…';
+  const sc=Math.min(1,1280/Math.max(video.videoWidth,video.videoHeight));
+  for(let i=0;i<n;i++){
+    const c=document.createElement('canvas'); c.width=Math.round(video.videoWidth*sc); c.height=Math.round(video.videoHeight*sc);
+    c.getContext('2d').drawImage(video,0,0,c.width,c.height); frames.push(c);
     await sleep(CONFIG.burstGapMs);
   }
-  stopCamera(); await runAnalysis(frames);
+  CAP[sh.id]=frames;
+  if(sh.id==='left') leftSign=Math.sign(lastYaw)||0;
+  if(curIdx>=SHOTS.length-1){ await finishCapture(); return; }
+  advance(`บันทึก${sh.name}แล้ว ✓ เตรียมมุมถัดไป`);
+}
+function advance(msg){
+  curIdx++; stable=0; holdUntil=performance.now()+2200; holdMsg=msg||'เตรียมมุมถัดไป'; capturing=false;
+  updateShotUI();
+}
+async function finishCapture(){
+  capturing=true; stopCamera();
+  if(!CAP.front){ alert('ยังไม่มีภาพหน้าตรง กรุณาถ่ายหน้าตรงก่อน'); show('intro'); return; }
+  const shots=SHOTS.filter(s=>CAP[s.id]).map(s=>({kind:s.id,frames:CAP[s.id]}));
+  await runAnalysis(shots);
 }
 
-function loadFile(file){
-  if(!file) return;
-  const img=new Image();
-  img.onload=async()=>{
-    const s=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight));
-    const c=document.createElement('canvas'); c.width=Math.round(img.naturalWidth*s); c.height=Math.round(img.naturalHeight*s);
-    c.getContext('2d').drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(img.src);
-    await runAnalysis([c]);
-  };
-  img.onerror=()=>alert('เปิดไฟล์ภาพนี้ไม่ได้');
-  img.src=URL.createObjectURL(file);
+/* ---------- อัปโหลดจากคลังภาพ ---------- */
+function fileToCanvas(file){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const s=Math.min(1,1280/Math.max(img.naturalWidth,img.naturalHeight));
+      const c=document.createElement('canvas'); c.width=Math.round(img.naturalWidth*s); c.height=Math.round(img.naturalHeight*s);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(img.src); res(c);
+    };
+    img.onerror=()=>rej(new Error('bad image'));
+    img.src=URL.createObjectURL(file);
+  });
+}
+function thumbOf(c,w=220){
+  const t=document.createElement('canvas'); t.width=w; t.height=Math.round(w*1.25);
+  const x=t.getContext('2d'), sc=Math.max(t.width/c.width,t.height/c.height), dw=c.width*sc, dh=c.height*sc;
+  x.drawImage(c,(t.width-dw)/2,(t.height-dh)/2,dw,dh);
+  return t.toDataURL('image/jpeg',.75);
+}
+function renderUploader(){
+  $('#upGrid').innerHTML=SHOTS.map(s=>{
+    const u=UP[s.id];
+    return `<button class="up-tile${u?' has':''}" data-s="${s.id}"${u?` style="background-image:url(${u.thumb})"`:''}>
+      <span class="up-emo">${s.emo}</span><b>${s.name}</b><small>${s.req?'จำเป็น':'ไม่บังคับ'}</small>
+      ${u?`<i class="up-x" data-x="${s.id}">✕</i>`:'<span class="up-add">＋ เลือกรูป</span>'}</button>`;
+  }).join('');
+  $('#btnAnalyze').disabled=!UP.front;
+}
+async function loadSlotFiles(files){
+  const arr=[...files].slice(0,SHOTS.length);
+  let bad=0;
+  for(let i=0;i<arr.length;i++){
+    const slot=SHOTS[(upStart+i)%SHOTS.length];
+    try{ const c=await fileToCanvas(arr[i]); UP[slot.id]={canvas:c,thumb:thumbOf(c)}; }catch(e){ bad++; }
+  }
+  if(bad) alert('มี '+bad+' ไฟล์ที่เปิดไม่ได้');
+  renderUploader();
+}
+async function analyzeUploads(){
+  if(!UP.front){ alert('ต้องมีภาพหน้าตรงก่อน'); return; }
+  const shots=SHOTS.filter(s=>UP[s.id]).map(s=>({kind:s.id,frames:[UP[s.id].canvas]}));
+  await runAnalysis(shots);
 }
 
+/* ---------- วิเคราะห์ ---------- */
 const LSTEPS=['หาใบหน้าและจุดอ้างอิง 468 จุด','ปรับสมดุลแสงขาว','แปลงสีภาพ','ตรวจเมคอัพ','วิเคราะห์ผิว 5 ด้าน','เลือกผลิตภัณฑ์ ARTISTRY'];
 function setLoad(i){
   const pct=Math.round(i/LSTEPS.length*100);
-  $('#scanner').style.background=`conic-gradient(var(--teal) ${pct}%, var(--line) 0)`;
+  $('#scanner').style.background=`conic-gradient(var(--gold) ${pct}%, var(--line) 0)`;
   $('#scanPct').textContent=pct+'%';
   $('#lsteps').innerHTML=LSTEPS.map((s,k)=>`<li class="${k<i?'done':k===i?'act':''}">${s}</li>`).join('');
 }
 
-async function runAnalysis(frames){
+async function runAnalysis(shots){
   if(!landmarker){ alert('ตัววิเคราะห์ยังโหลดไม่เสร็จ รอสักครู่แล้วลองใหม่'); show('intro'); return; }
   show('loading'); setLoad(0); await sleep(80);
   try{
-    const dets=[];
     await setMode('IMAGE');
-    for(const f of frames){ const r=landmarker.detect(f); if(r.faceLandmarks?.length) dets.push([f,r.faceLandmarks[0]]); }
-    if(!dets.length){ alert('ไม่เจอใบหน้าในภาพ ลองใหม่โดยหันหน้าตรงในที่ที่มีแสงพอ'); show('intro'); return; }
+    const dets=[], skipped=[];
+    for(const s of shots){
+      const ok=[];
+      for(const f of s.frames){ const r=landmarker.detect(f); if(r.faceLandmarks?.length) ok.push([f,r.faceLandmarks[0]]); }
+      if(ok.length) dets.push({kind:s.kind,list:ok}); else skipped.push(s.kind);
+    }
+    if(!dets.some(d=>d.kind==='front')){ alert('ไม่เจอใบหน้าในภาพหน้าตรง ลองใหม่โดยหันหน้าตรงในที่ที่มีแสงพอ'); show('intro'); return; }
     setLoad(1); await sleep(120); setLoad(2); await sleep(120); setLoad(3); await sleep(60);
-    const rs=[];
-    for(const [f,lm] of dets){ rs.push(analyzeFrame(f,lm)); setLoad(4); await sleep(20); }
+    const parts=[];
+    for(const d of dets){
+      const rs=[];
+      for(const [f,lm] of d.list){ rs.push(analyzeFrame(f,lm,d.kind)); await sleep(20); }
+      parts.push({ kind:d.kind, r:combineBurst(rs) });
+      setLoad(4);
+    }
     setLoad(5); await sleep(120);
-    RESULT=combine(rs); RESULT.skinType=skinTypeOf(RESULT);
+    RESULT=combineShots(parts);
+    skipped.forEach(k=>RESULT.qc.push(`ภาพ${SHOT_NAME[k]}ไม่เจอใบหน้า จึงไม่นำมาคิด`));
+    RESULT.skipped=skipped;
+    RESULT.thumbs=shots.map(s=>({kind:s.kind,url:thumbOf(s.frames[0],200),used:!skipped.includes(s.kind)}));
+    RESULT.skinType=skinTypeOf(RESULT);
     OPT.type='auto'; $$('#typeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.t==='auto'));
+    SUM.preset='rec';
     renderResult();
     setLoad(6); await sleep(250);
     show('result');
@@ -1121,20 +1403,20 @@ function drawRadar(canvas,labels,values){
   const P=(i,r)=>[cx+Math.cos(ang(i))*r, cy+Math.sin(ang(i))*r];
   for(let lv=5;lv>=1;lv--){
     ctx.beginPath(); for(let i=0;i<n;i++){ const [x,y]=P(i,R*lv/5); i?ctx.lineTo(x,y):ctx.moveTo(x,y); } ctx.closePath();
-    ctx.fillStyle=lv%2?'#f7f9fb':'#ffffff'; ctx.fill(); ctx.strokeStyle='#e4e7ec'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle=lv%2?'#fbf6ea':'#ffffff'; ctx.fill(); ctx.strokeStyle='#eadfc8'; ctx.lineWidth=1; ctx.stroke();
   }
-  for(let i=0;i<n;i++){ const [x,y]=P(i,R); ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.strokeStyle='#e4e7ec'; ctx.stroke(); }
-  ctx.fillStyle='#98a2b3'; ctx.font="500 10px Sarabun, sans-serif"; ctx.textAlign='left';
+  for(let i=0;i<n;i++){ const [x,y]=P(i,R); ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.strokeStyle='#eadfc8'; ctx.stroke(); }
+  ctx.fillStyle='#b3a98f'; ctx.font="500 10px Sarabun, sans-serif"; ctx.textAlign='left';
   [20,40,60,80,100].forEach((v,k)=>ctx.fillText(v,cx+3,cy-R*(k+1)/5+3));
   ctx.beginPath(); values.forEach((v,i)=>{ const [x,y]=P(i,R*Math.max(v,3)/100); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }); ctx.closePath();
-  const g=ctx.createLinearGradient(cx-R,cy-R,cx+R,cy+R); g.addColorStop(0,'rgba(15,39,66,.22)'); g.addColorStop(1,'rgba(14,124,123,.28)');
-  ctx.fillStyle=g; ctx.fill(); ctx.strokeStyle='#0e7c7b'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
-  values.forEach((v,i)=>{ const [x,y]=P(i,R*Math.max(v,3)/100); ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fillStyle=level(v)[1]; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke(); });
+  const g=ctx.createLinearGradient(cx-R,cy-R,cx+R,cy+R); g.addColorStop(0,'rgba(10,20,36,.22)'); g.addColorStop(1,'rgba(200,161,90,.38)');
+  ctx.fillStyle=g; ctx.fill(); ctx.strokeStyle='#b8893a'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
+  values.forEach((v,i)=>{ const [x,y]=P(i,R*Math.max(v,3)/100); ctx.beginPath(); ctx.arc(x,y,5.5,0,Math.PI*2); ctx.fillStyle=level(v)[1]; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke(); });
   ctx.textAlign='center'; ctx.textBaseline='middle';
   labels.forEach((lab,i)=>{ const [x,y]=P(i,R+40); const lines=lab.split('\n');
-    ctx.fillStyle='#0f2742'; ctx.font="600 12.5px Sarabun, sans-serif";
+    ctx.fillStyle='#0a1424'; ctx.font="600 12.5px Sarabun, sans-serif";
     lines.forEach((l,k)=>ctx.fillText(l,x,y+(k-(lines.length-1)/2)*15-9));
-    ctx.fillStyle=level(values[i])[1]; ctx.font="700 14px Sarabun, sans-serif";
+    ctx.fillStyle=level(values[i])[1]; ctx.font="700 15px Sarabun, sans-serif";
     ctx.fillText(Math.round(values[i]),x,y+lines.length*7.5+4); });
 }
 
@@ -1151,7 +1433,7 @@ function drawPhoto(mode){
     const im=ctx.getImageData(0,0,r.W,r.H), d=im.data, m=r.overlay.wrinkleMask;
     for(let i=0;i<m.length;i++) if(m[i]){ d[i*4]=d[i*4]*.3+30*.7; d[i*4+1]=d[i*4+1]*.3+150*.7; d[i*4+2]=d[i*4+2]*.3+255*.7; }
     ctx.putImageData(im,0,0);
-    legend='<span><i style="background:#1e96ff"></i>เส้นร่อง/ริ้วรอยที่ตรวจพบ</span>';
+    legend='<span><i style="background:#1e96ff"></i>เส้นร่อง/ริ้วรอยที่ตรวจเจอ</span>';
   } else if(mode==='zones'){
     const col={forehead:'#4fc3f7',nose:'#4db6ac',cheekL:'#81c784',cheekR:'#81c784',chin:'#ba68c8',nasoL:'#ffb74d',nasoR:'#ffb74d',underEyeL:'#f06292',underEyeR:'#f06292',crowL:'#fff176',crowR:'#fff176',neck:'#90a4ae',lips:'#e57373',lidL:'#a1887f',lidR:'#a1887f'};
     ctx.lineWidth=1.6;
@@ -1166,44 +1448,110 @@ function why(p,rt){
   for(const k of NK){ const v=(p.t[k]||0)*(rt.ctx.n[k]||0); if(v>bv){ bv=v; best=k; } }
   let s = (!best||bv<.05) ? 'ดูแลพื้นฐานให้ผิวสมดุล' : `ตอบโจทย์: ${NEED_LABEL[best]}${KEYS.includes(best)?` (คะแนนของคุณ ${Math.round(RESULT.final[best])}/100)`:''}`;
   if(p.fit&&p.fit.includes(rt.type)&&p.fit.length<4) s+=` · เหมาะกับ${SKIN_TYPES[rt.type]}`;
-  if(p.remover) s=`เหมาะกับเมคอัพ${rt.ctx.heavy?'ค่อนข้างหนา':'บางเบา'}ที่ตรวจพบ`;
+  if(p.remover) s=`เหมาะกับเมคอัพ${rt.ctx.heavy?'ค่อนข้างหนา':'บาง ๆ'}ที่ตรวจเจอ`;
   return s;
 }
 
 function stepHTML(st,i,rt){
-  const p=st.p;
+  const p=st.p, tr=tierOf(st.role,RESULT);
   return `<div class="step"><div class="step-no">${i+1}</div><div>
-    <div class="step-lbl">${st.label}</div>
+    <div class="step-lbl">${ROLE[st.role].e} ${st.label}<span class="tg t${tr}">${TIER[tr].e} ${TIER[tr].t}</span></div>
     <div class="p-name"><span class="code ${p.grp}">${p.code}</span>${p.name}</div>
-    <div class="p-meta">กลุ่ม${SUB[p.sub]}${p.sku?` · SKU ${p.sku}`:''}${p.size?` · ${p.size}`:''}</div>
+    <div class="p-meta">${SUB[p.sub]}${p.sku?` · รหัส ${p.sku}`:''}${p.size?` · ${p.size}`:''}</div>
     <div class="p-why">${ICON.spark}<span>${why(p,rt)}</span></div>
     ${st.note?`<div class="p-note">${st.note}</div>`:''}
   </div></div>`;
 }
 
+function applyPreset(k){
+  const items=CUR.items||[];
+  SUM.preset=k;
+  SUM.sel=new Set(items.filter(it=>k==='start'?it.tier===1:k==='rec'?it.tier<=2:true).map(it=>it.p.id));
+}
+
 function renderRoutine(){
   const rt=buildRoutine(RESULT,OPT);
+  CUR={ rt, items:collectItems(rt,RESULT) };
+  applyPreset(SUM.preset==='custom'?'rec':SUM.preset);
+
   const pane=(k,arr)=>`<div class="rt-pane" data-pane="${k}" style="display:${TAB===k?'block':'none'}">${arr.length?arr.map((s,i)=>stepHTML(s,i,rt)).join(''):'<div class="empty">รูทีนระดับเบสิกไม่มีขั้นตอนรายสัปดาห์ เลือกระดับ "ครบสูตร" หรือ "เข้มข้นพิเศษ" เพื่อเพิ่มมาสก์/สครับ</div>'}</div>`;
   $('#rtAll').innerHTML=pane('am',rt.am)+pane('pm',rt.pm)+pane('wk',rt.wk);
 
-  const uniq=new Map(); [...rt.am,...rt.pm,...rt.wk].forEach(s=>uniq.set(s.p.alias&&uniq.has(s.p.alias)?s.p.alias:s.p.id,s.p));
-  const items=[...uniq.values()];
-  $('#total').innerHTML=`<div class="total"><div>รวม ${items.length} ผลิตภัณฑ์<small>${SKIN_TYPES[rt.type]}${OPT.type==='auto'?' (ประเมินอัตโนมัติ)':' (เลือกเอง)'}</small></div></div>`;
+  $('#total').innerHTML=`<div class="total"><div>🧴 รูทีนเต็มรวม ${CUR.items.length} ผลิตภัณฑ์<small>${SKIN_TYPES[rt.type]}${OPT.type==='auto'?' (ประเมินอัตโนมัติ)':' (เลือกเอง)'} · เลือกชุดที่ใช้จริงได้ที่แผงสรุปด้านล่าง</small></div></div>`;
 
-  // ---- Catalog
-  const inRt=new Set(items.map(p=>p.id)); items.forEach(p=>p.alias&&inRt.add(p.alias));
+  const inRt=new Set(CUR.items.map(p=>p.p.id)); CUR.items.forEach(it=>it.p.alias&&inRt.add(it.p.alias));
   $('#catalog').innerHTML=Object.keys(SUB).map(sub=>{
     const list=CATALOG.filter(p=>p.sub===sub).map(p=>{
       let s=matchRaw(p,rt.ctx.n)+(p.fit?(p.fit.includes(rt.type)?.25:-.15):0)+(p.remover?(rt.ctx.heavy?p.remover.heavy:p.remover.light)*.5:0);
       return {p,s:Math.max(0.01,s)};
     }).sort((a,b)=>b.s-a.s);
     const max=list[0].s;
-    return `<details class="cat"${sub==='A'?' open':''}><summary><span><span class="code ${sub[0]}">${sub}</span>${SUB[sub]} <small>· ${list.length} รายการ</small></span></summary><div class="cat-body">`+
+    return `<details class="cat"${sub==='A'?' open':''}><summary><span><span class="code ${sub[0]}">${sub}</span>${SUB_EMO[sub]} ${SUB[sub]} <small>· ${list.length} รายการ</small></span></summary><div class="cat-body">`+
       list.map(x=>{ const pct=Math.round(x.s/max*100);
-        return `<div class="cat-item"><div><div class="nm">${x.p.code} · ${x.p.name}${inRt.has(x.p.id)?'<span class="tag in">อยู่ในรูทีน</span>':''}${x.p.men?'<span class="tag men">สำหรับผู้ชาย</span>':''}${x.p.alias?`<span class="tag">ตัวเดียวกับ ${x.p.alias}</span>`:''}</div>
+        return `<div class="cat-item"><div><div class="nm">${x.p.code} · ${x.p.name}${inRt.has(x.p.id)?'<span class="tag in">อยู่ในรูทีน</span>':''}${x.p.men?'<span class="tag men">ไลน์ Men</span>':''}${x.p.alias?`<span class="tag">ตัวเดียวกับ ${x.p.alias}</span>`:''}</div>
           <div class="p-meta">${why(x.p,rt)}</div></div>
           <div class="pct">${pct}%<div class="mini"><i style="width:${pct}%"></i></div></div></div>`; }).join('')+`</div></details>`;
   }).join('');
+  renderSummary();
+}
+
+/* ---------- แผงสรุปชุดที่ควรใช้ ---------- */
+function selectedItems(){ return (CUR.items||[]).filter(it=>SUM.sel.has(it.p.id)); }
+function seqOf(arr){ return arr.filter(st=>inSel(st,SUM.sel)).map(st=>`${ROLE[st.role].s} ${st.p.code}`); }
+
+function renderSummary(){
+  const items=CUR.items||[], rt=CUR.rt; if(!rt) return;
+  const cnt=t=>items.filter(i=>i.tier<=t).length;
+  const presets=[['start','ชุดเริ่มต้น',cnt(1)],['rec','ชุดแนะนำ',cnt(2)],['full','ครบสูตร',items.length]];
+  let h=`<div class="seg" id="presetSeg">${presets.map(([k,t,n])=>`<button data-p="${k}" class="${SUM.preset===k?'on':''}">${t} · ${n}</button>`).join('')}</div>`;
+  for(const t of [1,2,3]){
+    const g=items.filter(i=>i.tier===t); if(!g.length) continue;
+    h+=`<div class="tier"><div class="tier-h"><b>${TIER[t].e} ${TIER[t].t}</b><small>${TIER[t].d}</small></div>`+
+      g.map(it=>`<label class="pick"><input type="checkbox" data-id="${it.p.id}"${SUM.sel.has(it.p.id)?' checked':''}><span class="bx"></span><div>
+        <div class="p-name"><span class="code ${it.p.grp}">${it.p.code}</span>${it.p.name}</div>
+        <div class="p-meta">${ROLE[it.role].e} ${ROLE[it.role].s}${it.p.sku?` · รหัส ${it.p.sku}`:''}${it.p.size?` · ${it.p.size}`:''}</div>
+        <div class="p-why">${ICON.spark}<span>${why(it.p,rt)}</span></div></div></label>`).join('')+`</div>`;
+  }
+  const n=SUM.sel.size, dis=n?'':' disabled';
+  h+=`<div class="sel-sum"><div><b>${n}</b> จาก ${items.length} ชิ้น<small>ติ๊กเพิ่มหรือเอาออกได้ตามต้องการ</small></div><div style="font-size:30px">🛍️</div></div>`;
+  const am=seqOf(rt.am), pm=seqOf(rt.pm), wk=seqOf(rt.wk);
+  if(n) h+=`<div class="seqbox">${am.length?`<div>☀️ <b>เช้า</b> · ${am.join(' → ')}</div>`:''}${pm.length?`<div>🌙 <b>กลางคืน</b> · ${pm.join(' → ')}</div>`:''}${wk.length?`<div>🗓️ <b>รายสัปดาห์</b> · ${wk.join(' · ')}</div>`:''}<div>💡 กันแดดทุกเช้า และใช้สม่ำเสมออย่างน้อย 4–6 สัปดาห์ จึงจะเห็นความต่างชัด</div></div>`;
+  h+=`<div class="btn-row"><button class="btn line" data-act="line"${dis}>💬 ส่งผลทาง LINE</button><button class="btn sec" data-act="copy"${dis}>📋 คัดลอกข้อความ</button></div>`;
+  $('#summary').innerHTML=h;
+}
+
+function buildLineText(){
+  const r=RESULT, rt=CUR.rt, chosen=selectedItems();
+  const ov=Math.round(overallOf(r)), [lt]=level(overallOf(r));
+  const L=[];
+  L.push(`✨ ผลวิเคราะห์ผิว ARTISTRY${OPT.name?` · คุณ${OPT.name}`:''}`);
+  L.push(`📅 ${new Date().toLocaleDateString('th-TH',{dateStyle:'medium'})}`);
+  L.push('');
+  L.push(`💎 คะแนนรวม ${ov}/100 (${lt}) · ${SKIN_TYPES[rt.type]}`);
+  KEYS.forEach(k=>L.push(`${EMO[k]} ${LABELS[k]} ${Math.round(r.final[k])}`));
+  L.push('');
+  L.push(`🛍️ ชุดที่เลือก ${chosen.length} ชิ้น`);
+  chosen.forEach((it,i)=>L.push(`${i+1}. ${it.p.name}${it.p.sku?` (รหัส ${it.p.sku})`:''}`));
+  const am=seqOf(rt.am), pm=seqOf(rt.pm), wk=seqOf(rt.wk);
+  L.push('');
+  if(am.length) L.push(`☀️ เช้า: ${am.join(' → ')}`);
+  if(pm.length) L.push(`🌙 กลางคืน: ${pm.join(' → ')}`);
+  if(wk.length) L.push(`🗓️ รายสัปดาห์: ${wk.join(' · ')}`);
+  L.push('');
+  L.push('💡 กันแดดทุกเช้า และใช้สม่ำเสมอ');
+  L.push('* ประเมินเชิงความงามจากภาพถ่าย ไม่ใช่การวินิจฉัยทางการแพทย์');
+  return L.join('\n');
+}
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); return true; }
+  catch(e){
+    const ta=document.createElement('textarea'); ta.value=t; ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
+    let ok=false; try{ ok=document.execCommand('copy'); }catch(_){} ta.remove(); return ok;
+  }
+}
+function sendLine(){
+  if(!SUM.sel.size) return;
+  window.open('https://line.me/R/share?text='+encodeURIComponent(buildLineText()),'_blank');
 }
 
 function renderResult(){
@@ -1211,24 +1559,29 @@ function renderResult(){
   drawPhoto('normal');
   $$('#viewSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v==='normal'));
 
+  $('#resTitle').textContent=OPT.name?`✦ รายงานสภาพผิวของ คุณ${OPT.name} ✦`:'✦ รายงานสภาพผิว ✦';
   const overall=overallOf(r), [lt,lc]=level(overall);
   $('#overallScore').textContent=Math.round(overall);
   $('#ringFg').style.stroke=lc;
   $('#ringFg').setAttribute('stroke-dasharray','0 100');
   $('#overallLevel').innerHTML=`สภาพผิวโดยรวม: <span style="color:${lc}">${lt}</span>`;
-  const mk=r.makeup, mkLv=mk<.3?['ไม่พบ/น้อยมาก','ok']:mk<.55?['บางเบา','warn']:['ค่อนข้างหนา','bad'];
+  const mk=r.makeup, mkLv=mk<.3?['ไม่พบ/น้อยมาก','ok']:mk<.55?['บาง ๆ','warn']:['ค่อนข้างหนา','bad'];
   const avgConf=Math.round(KEYS.reduce((a,k)=>a+r.conf[k],0)/KEYS.length*100);
-  $('#sumChips').innerHTML=`<span class="chip teal">${SKIN_TYPES[r.skinType]}</span><span class="chip ${mkLv[1]}">เมคอัพ: ${mkLv[0]} (${Math.round(mk*100)}%)</span><span class="chip">ความเชื่อมั่น ${avgConf}%</span><span class="chip ${r.qc.length?'warn':'ok'}">${r.qc.length?`คุณภาพภาพ: มีข้อสังเกต ${r.qc.length} ข้อ`:'คุณภาพภาพดี'}</span>`;
-  $('#scanMeta').textContent=`วิเคราะห์จาก ${r.frames} เฟรม · ${new Date().toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'})}`;
-  $('#qcBox').innerHTML=r.qc.length?`<div class="callout warn">${ICON.alert}<div><b>ข้อสังเกตด้านคุณภาพภาพ</b> ซึ่งอาจทำให้ผลคลาดเคลื่อน<ul>${r.qc.map(q=>`<li>${q}</li>`).join('')}</ul></div></div>`:'';
+  $('#sumChips').innerHTML=`<span class="chip gold">🧬 ${SKIN_TYPES[r.skinType]}</span><span class="chip ${mkLv[1]}">💄 เมคอัพ: ${mkLv[0]} (${Math.round(mk*100)}%)</span><span class="chip">🎚️ ความเชื่อมั่น ${avgConf}%</span><span class="chip ${r.qc.length?'warn':'ok'}">${r.qc.length?`⚠️ คุณภาพภาพ: มีข้อสังเกต ${r.qc.length} ข้อ`:'✅ คุณภาพภาพดี'}</span>`;
+  $('#scanMeta').textContent=`วิเคราะห์จาก ${r.shots.length} มุม (${r.frames} เฟรม) · ${new Date().toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'})}`;
+  $('#qcBox').innerHTML=r.qc.length?`<div class="callout warn">${ICON.alert}<div><b>ข้อสังเกตด้านคุณภาพภาพ</b> ที่อาจทำให้ผลคลาดเคลื่อน<ul>${r.qc.map(q=>`<li>${q}</li>`).join('')}</ul></div></div>`:'';
 
   const sorted=[...KEYS].sort((a,b)=>r.final[a]-r.final[b]).slice(0,2);
-  $('#priority').innerHTML=sorted.map((k,i)=>`<div class="prio"><small>ควรดูแลอันดับ ${i+1}</small><b>${LABELS[k]} · ${Math.round(r.final[k])}/100</b><div class="note">${TIPS[k]}</div></div>`).join('');
+  $('#priority').innerHTML=sorted.map((k,i)=>`<div class="prio"><small>ควรดูแลอันดับ ${i+1}</small><b>${EMO[k]} ${LABELS[k]} · ${Math.round(r.final[k])}/100</b><div class="note">${TIPS[k]}</div></div>`).join('');
 
-  $('#metrics').innerHTML=KEYS.map((k,i)=>{
+  $('#shotsCard').innerHTML=`<h2><span class="em">📸</span>ภาพที่ใช้วิเคราะห์</h2><p class="sub">ใช้ ${r.thumbs.filter(t=>t.used).length} จาก 5 มุม ถ่ายครบทุกมุมผลจะแม่นขึ้น</p><div class="thumbs">`+
+    SHOTS.map(s=>{ const t=r.thumbs.find(x=>x.kind===s.id);
+      return t?`<figure class="${t.used?'':'dim'}"><img src="${t.url}" alt="${s.name}">${s.emo} ${s.name}</figure>`:`<figure><div class="nop">ไม่ได้ใช้</div>${s.emo} ${s.name}</figure>`; }).join('')+`</div>`;
+
+  $('#metrics').innerHTML=KEYS.map(k=>{
     const v=r.final[k], [t,col,lv]=level(v), c=Math.round(r.conf[k]*100);
     return `<div class="metric"><div class="m-top">
-        <div class="m-ic" style="background:${col}1f;color:${col}">${i+1}</div>
+        <div class="m-ic" style="background:${col}1f">${EMO[k]}</div>
         <div class="m-name"><b>${LABELS[k]}</b><small>${HINT[k]}</small></div>
         <div class="m-score" style="color:${col}">${Math.round(v)}<small>ระดับ ${lv}/5 · ${t}</small></div></div>
       <div class="bar"><i data-w="${v}" style="width:0;background:linear-gradient(90deg,${col}aa,${col})"></i></div>
@@ -1240,17 +1593,17 @@ function renderResult(){
   const oilLv=r.aux.oil>=65?['ต่ำ','#12a150']:r.aux.oil>=40?['ปานกลาง','#d99a00']:['สูง','#e8762c'];
   const tx=level(r.aux.texture), dcl=level(r.aux.darkcircle);
   $('#aux').innerHTML=`
-    <div><small>ความมันโซน T</small><b>${Math.round(100-r.aux.oil)}</b><span style="color:${oilLv[1]}">ระดับ${oilLv[0]}</span></div>
-    <div><small>ความเรียบเนียนผิว</small><b>${Math.round(r.aux.texture)}</b><span style="color:${tx[1]}">${tx[0]}</span></div>
-    <div><small>ผิวรอบดวงตา</small><b>${Math.round(r.aux.darkcircle)}</b><span style="color:${dcl[1]}">${dcl[0]}</span></div>`;
+    <div><small>🌿 ความมันโซน T</small><b>${Math.round(100-r.aux.oil)}</b><span style="color:${oilLv[1]}">ระดับ${oilLv[0]}</span></div>
+    <div><small>🪞 ความเรียบเนียนผิว</small><b>${Math.round(r.aux.texture)}</b><span style="color:${tx[1]}">${tx[0]}</span></div>
+    <div><small>👁️ ผิวรอบดวงตา</small><b>${Math.round(r.aux.darkcircle)}</b><span style="color:${dcl[1]}">${dcl[0]}</span></div>`;
 
   $('#makeup').innerHTML=r.signals.map(s=>{
     const ok=s.v!==null&&Number.isFinite(s.v);
     return `<div class="mk-row"><span>${s.k}</span>${ok?`<div class="mini"><i style="width:${Math.round(s.v*100)}%"></i></div><em>${Math.round(s.v*100)}%</em>`:'<span class="note">ไม่มีข้อมูล</span><em>–</em>'}</div>`;
   }).join('')+
   `<div class="callout ${mk>=.3?'warn':''}">${mk>=.3?ICON.alert:ICON.info}<div>${mk>=.3
-    ?`<b>ตรวจพบเมคอัพ ระบบจึงชดเชยผลดังนี้</b><ul><li>ปรับคะแนนจุดด่างดำและความกระจ่างใสลง เพราะรองพื้นและคอนซีลเลอร์ปกปิดไว้</li><li>เปลี่ยนการตรวจริ้วรอยไปใช้สเกลหยาบขึ้น เพื่อลดผลของรองพื้นที่ตกร่อง</li><li>ความหย่อนคล้อยวัดจากรูปทรงใบหน้า จึงแทบไม่ได้รับผลกระทบ</li><li>ลดค่าความเชื่อมั่น และการประเมินความมันอาจคลาดเคลื่อนจากแป้งแบบแมตต์</li></ul><b>เพื่อผลที่แม่นยำที่สุด แนะนำให้ล้างเมคอัพแล้วสแกนใหม่</b>`
-    :'ไม่พบเมคอัพที่มีนัยสำคัญ ผลการวิเคราะห์จึงสะท้อนสภาพผิวจริงได้ดี'}</div></div>`;
+    ?`<b>ตรวจเจอเมคอัพ ระบบจึงปรับผลดังนี้</b><ul><li>ลดคะแนนจุดด่างดำและความกระจ่างใสลง เพราะรองพื้นและคอนซีลเลอร์ปิดไว้</li><li>ตรวจริ้วรอยด้วยสเกลหยาบขึ้น เพื่อไม่ให้รองพื้นที่ตกร่องมาปนกับริ้วรอยจริง</li><li>ความหย่อนคล้อยวัดจากรูปทรงใบหน้า จึงแทบไม่ได้รับผลกระทบ</li><li>ความเชื่อมั่นลดลง และความมันอาจคลาดเคลื่อนเพราะแป้งแมตต์</li></ul><b>ถ้าต้องการผลที่แม่นที่สุด ให้ล้างเมคอัพแล้วสแกนใหม่</b>`
+    :'ไม่พบเมคอัพที่มีนัยสำคัญ ผลวิเคราะห์จึงสะท้อนสภาพผิวจริงได้ดี'}</div></div>`;
 
   const rw=r.raw, f=(v,d=3)=>Number.isFinite(v)?(+v).toFixed(d):'–';
   const rows=[['Micro-texture roughness',f(rw.rough,2)],['Glow fraction',f(rw.glow)],['Flake fraction',f(rw.flake)],['T-zone shine / cheek shine',`${f(rw.oilFrac)} / ${f(rw.cheekShine)}`],
@@ -1258,7 +1611,8 @@ function renderResult(){
     ['Nasolabial shadow',f(rw.nasoShadow)],['Under-eye shadow',f(rw.underShadow)],['Mouth-corner droop',f(rw.droop,4)],['Jaw / face width ratio',f(rw.jawRatio)],
     ['Wrinkle idx (forehead/crow/under/naso)',`${f(rw.wF)} / ${f(rw.wC)} / ${f(rw.wU)} / ${f(rw.wN)}`],['Tone evenness (std ΔL*)',f(rw.evenness,2)],['Skin chroma C*',f(rw.chroma,1)],
     ['ITA° (แสดงผลเท่านั้น ไม่ใช้ให้คะแนน)',f(rw.ita,1)],['Face–neck ΔE',f(rw.neckDE,1)],['Texture / eye-sharpness ratio',f(rw.texRatio)],['Lip ΔC*',f(rw.lipDelta,1)],
-    ['Eyelid ΔE',f(rw.lidDE,1)],['Regional a* spread',f(rw.aSpread,2)],['Eye sharpness',f(rw.eyeSharp,1)],['Yaw / Roll',`${f(rw.yaw)} / ${f(rw.roll,1)}°`],['WB gains R / G / B',rw.wb]];
+    ['Eyelid ΔE',f(rw.lidDE,1)],['Regional a* spread',f(rw.aSpread,2)],['Eye sharpness',f(rw.eyeSharp,1)],['Yaw / Roll',`${f(rw.yaw)} / ${f(rw.roll,1)}°`],['WB gains R / G / B',rw.wb],
+    ['Shots used',r.shots.join(', ')]];
   $('#rawTable').innerHTML=rows.map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join('');
 
   renderRoutine();
@@ -1284,21 +1638,49 @@ segBind('#genderSeg','g',v=>{ OPT.gender=v; if(RESULT) renderRoutine(); });
 segBind('#levelSeg','l',v=>{ OPT.level=v; renderRoutine(); });
 segBind('#typeSeg','t',v=>{ OPT.type=v; renderRoutine(); });
 segBind('#viewSeg','v',v=>{ if(RESULT) drawPhoto(v); });
+$('#userName').addEventListener('input',e=>{ OPT.name=e.target.value.trim(); });
 $('#tabs').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return; TAB=b.dataset.tab;
   $$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
   $$('.rt-pane').forEach(p=>p.style.display=p.dataset.pane===TAB?'block':'none');
 });
-$('#btnStart').onclick=startCamera;
-$('#btnNative').onclick=()=>$('#fileNative').click();
-$('#btnUpload').onclick=()=>$('#fileUpload').click();
-$('#fileNative').onchange=e=>{ loadFile(e.target.files[0]); e.target.value=''; };
-$('#fileUpload').onchange=e=>{ loadFile(e.target.files[0]); e.target.value=''; };
-$('#btnCancel').onclick=()=>{ stopCamera(); show('intro'); };
+$('#summary').addEventListener('click',async e=>{
+  const pb=e.target.closest('#presetSeg button');
+  if(pb){ applyPreset(pb.dataset.p); renderSummary(); return; }
+  const ab=e.target.closest('[data-act]');
+  if(ab&&!ab.disabled){
+    if(ab.dataset.act==='line') sendLine();
+    else if(ab.dataset.act==='copy') toast(await copyText(buildLineText())?'คัดลอกข้อความแล้ว':'คัดลอกไม่สำเร็จ');
+  }
+});
+$('#summary').addEventListener('change',e=>{
+  const cb=e.target.closest('input[data-id]'); if(!cb) return;
+  if(cb.checked) SUM.sel.add(cb.dataset.id); else SUM.sel.delete(cb.dataset.id);
+  SUM.preset='custom'; renderSummary();
+});
+
+$('#btnStart').onclick=()=>startCamera();
+$('#btnUpload').onclick=()=>{ $('#uploadPanel').classList.toggle('hidden'); renderUploader(); if(!$('#uploadPanel').classList.contains('hidden')) $('#uploadPanel').scrollIntoView({behavior:'smooth',block:'center'}); };
+$('#upGrid').addEventListener('click',e=>{
+  const x=e.target.closest('[data-x]');
+  if(x){ e.stopPropagation(); delete UP[x.dataset.x]; renderUploader(); return; }
+  const t=e.target.closest('[data-s]'); if(!t) return;
+  upStart=SHOTS.findIndex(s=>s.id===t.dataset.s);
+  $('#fileUpload').click();
+});
+$('#fileUpload').onchange=async e=>{ const fl=e.target.files; if(fl&&fl.length) await loadSlotFiles(fl); e.target.value=''; };
+$('#btnAnalyze').onclick=analyzeUploads;
+$('#btnCancel').onclick=()=>{ stopCamera(); CAP={}; show('intro'); };
 $('#btnShutter').onclick=captureBurst;
-$('#btnFlip').onclick=async()=>{ facing=facing==='user'?'environment':'user'; stopCamera(); await startCamera(); };
+$('#btnFlip').onclick=async()=>{ facing=facing==='user'?'environment':'user'; stopCamera(); await startCamera(true); };
 $('#autoToggle').onclick=()=>{ autoCap=!autoCap; $('#autoToggle').classList.toggle('on',autoCap); stable=0; };
-$('#btnRescan').onclick=()=>show('intro');
+$('#btnSkip').onclick=async()=>{
+  if(capturing) return;
+  if(curIdx>=SHOTS.length-1){ await finishCapture(); return; }
+  advance('ข้ามมุมนี้แล้ว เตรียมมุมถัดไป');
+};
+$('#btnFinish').onclick=async()=>{ if(!capturing) await finishCapture(); };
+$('#btnRescan').onclick=()=>{ CAP={}; UP={}; renderUploader(); $('#uploadPanel').classList.add('hidden'); show('intro'); };
 $('#btnPrint').onclick=()=>window.print();
 window.addEventListener('resize',()=>{ if(RESULT&&$('#screen-result').classList.contains('active')) drawRadar($('#radar'),RADAR_LABELS,KEYS.map(k=>RESULT.final[k])); });
 document.fonts?.ready?.then(()=>{ if(RESULT&&$('#screen-result').classList.contains('active')) drawRadar($('#radar'),RADAR_LABELS,KEYS.map(k=>RESULT.final[k])); });

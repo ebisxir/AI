@@ -206,9 +206,13 @@ main{max-width:980px;margin:0 auto;padding:16px 16px calc(40px + env(safe-area-i
 .prio{border-radius:16px;padding:13px 15px;background:linear-gradient(135deg,#fff7e6,#fffdf8);border:1px solid #efd9a8}
 .prio small{color:var(--gold-d);font-weight:700;font-size:12px;letter-spacing:.04em}
 .prio b{display:block;color:var(--ink);font-size:15.5px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-bottom:18px}
+.grid2>*{min-width:0}
 .grid2 .card{margin-bottom:0}
-.photo{width:100%;border-radius:16px;display:block;background:#f1eadc}
+.photo{width:100%;max-width:100%;height:auto;max-height:min(70vh,620px);object-fit:contain;border-radius:16px;display:block;background:#f1eadc}
+#shotSeg,#viewSeg{flex-wrap:wrap}
+#viewSeg button{flex:1 1 44%;white-space:normal;padding:9px 6px;font-size:13.5px;line-height:1.3}
+#shotSeg button{flex:1 1 30%;white-space:normal;padding:9px 6px;font-size:13.5px;line-height:1.3}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:10px;min-height:18px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 #radar{width:100%;max-width:390px;aspect-ratio:1;display:block;margin:0 auto}
@@ -310,7 +314,7 @@ table.raw td:last-child{text-align:right;font-variant-numeric:tabular-nums;color
 .disclaimer{font-size:12.5px;color:var(--muted);line-height:1.75;padding:2px 6px 14px}
 
 @media (max-width:720px){
-  .grid2,.ctrl,.tips,.priority{grid-template-columns:1fr}
+  .grid2,.ctrl,.tips,.priority{grid-template-columns:minmax(0,1fr)}
   .trust{grid-template-columns:1fr}
   .trust div{display:flex;gap:12px;align-items:center}
   .trust .e{margin:0}
@@ -399,7 +403,7 @@ table.lg th{color:var(--muted);font-weight:600;font-size:12.5px}
   <div class="hero">
     <span class="eyebrow">✦ ARTISTRY ✦</span>
     <h1>ดูสภาพผิวของคุณ<br><em>แบบละเอียด 5 ด้าน</em></h1>
-    <p>ถ่ายรูปหน้าด้วยมือถือ แล้วดูสภาพผิว พร้อมรูทีน ARTISTRY ที่เหมาะกับผิวของคุณ</p>
+    <p>ถ่ายรูปหน้าด้วยมือถือ แล้วดูสภาพผิว พร้อมผลิตภัณฑ์ ARTISTRY ประจำวันที่เหมาะกับผิวของคุณ</p>
     <div class="trust">
       <div><span class="e">🔬</span><span><b>วิเคราะห์ 5 ด้าน</b>ชุ่มชื้น จุดด่าง หย่อนคล้อย ริ้วรอย กระจ่างใส</span></div>
       <div><span class="e">🗺️</span><span><b>แบ่งโซนใบหน้า</b>ใช้จุดบนใบหน้า 468 จุด</span></div>
@@ -575,10 +579,10 @@ table.lg th{color:var(--muted);font-weight:600;font-size:12.5px}
   </div>
 
   <div class="card">
-    <h2><span class="em">🧴</span>รูทีน ARTISTRY สำหรับคุณ</h2>
-    <p class="sub">จับคู่จากผลวิเคราะห์ 5 ด้านและประเภทผิว เป็นรูทีนเต็ม ดูแผงสรุปด้านล่างเพื่อเลือกชุดที่ใช้จริง</p>
+    <h2><span class="em">🧴</span>ชุดผลิตภัณฑ์ประจำวัน ARTISTRY สำหรับคุณ</h2>
+    <p class="sub">จับคู่จากผลวิเคราะห์ 5 ด้านและประเภทผิว เป็นชุดประจำวันแบบเต็ม ดูแผงสรุปด้านล่างเพื่อเลือกชุดที่ใช้จริง</p>
     <div class="ctrl">
-      <div><label>ระดับรูทีน</label>
+      <div><label>ระดับชุดประจำวัน</label>
         <div class="seg" id="levelSeg"><button data-l="basic">เบสิก</button><button data-l="full" class="on">ครบสูตร</button><button data-l="intensive">เข้มข้นพิเศษ</button></div>
       </div>
       <div><label>ประเภทผิว</label>
@@ -760,8 +764,10 @@ add('B1.5','B1','toner','แอนตี้-เบลมมิช โทนเ�
 add('B1.6','B1','toner','เมน บาลานซิ่ง ไอเดรเทอร์',{men:true,fit:ALL,t:{hydration:.6,oil:.5}});
 
 // ---------- B2 ซีรัม ----------
-add('B2.1','B2','serum','สกินนิวทริชั่น คอร์เรคติ้ง เซรั่ม',{fit:ALL,t:{spots:.9,radiance:.8,texture:.4}});
-add('B2.2','B2','serum','สกินนิวทริชั่น ดีฟายอิ้ง เซรั่ม',{fit:ALL,t:{wrinkles:1,sagging:.8}});
+add('B2.1','B2','serum','สกินนิวทริชั่น คอร์เรคติ้ง เซรั่ม',{size:'30 มล.',minAge:35,fit:ALL,t:{wrinkles:1,sagging:.9,radiance:.4,hydration:.4},
+  note:'ดูแลสัญญาณวัยที่เห็นชัดแล้ว เช่น ริ้วรอยร่องลึก ผิวหย่อนคล้อย ผิวหมองเหลือง ใช้เช้า–เย็นหลังโทนเนอร์ ประมาณ 3 ปั๊ม ทาหน้าและลำคอ เลี่ยงรอบดวงตา ใช้ร่วมกับดีฟายอิ้ง เซรั่มได้ ทั้งผสมหรือสลับกัน หากตั้งครรภ์ควรปรึกษาแพทย์ก่อน'});
+add('B2.2','B2','serum','สกินนิวทริชั่น ดีฟายอิ้ง เซรั่ม',{size:'30 มล.',minAge:25,fit:ALL,t:{texture:1,wrinkles:.6,sagging:.4,hydration:.5,radiance:.5,spots:.3},
+  note:'ดูแลสัญญาณวัยระยะเริ่มต้น เช่น ริ้วรอยเส้นเล็ก รูขุมขนที่เห็นชัด ผิวขาดความยืดหยุ่น มีส่วนผสมผลัดเซลล์ผิวอ่อน ๆ (แลคติก แอซิดและสารสกัดเปลือกวิลโลว์ขาว) ใช้เช้า–เย็นหลังโทนเนอร์ ประมาณ 3 ปั๊ม ทาหน้าและลำคอ เลี่ยงรอบดวงตา ใช้ร่วมกับคอร์เรคติ้ง เซรั่มได้ หากตั้งครรภ์ควรปรึกษาแพทย์ก่อน'});
 add('B2.3','B2','serum','โกลว์ + มอยส์เจอร์ แอมพูล',{fit:ALL,t:{hydration:.9,radiance:.7}});
 
 // ---------- B3 ซีรัมพิเศษ ----------
@@ -1654,15 +1660,15 @@ function applyPreset(k){
 function renderRoutine(){
   SWAP={};
   const ap=ageProfile(OPT.age);
-  $('#ageNote').innerHTML=ap?`<div class="callout">🎂 <div><b>วัย ${ap.label}</b> · ${ap.note}</div></div>`:`<div class="callout warn">🎂 <div>ยังไม่ได้ระบุอายุ ระบบจึงยังไม่ปรับรูทีนตามวัย ใส่อายุในช่องด้านบนเพื่อให้แนะนำได้ตรงขึ้น</div></div>`;
+  $('#ageNote').innerHTML=ap?`<div class="callout">🎂 <div><b>วัย ${ap.label}</b> · ${ap.note}</div></div>`:`<div class="callout warn">🎂 <div>ยังไม่ได้ระบุอายุ ระบบจึงยังไม่ปรับชุดประจำวันตามวัย ใส่อายุในช่องด้านบนเพื่อให้แนะนำได้ตรงขึ้น</div></div>`;
   const rt=buildRoutine(RESULT,OPT);
   CUR={ rt, items:collectItems(rt,RESULT) };
   applyPreset(SUM.preset==='custom'?'rec':SUM.preset);
 
-  const pane=(k,arr)=>`<div class="rt-pane" data-pane="${k}" style="display:${TAB===k?'block':'none'}">${arr.length?arr.map((s,i)=>stepHTML(s,i,rt)).join(''):'<div class="empty">รูทีนระดับเบสิกไม่มีขั้นตอนรายสัปดาห์ เลือกระดับ "ครบสูตร" หรือ "เข้มข้นพิเศษ" เพื่อเพิ่มมาสก์/สครับ</div>'}</div>`;
+  const pane=(k,arr)=>`<div class="rt-pane" data-pane="${k}" style="display:${TAB===k?'block':'none'}">${arr.length?arr.map((s,i)=>stepHTML(s,i,rt)).join(''):'<div class="empty">ชุดประจำวันระดับเบสิกไม่มีขั้นตอนรายสัปดาห์ เลือกระดับ "ครบสูตร" หรือ "เข้มข้นพิเศษ" เพื่อเพิ่มมาสก์/สครับ</div>'}</div>`;
   $('#rtAll').innerHTML=pane('am',rt.am)+pane('pm',rt.pm)+pane('wk',rt.wk);
 
-  $('#total').innerHTML=`<div class="total"><div>🧴 รูทีนเต็มรวม ${CUR.items.length} ผลิตภัณฑ์<small>${SKIN_TYPES[rt.type]}${OPT.type==='auto'?' (ประเมินอัตโนมัติ)':' (เลือกเอง)'} · เลือกชุดที่ใช้จริงได้ที่แผงสรุปด้านล่าง</small></div></div>`;
+  $('#total').innerHTML=`<div class="total"><div>🧴 ชุดประจำวันแบบเต็มรวม ${CUR.items.length} ผลิตภัณฑ์<small>${SKIN_TYPES[rt.type]}${OPT.type==='auto'?' (ประเมินอัตโนมัติ)':' (เลือกเอง)'} · เลือกชุดที่ใช้จริงได้ที่แผงสรุปด้านล่าง</small></div></div>`;
 
   const inRt=new Set(CUR.items.map(p=>p.p.id)); CUR.items.forEach(it=>it.p.alias&&inRt.add(it.p.alias));
   $('#catalog').innerHTML=Object.keys(SUB).map(sub=>{
@@ -1674,7 +1680,7 @@ function renderRoutine(){
     const max=list[0].s;
     return `<details class="cat"${sub==='A'?' open':''}><summary><span>${SUB_EMO[sub]} ${SUB[sub]} <small>· ${list.length} รายการ</small></span></summary><div class="cat-body">`+
       list.map(x=>{ const pct=Math.round(x.s/max*100);
-        return `<div class="cat-item"><div><div class="nm">${x.p.name}${x.p.premium?' 👑':''}${inRt.has(x.p.id)?'<span class="tag in">อยู่ในรูทีน</span>':''}${x.p.men?'<span class="tag men">ไลน์ Men</span>':''}${x.p.alias?`<span class="tag">อยู่ในกลุ่ม${SUB[CATALOG.find(c=>c.id===x.p.alias).sub]}ด้วย</span>`:''}${okAge(x.p,OPT.age)?'':'<span class="tag">ยังไม่แนะนำตามช่วงอายุ</span>'}</div>
+        return `<div class="cat-item"><div><div class="nm">${x.p.name}${x.p.premium?' 👑':''}${inRt.has(x.p.id)?'<span class="tag in">อยู่ในชุดประจำวัน</span>':''}${x.p.men?'<span class="tag men">ไลน์ Men</span>':''}${x.p.alias?`<span class="tag">อยู่ในกลุ่ม${SUB[CATALOG.find(c=>c.id===x.p.alias).sub]}ด้วย</span>`:''}${okAge(x.p,OPT.age)?'':'<span class="tag">ยังไม่แนะนำตามช่วงอายุ</span>'}</div>
           <div class="p-meta">${why(x.p,rt)}</div></div>
           <div class="pct">${pct}%<div class="mini"><i style="width:${pct}%"></i></div></div></div>`; }).join('')+`</div></details>`;
   }).join('');
